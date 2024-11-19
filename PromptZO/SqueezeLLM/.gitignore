@@ -1,0 +1,12 @@
+__pycache__
+*.pt
+squeezellm/build
+squeezellm/dist
+squeezellm/quant_cuda.egg-info
+quantization/grad
+quantization/lut*
+quantization/model
+quantization/outliers
+SqueezeLLM-gradients
+squeezellm.egg-info
+tmp*
