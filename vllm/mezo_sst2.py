@@ -3,19 +3,27 @@ import os
 import json
 from vllm import LLM, SamplingParams
 
+
+os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
+os.environ["NCCL_DEBUG"] = "INFO"
+os.environ["NCCL_P2P_DISABLE"] = "1"
+os.environ["NCCL_SHM_DISABLE"] = "1"
+os.environ["NCCL_ASYNC_ERROR_HANDLING"] = "1"
+os.environ["NCCL_NET"] = "Socket"
+
 # Initialize the vLLM model
-model_id = "meta-llama/Llama-3.2-11B-Vision-Instruct"
-llm = LLM(model=model_id, tensor_parallel_size=2, device="cuda")
+model_id = "meta-llama/Llama-3.2-3B"
+llm = LLM(model=model_id, tensor_parallel_size=4, device="cuda", dtype="bfloat16", max_model_len=2048)
 
 # Load input data
 data = []
-input_file = '/home/jlong1/Downloads/Data/zo/0_original_data/SST2/sst2_train.jsonl'  # Input file path
+input_file = '/grand/sbi-fair/jikaiLoong/Python_code/vllm/data/original/sst2_train.jsonl'  # Input file path
 with open(input_file, 'r', encoding='utf-8') as file:
     for line in file:
         data.append(json.loads(line.strip()))
 
-# Output and error file paths
-output_file = os.path.expanduser("/home/jlong1/Downloads/Data/zo/1_original_zo/synthetic/test/sst2_train.jsonl")
+# Output file paths
+output_file = os.path.expanduser("/grand/sbi-fair/jikaiLoong/Python_code/vllm/data/synthetic/sst2_train.jsonl")
 
 # Ensure output directories exist
 os.makedirs(os.path.dirname(output_file), exist_ok=True)
@@ -50,7 +58,7 @@ for i in tqdm(range(len(data))):
     """
 
     # Define sampling parameters
-    sampling_params = SamplingParams(max_tokens=512, temperature=0.7, top_p=0.9)
+    sampling_params = SamplingParams(max_tokens=512, temperature=0.1, top_p=0.5)
 
     # Generate output using vLLM
     outputs = llm.generate([prompt], sampling_params)
