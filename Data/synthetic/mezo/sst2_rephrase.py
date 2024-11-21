@@ -117,7 +117,7 @@ for i in tqdm(range(len(data))):
         add_generation_prompt=True,
     )
     inputs = processor(text=input_text, images=None, return_tensors="pt").to(model.device)
-    output = model.generate(**inputs, max_new_tokens=128000)
+    output = model.generate(**inputs, max_new_tokens=4096)
     output = processor.decode(output[0][inputs["input_ids"].shape[-1]:])
     # print(output)
     sentence = output.rsplit("<|eot_id|>", 1)[0]

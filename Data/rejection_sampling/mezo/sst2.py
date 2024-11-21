@@ -71,7 +71,7 @@ for i in tqdm(range(len(eval_list))):
             out_file.flush()
         i += 1
         continue
-    prompt = f"Given the original sentence '{eval_list[i]['original']}' and the rephrased sentence '{eval_list[i]['rephrased']}', jude if the rephrased \
+    prompt = f"Given the original sentence '{eval_list[i]['original']}' and the rephrased sentence '{eval_list[i]['rephrased']}', judge if the rephrased \
   sentence has the same meaning as the original sentence Directly output [same/not the same] without any explanation."
     response = client.chat.completions.create( # change
         model="gpt-4o",
