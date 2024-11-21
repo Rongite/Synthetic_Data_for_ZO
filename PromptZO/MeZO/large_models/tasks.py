@@ -2,7 +2,7 @@ from templates import *
 from utils import temp_seed
 import json
 import os
-from datasets import load_dataset
+from datasets import load_dataset, Dataset
 from dataclasses import dataclass
 from typing import List, Union
 import string
@@ -41,10 +41,14 @@ def get_task(task_name, args):
     if os.path.exists(task_name) and os.path.isdir(task_name):
         print(f"检测到本地路径：{task_name}")
         task_args['path'] = task_name  # 设置本地路径
-        task_group = "sst2"  # 假设本地数据集为 SST2
+        # task_group = "sst2"  # 假设本地数据集为 SST2
+        task_group = "cb"
     elif task_name.lower() == "sst2":
         task_group = "sst2"
         task_args['path'] = None  # 不设置本地路径
+    elif task_name.lower() == "cb":
+        task_group = "cb"
+        task_args['path'] = None
     else:
         # 如果 task_name 包含子任务，则解析子任务
         aa = task_name.split("__")
@@ -58,7 +62,8 @@ def get_task(task_name, args):
         raise ValueError("未能正确设置 task_group")
 
     # 生成类名
-    class_name = f"{task_group.upper()}Dataset" if task_group.lower() == 'sst2' else f"{task_group.capitalize()}Dataset"
+    # class_name = f"{task_group.upper()}Dataset" if task_group.lower() == 'sst2' else f"{task_group.capitalize()}Dataset"
+    class_name = f"{task_group.upper()}Dataset" if task_group.lower() == 'cb' else f"{task_group.capitalize()}Dataset"
 
     # 动态加载数据集类
     try:
@@ -304,16 +309,54 @@ class MultiRCDataset(Dataset):
 
 class CBDataset(Dataset):
     
-    def __init__(self, subtask=None, **kwargs) -> None:
-        self.load_dataset(subtask, **kwargs)
+    def __init__(self, subtask=None, path=None, **kwargs) -> None:
+        self.args = kwargs.get('args', {})
+        # self.load_dataset(subtask, **kwargs)
+        self.load_dataset(path, **kwargs)
     
     def load_dataset(self, path, **kwargs):
+        print(f"加载数据集的路径: {path}")
+        if path and os.path.exists(path):
+            print("从本地 JSONL 文件加载 CB 数据集...")
+            # train_samples = self.load_jsonl(os.path.join(path, "cb_train.jsonl"))
+            # valid_samples = self.load_jsonl(os.path.join(path, "cb_validation.jsonl"))
+            train_path = os.path.join(path, "cb_train.jsonl")
+            val_path = os.path.join(path, "cb_validation.jsonl")
+
+            with open(train_path, "r", encoding="utf-8") as f1:
+                train_set = [json.loads(line.strip()) for line in f1]
+            
+            with open(val_path, "r", encoding="utf-8") as f2:
+                val_set = [json.loads(line.strip()) for line in f2]
+
+            train_samples = Dataset.from_list(train_set)
+            valid_samples = Dataset.from_list(val_set)
+            print("train_samples: ", train_samples)
+        else:
+            print("从 Hugging Face 加载 CB 数据集...")
+            dataset = load_dataset("super_glue", "cb")
+            train_samples = dataset["train"]
+            valid_samples = dataset["validation"]
+            print("train_samples: ", train_samples)
+
+        self.samples = {
+            "train": [self.build_sample(example) for example in train_samples],
+            "valid": [self.build_sample(example) for example in valid_samples]
+        }
+        '''
         d = load_dataset("super_glue", "cb")
         train_set = d["train"]
         valid_set = d["validation"]
         train_samples = [self.build_sample(example) for example in train_set]
         valid_samples = [self.build_sample(example) for example in valid_set]
         self.samples = {"train": train_samples, "valid": valid_samples}
+        '''
+    
+    # 新加的方法
+    def load_jsonl(self, file_path):
+        """加载 JSONL 文件并返回字典列表"""
+        with open(file_path, 'r', encoding='utf-8') as f:
+            return [json.loads(line) for line in f]
     
     def build_sample(self, example):
         sample = \
