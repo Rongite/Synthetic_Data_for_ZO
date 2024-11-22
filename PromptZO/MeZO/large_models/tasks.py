@@ -2,7 +2,9 @@ from templates import *
 from utils import temp_seed
 import json
 import os
-from datasets import load_dataset, Dataset
+from datasets import load_dataset
+from datasets import Features, Value, ClassLabel
+from datasets import Dataset as HFDataset
 from dataclasses import dataclass
 from typing import List, Union
 import string
@@ -17,64 +19,51 @@ logger.setLevel(logging.INFO)
 
 
 def get_task(task_name, args):
-    # aa = task_name.split("__")
-    # if len(aa) == 2:
-    #     task_group, subtask = aa
-    # else:
-    #     task_group = aa[0]
-    #     subtask = None
-    # class_ = getattr(sys.modules[__name__], f"{task_group}Dataset")
-    # instance = class_(subtask, args=args)
-    # return instance
-    # 初始化 task_group 和 subtask
+    # Initialize task_group and subtask
     """
-    根据任务名称动态加载任务类，同时支持从 Hugging Face 和本地 JSONL 文件加载数据。
+    Dynamically load the task class based on the task name and pass the correct path.
     """
-    # 初始化 task_group 和 subtask
     task_group = None
-    subtask = None
 
-    # 创建一个字典来存储 args 对象的属性
-    task_args = {k: v for k, v in vars(args).items()}
-
-    # 检查 task_name 是否为本地路径
-    if os.path.exists(task_name) and os.path.isdir(task_name):
-        print(f"检测到本地路径：{task_name}")
-        task_args['path'] = task_name  # 设置本地路径
-        # task_group = "sst2"  # 假设本地数据集为 SST2
-        task_group = "cb"
-    elif task_name.lower() == "sst2":
-        task_group = "sst2"
-        task_args['path'] = None  # 不设置本地路径
-    elif task_name.lower() == "cb":
-        task_group = "cb"
-        task_args['path'] = None
+    # If it's a local path
+    if os.path.exists(task_name):
+        print(f"Detected local path: {task_name}")
+        task_group = os.path.basename(task_name).split("_")[0].lower()  # Extract task name
+        args.path = task_name  # Set local path
     else:
-        # 如果 task_name 包含子任务，则解析子任务
-        aa = task_name.split("__")
-        if len(aa) == 2:
-            task_group, subtask = aa
-        else:
-            task_group = aa[0]
+        # If it's a predefined task name
+        task_group = task_name.lower()
+        args.path = None  # Do not set local path
 
-    # 如果 task_group 未正确设置，抛出异常
-    if not task_group:
-        raise ValueError("未能正确设置 task_group")
+    # Mapping from task names to class names
+    supported_tasks = {
+        "sst2": "SST2Dataset",
+        "copa": "CopaDataset",
+        "boolq": "BoolQDataset",
+        "multirc": "MultiRCDataset",
+        "cb": "CBDataset",
+        "wic": "WICDataset",
+        "wsc": "WSCDataset",
+        "record": "ReCoRDDataset",
+        "rte": "RTEDataset",
+        "squad": "SQuADDataset",
+        "drop": "DROPDataset",
+        "winogrande": "WinoGrandeDataset"
+    }
 
-    # 生成类名
-    # class_name = f"{task_group.upper()}Dataset" if task_group.lower() == 'sst2' else f"{task_group.capitalize()}Dataset"
-    class_name = f"{task_group.upper()}Dataset" if task_group.lower() == 'cb' else f"{task_group.capitalize()}Dataset"
+    # Check if the task name is supported
+    if task_group not in supported_tasks:
+        raise ValueError(f"Unknown task name or path: {task_name}")
 
-    # 动态加载数据集类
+    # Dynamically load the class
+    class_name = supported_tasks[task_group]
     try:
         class_ = getattr(sys.modules[__name__], class_name)
-    except AttributeError as e:
-        print(f"错误：找不到类 '{class_name}'。请检查任务名称。")
-        raise e
+    except AttributeError:
+        raise AttributeError(f"Error: Could not find class '{class_name}'. Please check the class definition or module imports.")
 
-    # 实例化数据集类，并确保传递 task_args
-    instance = class_(subtask=subtask, path=task_args.get('path'), args=task_args)
-    return instance
+    # Instantiate the task class
+    return class_(path=args.path, args=args)
 
 @dataclass
 class Sample:
@@ -164,12 +153,15 @@ class SST2Dataset(Dataset):
         #     self.template = SST2Template
     def __init__(self, subtask=None, path=None, **kwargs) -> None:
         """
-        初始化数据集，根据参数决定是从本地 JSONL 文件还是 Hugging Face Hub 加载数据
+        Initialize the dataset and decide whether to load from local JSONL files or from the Hugging Face Hub based on parameters.
         """
         self.args = kwargs.get('args', {})
+        self.subtask = subtask
+        self.samples = {"train": [], "valid": []}
         self.load_dataset(path, **kwargs)
-        # 根据模型名称选择模板
-        model_name = self.args.get('model_name', '').lower()
+        # Choose the template based on the model name
+        # model_name = self.args.get('model_name', '').lower()
+        model_name = getattr(self.args, "model_name", "").lower()
         if 'llama' in model_name:
             self.template = SST2Template_LLama2
         elif 'mistral' in model_name:
@@ -187,32 +179,47 @@ class SST2Dataset(Dataset):
         
         # self.samples = {"train": train_samples, "valid": valid_samples}
     def load_dataset(self, path=None, **kwargs):
-        print(f"加载数据集的路径: {path}")
-        if path and os.path.exists(path):
-            print("从本地 JSONL 文件加载 SST-2 数据集...")
-            train_samples = self.load_jsonl(os.path.join(path, "sst2_train.jsonl"))
-            valid_samples = self.load_jsonl(os.path.join(path, "sst2_validation.jsonl"))
-        else:
-            print("从 Hugging Face 加载 SST-2 数据集...")
-            dataset = load_dataset('glue', 'sst2')
-            train_samples = dataset["train"]
-            valid_samples = dataset["validation"]
-        
-        self.samples = {
-            "train": [self.build_sample(example) for example in train_samples],
-            "valid": [self.build_sample(example) for example in valid_samples]
-        }
+        print(f"Dataset path: {path}")
+        try:
+            if path and os.path.exists(path):
+                print("Loading SST-2 dataset from local JSONL files...")
+                train_samples = self.load_jsonl(os.path.join(path, "sst2_train.jsonl"))
+                valid_samples = self.load_jsonl(os.path.join(path, "sst2_validation.jsonl"))
+            else:
+                print("Loading SST-2 dataset from Hugging Face...")
+                dataset = load_dataset("glue", "sst2")
+                train_samples = dataset["train"]
+                valid_samples = dataset["validation"]
 
-    # 新加的方法
+            # Build samples
+            self.samples = {
+                "train": [self.build_sample(example) for example in train_samples],
+                "valid": [self.build_sample(example) for example in valid_samples],
+            }
+        except Exception as e:
+            raise RuntimeError(f"Failed to load dataset: {e}")
+
+    # Newly added method
     def load_jsonl(self, file_path):
-        """加载 JSONL 文件并返回字典列表"""
-        with open(file_path, 'r', encoding='utf-8') as f:
-            return [json.loads(line) for line in f]
-    
-    # for generative tasks, candidates are []
+        """Load a JSONL file and return a list of dictionaries"""
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                return [json.loads(line.strip()) for line in f]
+        except Exception as e:
+            raise RuntimeError(f"Unable to load JSONL file {file_path}: {e}")
+        
+    # For generative tasks, candidates are []
     def build_sample(self, example):
-        label = int(example["label"])
-        return Sample(id=example["idx"], data=example, correct_candidate=label, candidates=[0, 1])
+        try:
+            label = int(example["label"])
+            return Sample(
+                id=example["idx"],
+                data=example,
+                correct_candidate=label,
+                candidates=[0, 1],
+            )
+        except KeyError as e:
+            raise ValueError(f"Sample data missing required field: {e}")
         
     def get_template(self, template_version=0):
         return {0: self.template}[template_version]()
@@ -307,69 +314,156 @@ class MultiRCDataset(Dataset):
         return {0: MultiRCTemplate}[template_version]()
 
 
+class SampleCB:
+    def __init__(self, data, candidates, correct_candidate):
+        self.data = data  # Contains fields like 'premise', 'hypothesis', 'idx', 'label', etc.
+        self.candidates = candidates  # List of possible label indices
+        self.correct_candidate = correct_candidate  # Correct label index
+
+
 class CBDataset(Dataset):
-    
-    def __init__(self, subtask=None, path=None, **kwargs) -> None:
-        self.args = kwargs.get('args', {})
-        # self.load_dataset(subtask, **kwargs)
-        self.load_dataset(path, **kwargs)
-    
-    def load_dataset(self, path, **kwargs):
-        print(f"加载数据集的路径: {path}")
+    def __init__(self, subtask=None, path=None, **kwargs):
+        super().__init__(subtask, **kwargs)
+        self.args = kwargs.get("args", {})
+        self.samples = {"train": [], "valid": []}
+        self.load_dataset(path)
+
+    def load_jsonl(self, file_path):
+        """Load a JSONL file and return a list of dictionaries"""
+        samples = []
+        with open(file_path, 'r', encoding='utf-8') as f:
+            for line_num, line in enumerate(f, 1):
+                line = line.strip()
+                if not line:
+                    print(f"Warning: Line {line_num} in {file_path} is empty, skipped")
+                    continue
+                try:
+                    sample = json.loads(line)
+                    samples.append(sample)
+                except json.JSONDecodeError as e:
+                    print(f"JSON decoding error at line {line_num} in {file_path}: {e}")
+        print(f"Loaded {len(samples)} samples from {file_path}")
+        return samples
+
+    def load_dataset(self, path):
+        """
+        Load data based on the provided path.
+        - If a valid path is provided, load from local JSONL files.
+        - If the path is empty or invalid, load from Hugging Face Hub.
+        """
+        label_names = ["entailment", "contradiction", "neutral"]
+        label_to_id = {name: idx for idx, name in enumerate(label_names)}
+
         if path and os.path.exists(path):
-            print("从本地 JSONL 文件加载 CB 数据集...")
-            # train_samples = self.load_jsonl(os.path.join(path, "cb_train.jsonl"))
-            # valid_samples = self.load_jsonl(os.path.join(path, "cb_validation.jsonl"))
-            train_path = os.path.join(path, "cb_train.jsonl")
-            val_path = os.path.join(path, "cb_validation.jsonl")
+            print(f"Loading CB dataset from local JSONL files: {path}")
+            train_file = os.path.join(path, "cb_train.jsonl")
+            valid_file = os.path.join(path, "cb_validation.jsonl")
+            if not os.path.exists(train_file) or not os.path.exists(valid_file):
+                raise FileNotFoundError("Training or validation JSONL file not found, please check the path and filenames")
 
-            with open(train_path, "r", encoding="utf-8") as f1:
-                train_set = [json.loads(line.strip()) for line in f1]
-            
-            with open(val_path, "r", encoding="utf-8") as f2:
-                val_set = [json.loads(line.strip()) for line in f2]
+            train_samples = self.load_jsonl(train_file)
+            valid_samples = self.load_jsonl(valid_file)
 
-            train_samples = Dataset.from_list(train_set)
-            valid_samples = Dataset.from_list(val_set)
-            print("train_samples: ", train_samples)
+            print(f"Number of training samples loaded: {len(train_samples)}")
+            print(f"Number of validation samples loaded: {len(valid_samples)}")
+
+            # Process labels to ensure they are integer indices
+            def process_labels(samples):
+                label_names = ["entailment", "contradiction", "neutral"]
+                label_to_id = {name: idx for idx, name in enumerate(label_names)}
+                processed_samples = []
+                for sample in samples:
+                    label = sample.get('label')
+                    if isinstance(label, str):
+                        label_lower = label.lower()
+                        label_variations = {
+                            "entailment": "entailment",
+                            "entail": "entailment",
+                            "contradiction": "contradiction",
+                            "contradict": "contradiction",
+                            "neutral": "neutral",
+                        }
+                        if label_lower in label_variations:
+                            sample['label'] = label_to_id[label_variations[label_lower]]
+                        else:
+                            print(f"Unknown label '{label}', sample skipped: {sample}")
+                            continue  # Skip this sample
+                    elif isinstance(label, int):
+                        if 0 <= label < len(label_names):
+                            sample['label'] = label  # Valid label index
+                        else:
+                            print(f"Invalid label index '{label}', sample skipped: {sample}")
+                            continue  # Skip this sample
+                    else:
+                        print(f"Invalid label type '{type(label)}', sample skipped: {sample}")
+                        continue  # Skip this sample
+                    processed_samples.append(sample)
+                return processed_samples
+
+            train_samples = process_labels(train_samples)
+            valid_samples = process_labels(valid_samples)
+
+            print(f"Number of training samples after label processing: {len(train_samples)}")
+            print(f"Number of validation samples after label processing: {len(valid_samples)}")
+
         else:
-            print("从 Hugging Face 加载 CB 数据集...")
+            print("Loading CB dataset from Hugging Face...")
             dataset = load_dataset("super_glue", "cb")
             train_samples = dataset["train"]
             valid_samples = dataset["validation"]
-            print("train_samples: ", train_samples)
 
-        self.samples = {
-            "train": [self.build_sample(example) for example in train_samples],
-            "valid": [self.build_sample(example) for example in valid_samples]
-        }
-        '''
-        d = load_dataset("super_glue", "cb")
-        train_set = d["train"]
-        valid_set = d["validation"]
-        train_samples = [self.build_sample(example) for example in train_set]
-        valid_samples = [self.build_sample(example) for example in valid_set]
-        self.samples = {"train": train_samples, "valid": valid_samples}
-        '''
-    
-    # 新加的方法
-    def load_jsonl(self, file_path):
-        """加载 JSONL 文件并返回字典列表"""
-        with open(file_path, 'r', encoding='utf-8') as f:
-            return [json.loads(line) for line in f]
-    
+            print(f"Number of training samples loaded from Hugging Face: {len(train_samples)}")
+            print(f"Number of validation samples loaded from Hugging Face: {len(valid_samples)}")
+
+        # Build samples
+        train_samples_built = [self.build_sample(example) for example in train_samples]
+        valid_samples_built = [self.build_sample(example) for example in valid_samples]
+
+        # Filter out samples that failed to build
+        train_samples_built = [sample for sample in train_samples_built if sample is not None]
+        valid_samples_built = [sample for sample in valid_samples_built if sample is not None]
+
+        print(f"Number of training samples after building: {len(train_samples_built)}")
+        print(f"Number of validation samples after building: {len(valid_samples_built)}")
+
+        # Save samples
+        self.samples = {"train": train_samples_built, "valid": valid_samples_built}
+
+        # Output sample counts
+        print(f"Training set sample count: {len(self.samples['train'])}")
+        print(f"Validation set sample count: {len(self.samples['valid'])}")
+
+        # Prevent empty training set
+        if len(self.samples["train"]) == 0:
+            raise ValueError("Training dataset is empty, please check the data path and file format")
+
     def build_sample(self, example):
-        sample = \
-            Sample(
+        """Build a sample"""
+        try:
+            # Ensure the label is an integer index
+            label = example['label']
+            if isinstance(label, int):
+                pass
+            elif isinstance(label, str):
+                label_names = ["entailment", "contradiction", "neutral"]
+                label = label_names.index(label.lower())
+            else:
+                print(f"Invalid label type '{type(label)}', sample skipped: {example}")
+                return None  # Skip this sample
+
+            sample = SampleCB(
                 data=example,
                 candidates=[0, 1, 2],
-                correct_candidate=example['label']
+                correct_candidate=label
             )
-        
-        return sample
-    
+            return sample
+        except Exception as e:
+            print(f"Error building sample, sample skipped: {example}\nError message: {e}")
+            return None  # Skip problematic sample
+
     def get_template(self, template_version=0):
-        return {0: CBTemplate}[template_version]()
+        templates = {0: CBTemplate}  # Assume you have a CBTemplate class defined
+        return templates[template_version]()
 
 
 class WICDataset(Dataset):
