@@ -616,19 +616,6 @@ def main():
 
             if args.trainer != "none":
                 if args.num_dev is not None:
-                    # Dev samples
-                    # print(f"train_samples 类型: {type(train_samples)}")
-                    # if isinstance(train_samples, dict):
-                    #     train_samples = list(train_samples.values())
-
-                    # # 验证切片逻辑
-                    # if isinstance(train_samples, list):
-                    #     if len(train_samples) >= args.num_dev:
-                    #         dev_samples = train_samples[-args.num_dev:]
-                    #     else:
-                    #         raise ValueError(f"训练样本不足以生成 dev_samples: {len(train_samples)} 可用，{args.num_dev} 请求。")
-                    # else:
-                    #     raise TypeError(f"train_samples 类型错误: {type(train_samples)}，无法切片。")
                     dev_samples = train_samples[-args.num_dev:] 
                     train_samples = train_samples[:-args.num_dev]
                 else:
