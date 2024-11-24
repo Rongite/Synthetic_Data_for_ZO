@@ -94,7 +94,15 @@ class Dataset:
     def build_sample(self, example):
         return 
      
+    def ordered_train_sets(self):
+        print("The training set is completely sequential")
+        train_samples = []
+        sample = self.samples["train"]
+        train_samples.append(sample)
+        return train_samples
+    
     def sample_train_sets(self, num_train=32, num_dev=None, num_eval=None, num_train_sets=None, seed=None):
+        # print("num_train有多大: ", num_train)
         if seed is not None:
             # one train/demo set using the designated seed
             seeds = [seed]
@@ -115,6 +123,7 @@ class Dataset:
                 train_samples.append(self.sample_subset(data_split="valid", seed=set_seed, num=num_train, exclude=i))
             else:
                 if num_dev is not None:
+                    # print("num_train有多大: ", num_train)
                     train_samples.append(self.sample_subset(data_split="train", seed=set_seed, num=num_train+num_dev)) # dev set is included at the end of train set
                     if num_train + num_dev > len(self.samples["train"]):
                         logger.warn("num_train + num_dev > available training examples")
@@ -129,6 +138,8 @@ class Dataset:
         with temp_seed(seed):
             samples = self.samples[data_split] 
             lens = len(samples)
+            # print("samples的个数有多少: ", lens)
+            # print("num_train+num_dev的个数有多少: ", num)
             index = np.random.permutation(lens).tolist()[:num if exclude is None else num+1]
             if exclude is not None and exclude in index:
                 index.remove(exclude)

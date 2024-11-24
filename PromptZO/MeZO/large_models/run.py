@@ -599,7 +599,8 @@ def main():
     print(args, flush=True)
     set_seed(args.seed)
     task = get_task(args.task_name, args)
-    train_sets = task.sample_train_sets(num_train=args.num_train, num_dev=args.num_dev, num_eval=args.num_eval, num_train_sets=args.num_train_sets, seed=args.train_set_seed)
+    # train_sets = task.sample_train_sets(num_train=args.num_train, num_dev=args.num_dev, num_eval=args.num_eval, num_train_sets=args.num_train_sets, seed=args.train_set_seed)
+    train_sets = task.ordered_train_sets()
     # Initialize trainer and load model
     framework = Framework(args, task)
     
