@@ -240,29 +240,73 @@ class CopaDataset(Dataset):
     train_sep = "\n\n"
     mixed_set = False
 
-    def __init__(self, subtask=None, **kwargs) -> None:
-        self.load_dataset(subtask, **kwargs)
-        
-    def load_dataset(self, path, **kwargs):
-        train_examples = load_dataset('super_glue', "copa")["train"]
-        valid_examples = load_dataset('super_glue', "copa")["validation"]
-    
-        train_samples = [self.build_sample(example) for example in train_examples]
-        valid_samples = [self.build_sample(example) for example in valid_examples]
-        self.samples = {"train": train_samples, "valid": valid_samples}
-    
-    # for generative tasks, candidates are []
+    def __init__(self, subtask=None, path=None, **kwargs):
+        """
+        Initialize the dataset. Decide to load from Huggingface or local JSONL files.
+        """
+        self.samples = {"train": [], "valid": []}
+        self.args = kwargs.get("args", {})
+        self.load_dataset(path)
+
+    def load_jsonl(self, file_path):
+        """Load a JSONL file and return a list of dictionaries."""
+        samples = []
+        with open(file_path, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    sample = json.loads(line)
+                    samples.append(sample)
+                except json.JSONDecodeError as e:
+                    print(f"JSON decode error in file {file_path}: {e}")
+        print(f"Loaded {len(samples)} samples from {file_path}")
+        return samples
+
+    def load_dataset(self, path=None):
+        """
+        Load the dataset. If `path` is provided and valid, load from local JSONL files.
+        Otherwise, load from Huggingface.
+        """
+        if path and os.path.exists(path):
+            print(f"Loading COPA dataset from local JSONL files at: {path}")
+            train_file = os.path.join(path, "copa_train.jsonl")
+            valid_file = os.path.join(path, "copa_validation.jsonl")
+            if not os.path.exists(train_file) or not os.path.exists(valid_file):
+                raise FileNotFoundError("Train or validation JSONL file is missing. Check the path.")
+
+            train_samples = self.load_jsonl(train_file)
+            valid_samples = self.load_jsonl(valid_file)
+
+        else:
+            print("Loading COPA dataset from Huggingface...")
+            dataset = load_dataset("super_glue", "copa")
+            train_samples = dataset["train"]
+            valid_samples = dataset["validation"]
+
+        # Build samples
+        self.samples = {
+            "train": [self.build_sample(example) for example in train_samples],
+            "valid": [self.build_sample(example) for example in valid_samples],
+        }
+        print(f"Training samples: {len(self.samples['train'])}")
+        print(f"Validation samples: {len(self.samples['valid'])}")
+
     def build_sample(self, example):
-        sample = \
-            Sample(
+        """Construct a sample."""
+        try:
+            sample = Sample(
                 id=example["idx"],
                 data=example,
                 candidates=[example["choice1"], example["choice2"]],
                 correct_candidate=example[f"choice{example['label'] + 1}"],
             )
-        
-        return sample
-        
+            return sample
+        except KeyError as e:
+            print(f"Error building sample, missing key: {e}, example: {example}")
+            return None
+
     def get_template(self, template_version=0):
         return {0: CopaTemplate}[template_version]()
 
@@ -507,28 +551,72 @@ class WICDataset(Dataset):
 
 class WSCDataset(Dataset):
     
-    def __init__(self, subtask=None, **kwargs) -> None:
-        self.load_dataset(subtask, **kwargs)
-    
-    def load_dataset(self, path, **kwargs):
-        d = load_dataset("super_glue", "wsc.fixed")
-        train_set = d["train"]
-        valid_set = d["validation"]
+    def __init__(self, subtask=None, path=None, **kwargs):
+        """
+        Initialize the dataset. Load from Huggingface or local JSONL files.
+        """
+        self.args = kwargs.get("args", {})
+        self.samples = {"train": [], "valid": []}
+        self.load_dataset(path)
 
-        train_samples = [self.build_sample(example) for example in train_set]
-        valid_samples = [self.build_sample(example) for example in valid_set]
-        self.samples = {"train": train_samples, "valid": valid_samples}
-    
+    def load_jsonl(self, file_path):
+        """Load a JSONL file and return a list of dictionaries."""
+        samples = []
+        with open(file_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    sample = json.loads(line)
+                    samples.append(sample)
+                except json.JSONDecodeError as e:
+                    print(f"JSON decode error in file {file_path}: {e}")
+        print(f"Loaded {len(samples)} samples from {file_path}")
+        return samples
+
+    def load_dataset(self, path=None):
+        """
+        Load the dataset. If `path` is provided and valid, load from local JSONL files.
+        Otherwise, load from Huggingface.
+        """
+        if path and os.path.exists(path):
+            print(f"Loading WSC dataset from local JSONL files at: {path}")
+            train_file = os.path.join(path, "wsc_train.jsonl")
+            valid_file = os.path.join(path, "wsc_validation.jsonl")
+            if not os.path.exists(train_file) or not os.path.exists(valid_file):
+                raise FileNotFoundError("Train or validation JSONL file is missing. Check the path.")
+
+            train_samples = self.load_jsonl(train_file)
+            valid_samples = self.load_jsonl(valid_file)
+
+        else:
+            print("Loading WSC dataset from Huggingface...")
+            dataset = load_dataset("super_glue", "wsc.fixed")
+            train_samples = dataset["train"]
+            valid_samples = dataset["validation"]
+
+        # Build samples
+        self.samples = {
+            "train": [self.build_sample(example) for example in train_samples],
+            "valid": [self.build_sample(example) for example in valid_samples],
+        }
+        print(f"Training samples: {len(self.samples['train'])}")
+        print(f"Validation samples: {len(self.samples['valid'])}")
+
     def build_sample(self, example):
-        sample = \
-            Sample(
+        """Construct a sample."""
+        try:
+            sample = Sample(
                 data=example,
                 candidates=[0, 1],
-                correct_candidate=example['label']
+                correct_candidate=example["label"]
             )
-        
-        return sample
-    
+            return sample
+        except KeyError as e:
+            print(f"Error building sample, missing key: {e}, example: {example}")
+            return None
+
     def get_template(self, template_version=0):
         return {0: WSCTemplate}[template_version]()
 
