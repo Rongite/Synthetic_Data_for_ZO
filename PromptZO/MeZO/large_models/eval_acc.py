@@ -601,65 +601,20 @@ def main():
     print(args, flush=True)
     set_seed(args.seed)
     task = get_task(args.task_name, args)
-    # train_sets = task.sample_train_sets(num_train=args.num_train, num_dev=args.num_dev, num_eval=args.num_eval, num_train_sets=args.num_train_sets, seed=args.train_set_seed)
     train_sets = task.ordered_train_sets()
+
     # Initialize trainer and load model
     framework = Framework(args, task)
-    
-    if args.train_set_seed is not None or args.num_train_sets is not None:
-        # Eval samples share one (or multiple) training set(s)
-        for train_set_id, train_samples in enumerate(train_sets):
-            train_set_seed = train_set_id if args.train_set_seed is None else args.train_set_seed
 
-            # Sample eval samples
-            if args.num_eval is not None:
-                eval_samples = task.sample_subset(data_split="valid", seed=train_set_seed, num=args.num_eval)
-            else:
-                eval_samples = task.valid_samples
+    # Use train_samples as eval_samples
+    eval_samples  = train_sets[0][:-args.num_dev]  # Assuming the first training set is used
 
-            if args.trainer != "none":
-                if args.num_dev is not None:
-                    dev_samples = train_samples[-args.num_dev:] 
-                    train_samples = train_samples[:-args.num_dev]
-                else:
-                    dev_samples = None
+    # Perform evaluation
+    metrics = framework.evaluate([], eval_samples)
+    print(metrics)
 
-                # Training
-                framework.train(train_samples, dev_samples if dev_samples is not None else eval_samples, eval_samples)
-
-                if not args.no_eval:
-                    metrics = framework.evaluate([], eval_samples) # No in-context learning if there is training
-                    if dev_samples is not None:
-                        dev_metrics = framework.evaluate([], dev_samples) 
-                        for m in dev_metrics:
-                            metrics["dev_" + m] = dev_metrics[m]
-            else:
-                assert args.num_dev is None
-                # Zero-shot / in-context learning
-                metrics = framework.evaluate(train_samples, eval_samples)
-
-            if not args.no_eval:
-                print("===== Train set %d =====" % train_set_seed)
-                print(metrics)
-                the_output_file = os.path.dirname(args.output_dir)
-                if args.local_rank <= 0:
-                    write_metrics_to_file(metrics, "result" + result_file_tag(args) + f"-trainset{train_set_id}.json" if args.result_file is None else args.result_file)
-
-    else:
-        # For each eval sample, there is a training set. no training is allowed
-        # This is for in-context learning (ICL)
-        assert args.trainer == "none"
-        if args.num_eval is not None:
-            eval_samples = task.sample_subset(data_split="valid", seed=0, num=args.num_eval)
-        else:
-            eval_samples = task.valid_samples
-
-        metrics = framework.evaluate(train_sets, eval_samples, one_train_set_per_eval_sample=True)
-        print(metrics)
-        if args.local_rank <= 0:
-            write_metrics_to_file(metrics, "result" + result_file_tag(args) + "-onetrainpereval.json" if args.result_file is None else args.result_file)
-
-    shutil.rmtree(framework.trainer.state.best_model_checkpoint)
+    # Optionally, save the metrics to a file
+    write_metrics_to_file(metrics, f"{args.task_name}_train_accuracy.json")
 
 
 if __name__ == "__main__": 

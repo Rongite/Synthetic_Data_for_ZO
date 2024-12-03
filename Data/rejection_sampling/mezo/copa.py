@@ -5,154 +5,183 @@ from tqdm import tqdm
 import os
 
 client = OpenAI(
-    api_key = 'sk-eYvV5PulUcRh5gX40d10873c274b41C3B596F4F1F06e1a34', # office
-    # api_key = 'sk-eWSYPo0CvhRYgcJs55B0C3F00aC74f6e95F47c1f4772292c', # my
+    # api_key = 'sk-eYvV5PulUcRh5gX40d10873c274b41C3B596F4F1F06e1a34', # office
+    api_key = 'sk-eWSYPo0CvhRYgcJs55B0C3F00aC74f6e95F47c1f4772292c', # my
     base_url = "https://api2.aigcbest.top/v1"
 )
 
 eval_list = []
 
-# Example hypothesis and reference
-example = [ 
-    { 
-        "id": "1",
-        "original": "My body cast a shadow over the grass.", # modify
-        "rephrased": "A shadow from my body was cast across the grass.", # modify 
-        "eval": "same"
-    }, 
-    { 
-        "id": "2",
-        "original": "The woman tolerated her friend's difficult behavior.", # modify
-        "rephrased": "The woman put up with her friend's challenging behavior.", # modify 
-        "eval": "same"
-    },
-    { 
-        "id": "3",
-        "original": "The women met for coffee.", # modify
-        "rephrased": "The women gathered for a coffee.", # modify 
-        "eval": "not the same"
-    },
-    { 
-        "id": "4",
-        "original": "The runner wore shorts.", # modify
-        "rephrased": "The athlete had on a pair of shorts.", # modify 
-        "eval": "same"
-    },
-    { 
-        "id": "5",
-        "original": "The guests of the party hid behind the couch.", # modify
-        "rephrased": "The party attendees concealed themselves behind the couch.", # modify 
-        "eval": "same"
-    },
-    { 
-        "id": "6",
-        "original": "The politician lost the election.", # modify
-        "rephrased": "The election did not turn out in the politician's favor.", # modify 
-        "eval": "same"
-    },
-    { 
-        "id": "7",
-        "original": "The stain came out of the shirt.", # modify
-        "rephrased": "The shirt had the stain successfully removed.", # modify 
-        "eval": "same"
-    },
-    { 
-        "id": "8",
-        "original": "The man got a discount on his groceries.", # modify
-        "rephrased": "A man received a price reduction on his grocery bill.", # modify 
-        "eval": "same"
-    },
-    { 
-        "id": "9",
-        "original": "The physician misdiagnosed the patient.", # modify
-        "rephrased": "The patient was given an incorrect diagnosis by the doctor.", # modify 
-        "eval": "same"
-    },
-    { 
-        "id": "10",
-        "original": "The customer filed a complaint with the store manager.", # modify
-        "rephrased": "The customer lodged a grievance with the store manager.", # modify 
-        "eval": "same"
-    },
-    { 
-        "id": "11",
-        "original": "The woman repaired her faucet.", # modify
-        "rephrased": "The woman fixed her tap.", # modify 
-        "eval": "same"
-    },
-    { 
-        "id": "12",
-        "original": "The elderly woman suffered a stroke.", # modify
-        "rephrased": "An aged woman experienced a stroke.", # modify 
-        "eval": "same"
-    },
-    { 
-        "id": "13",
-        "original": "The pond froze over for the winter.", # modify
-        "rephrased": "The pond became ice-covered during the winter.", # modify 
-        "eval": "same"
-    },
-    { 
-        "id": "14",
-        "original": "The offender violated parole.", # modify
-        "rephrased": "The parolee committed an infraction of their parole conditions.", # modify 
-        "eval": "same"
-    },
-    { 
-        "id": "15",
-        "original": "I poured water on my sleeping friend.", # modify
-        "rephrased": "I drenched my friend with water while they were asleep.", # modify 
-        "eval": "not the same"
-    },
-    { 
-        "id": "16",
-        "original": "The girl gasped.", # modify
-        "rephrased": "The girl let out a sharp intake of breath.", # modify 
-        "eval": "same"
-    },
-    { 
-        "id": "17",
-        "original": "The shirt shrunk.", # modify
-        "rephrased": "The shirt became smaller.", # modify 
-        "eval": "not the same"
-    },
-    { 
-        "id": "18",
-        "original": "It got dark outside.", # modify
-        "rephrased": "Night fell.", # modify 
-        "eval": "same"
-    },
-    { 
-        "id": "19",
-        "original": "I hung up the phone.", # modify
-        "rephrased": "I ended the phone call.", # modify 
-        "eval": "same"
-    },
-    { 
-        "id": "20",
-        "original": "The woman's ring slipped off in the shower.", # modify
-        "rephrased": "While taking a shower, the woman's ring fell off.", # modify 
-        "eval": "same"
-    }
-]  
+def generate_prompt(original_premise, choice1, choice2, question, correct_choice, rephrased_premise):
+    return f"""
+            You are tasked with judging if the rephrased premise has the same meaning as the original premise and checking if the rephrased premise remains \
+                consistent with its associated question and choices. If the rephrased premise remains consistent with its associated questions and options, the \
+                    choice inferred from the rephrased premise will be the same as the choice inferred from the original premise, meaning that the correct answer \
+                        remains the same. Below are the correctly rephrased examples:
 
-def few_shot(i, example):
-    return example[i]
+            ### Few-shot Examples:
+            
+            Original premise: "The girl received a trophy."
+            Choice 1: "She won a spelling bee."
+            Choice 2: "She made a new friend."
+            Question type: "cause"
+            Correct answer: Choice 1
+            Rephrased premise: "The girl was awarded a trophy."
 
-def prompt(sample_example):
-    return f"Given the original sentence '{sample_example['original']}' and the rephrased sentence '{sample_example['rephrased']}', judge if the rephrased \
-  sentence has the same meaning as the original sentence Directly output [same/not the same] without any explanation."
+            Original premise: "The woman's date wanted to look like a gentleman."
+            Choice 1: "He opened the door for her."
+            Choice 2: "He asked her if she liked sushi."
+            Question type: "effect"
+            Correct answer: Choice 1
+            Rephrased premise: "The woman's date aimed to present himself as a gentleman."
 
-def messages(example):
-    messages = [{"role": "system", "content": "You are a helpful judge."}]
-    for i in range(len(example)):
-        sample_example = few_shot(i, example)
-        the_prompt = prompt(sample_example)
-        messages.append({"role": "user", "content": the_prompt})
-        messages.append({"role": "assistant", "content": sample_example["eval"]})
-    return messages
+            Original premise: "The farmland needed irrigation."
+            Choice 1: "A canal was constructed."
+            Choice 2: "A flood occurred."
+            Question type: "effect"
+            Correct answer: Choice 1
+            Rephrased premise: "The farmland required a water supply."
 
-messages = messages(example)
+            Original premise: "The host cancelled the party."
+            Choice 1: "She was certain she had the flu."
+            Choice 2: "She worried she would catch the flu."
+            Question type: "cause"
+            Correct answer: Choice 1
+            Rephrased premise: "The host called off the party."
+
+            Original premise: "The woman gave the man her phone number."
+            Choice 1: "She was attracted to him."
+            Choice 2: "She was repulsed by him."
+            Question type: "cause"
+            Correct answer: Choice 1
+            Rephrased premise: "The woman shared her phone number with the man."
+
+            Original premise: "The skydiver glided safely to the ground."
+            Choice 1: "She opened her parachute."
+            Choice 2: "She jumped out of the plane."
+            Question type: "cause"
+            Correct answer: Choice 1
+            Rephrased premise: "The skydiver landed safely on the ground."
+
+            Original premise: "The toddler became cranky."
+            Choice 1: "Her mother put her down for a nap."
+            Choice 2: "Her mother fixed her hair into pigtails."
+            Question type: "effect"
+            Correct answer: Choice 1
+            Rephrased premise: "The toddler got irritable."
+
+            Original premise: "The child became immune to the disease."
+            Choice 1: "He avoided exposure to the disease."
+            Choice 2: "He received the vaccine for the disease."
+            Question type: "cause"
+            Correct answer: Choice 2
+            Rephrased premise: "The child developed immunity to the disease."
+
+            Original premise: "The grape juice fermented."
+            Choice 1: "The juice turned to wine."
+            Choice 2: "The juice evaporated."
+            Question type: "effect"
+            Correct answer: Choice 1
+            Rephrased premise: "The grape juice underwent fermentation."
+
+            Original premise: "The friends' debate dragged on interminably."
+            Choice 1: "The friends saw eye to eye."
+            Choice 2: "The friends were splitting hairs."
+            Question type: "cause"
+            Correct answer: Choice 2
+            Rephrased premise: "The friends' discussion seemed endless."
+
+            Original premise: "The woman hummed to herself."
+            Choice 1: "She was nervous."
+            Choice 2: "She was in a good mood."
+            Question type: "cause"
+            Correct answer: Choice 2
+            Rephrased premise: "The woman quietly sang to herself."
+
+            Original premise: "The man hated his new haircut."
+            Choice 1: "He wore a hat."
+            Choice 2: "He grew a beard."
+            Question type: "effect"
+            Correct answer: Choice 1
+            Rephrased premise: "The man disliked his new haircut."
+
+            Original premise: "The police aimed their weapons at the fugitive."
+            Choice 1: "The fugitive fell to the ground."
+            Choice 2: "The fugitive dropped his gun."
+            Question type: "effect"
+            Correct answer: Choice 2
+            Rephrased premise: "The police pointed their guns at the fugitive."
+
+            Original premise: "The patient was dehydrated."
+            Choice 1: "The nurse tested his reflexes."
+            Choice 2: "The nurse gave him an IV."
+            Question type: "effect"
+            Correct answer: Choice 2
+            Rephrased premise: "The patient experienced dehydration."
+
+            Original premise: "The girl found the missing puzzle piece."
+            Choice 1: "She completed the puzzle."
+            Choice 2: "She took apart the puzzle."
+            Question type: "effect"
+            Correct answer: Choice 1
+            Rephrased premise: "The girl discovered the lost puzzle piece."
+
+            Original premise: "The man urgently leaped out of bed."
+            Choice 1: "He wanted to shut off the alarm clock."
+            Choice 2: "He wanted to iron his pants before work."
+            Question type: "cause"
+            Correct answer: Choice 1
+            Rephrased premise: "The man quickly sprang out of bed."
+
+            Original premise: "The papers were disorganized."
+            Choice 1: "I made photocopies of them."
+            Choice 2: "I put them into alphabetical order."
+            Question type: "effect"
+            Correct answer: Choice 2
+            Rephrased premise: "The papers were in disarray."
+
+            Original premise: "The woman won the lottery."
+            Choice 1: "She bought a yacht."
+            Choice 2: "She joined a church."
+            Question type: "effect"
+            Correct answer: Choice 1
+            Rephrased premise: "The woman hit the jackpot in the lottery."
+
+            Original premise: "The seamstress pushed the threaded needle into the fabric."
+            Choice 1: "The thread wrapped around the needle."
+            Choice 2: "The thread went through the fabric."
+            Question type: "effect"
+            Correct answer: Choice 2
+            Rephrased premise: "The seamstress inserted the threaded needle into the fabric."
+
+            Original premise: "The woman hired a lawyer."
+            Choice 1: "She decided to sue her employer."
+            Choice 2: "She decided to run for office."
+            Question type: "cause"
+            Correct answer: Choice 1
+            Rephrased premise: "The woman engaged legal counsel."
+
+            ---
+
+            Your task:
+            For the given information below, determine whether the Rephrased premise and Original premise are the same. If the meaning and tone of the Rephrased \
+                premise and the Original premise are consistent, and the rephrased premise remains consistent with the provided questions and choices so that the \
+                    Correct answer remains unchanged, then the rephrased premise and the original premise can be determined to be the same, otherwise they are not \
+                        the same.
+
+            Original premise: "{original_premise}"
+            Choice 1: "{choice1}"
+            Choice 2: "{choice2}"
+            Question type: "{question}" (cause or effect)
+            Correct answer: "{correct_choice}"
+            Rephrased premise: "{rephrased_premise}"
+
+            Directly output [same/not the same] without any explanation:
+            """ 
+
+def correct_choice(choice1, choice2, label):
+    correct_choice = choice1 if label == 0 else choice2
+    return correct_choice
 
 eval_list = []
 count = 0
@@ -184,41 +213,31 @@ total_answer = 0
 
 for i in tqdm(range(len(eval_list))):
     output_data = {}
-    if i < 20:
-        eval_list[i]['eval_result'] = example[i]["eval"]
-        if example[i]["eval"] == "same":
-            output_data["premise"] = eval_list[i]["rephrased"]
-            output_data["choice1"] = eval_list[i]["choice1"]
-            output_data["choice2"] = eval_list[i]["choice2"]
-            output_data["question"] = eval_list[i]["question"]
-            output_data["idx"] = eval_list[i]["idx"]
-            output_data["label"] = eval_list[i]["label"]
-            correct_answer += 1
-            total_answer += 1
-            out_file.write(json.dumps(output_data) + "\n")
-            out_file.flush()
-        else:
-            print(example[i])
-            output_data["premise"] = eval_list[i]["original"]
-            output_data["choice1"] = eval_list[i]["choice1"]
-            output_data["choice2"] = eval_list[i]["choice2"]
-            output_data["question"] = eval_list[i]["question"]
-            output_data["idx"] = eval_list[i]["idx"]
-            output_data["label"] = eval_list[i]["label"]
-            total_answer += 1
-            out_file.write(json.dumps(output_data) + "\n")
-            out_file.flush()
+    if 20 <= i < 40:
+        eval_list[i]['eval_result'] = "same"
+        output_data["premise"] = eval_list[i]["rephrased"]
+        output_data["choice1"] = eval_list[i]["choice1"]
+        output_data["choice2"] = eval_list[i]["choice2"]
+        output_data["question"] = eval_list[i]["question"]
+        output_data["idx"] = eval_list[i]["idx"]
+        output_data["label"] = eval_list[i]["label"]
+        correct_answer += 1
+        total_answer += 1
+        out_file.write(json.dumps(output_data) + "\n")
+        out_file.flush()
         continue
-    
-    prompt = f"Given the original sentence '{eval_list[i]['original']}' and the rephrased sentence '{eval_list[i]['rephrased']}', judge if the rephrased \
-  sentence has the same meaning as the original sentence Directly output [same/not the same] without any explanation."
-    messages.append({"role": "user", "content": prompt})
+
+    the_correct_choice = correct_choice(eval_list[i]["choice1"], eval_list[i]["choice2"], eval_list[i]["label"])
+    prompt = generate_prompt(eval_list[i]["original"], eval_list[i]["choice1"], eval_list[i]["choice2"], eval_list[i]["question"], \
+                    the_correct_choice, eval_list[i]["rephrased"])
     response = client.chat.completions.create( # change
         model="gpt-4o",
-        messages=messages,
+        messages=[
+            {"role": "system", "content": "You are a helpful judge."},
+            {"role": "user", "content": prompt}
+        ],
         temperature=0.0 
     )
-    messages.pop()
     if response.choices[0].message.content == 'not the same': # change
         print(eval_list[i]["rephrased"])
         eval_list[i]['eval_result'] = response.choices[0].message.content # change
