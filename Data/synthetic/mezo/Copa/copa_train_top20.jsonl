@@ -1,40 +1,20 @@
-{"premise": "The shadow of my body fell upon the grass.", "choice1": "The sun was rising.", "choice2": "The grass was cut.", "question": "cause", "idx": 0, "label": 0}
-{"premise": "The woman endured her friend's challenging behavior.", "choice1": "The woman knew her friend was going through a hard time.", "choice2": "The woman felt that her friend took advantage of her kindness.", "question": "cause", "idx": 1, "label": 0}
-{"premise": "The women gathered to have coffee together.", "choice1": "The cafe reopened in a new location.", "choice2": "They wanted to catch up with each other.", "question": "cause", "idx": 2, "label": 1}
-{"premise": "The runner decided to wear shorts.", "choice1": "The forecast predicted high temperatures.", "choice2": "She planned to run along the beach.", "question": "cause", "idx": 3, "label": 0}
-{"premise": "The party attendees concealed themselves behind the couch.", "choice1": "It was a surprise party.", "choice2": "It was a birthday party.", "question": "cause", "idx": 4, "label": 0}
-{"premise": "The election was lost by the politician.", "choice1": "He ran negative campaign ads.", "choice2": "No one voted for him.", "question": "cause", "idx": 5, "label": 1}
-{"premise": "The shirt became clean after the stain was removed.", "choice1": "I patched the shirt.", "choice2": "I bleached the shirt.", "question": "cause", "idx": 6, "label": 1}
-{"premise": "The man received a reduction in the price of his groceries.", "choice1": "He greeted the cashier.", "choice2": "He used a coupon.", "question": "cause", "idx": 7, "label": 1}
-{"premise": "The doctor incorrectly diagnosed the patient.", "choice1": "The patient filed a malpractice lawsuit against the physician.", "choice2": "The patient disclosed confidential information to the physician.", "question": "effect", "idx": 8, "label": 0}
-{"premise": "The customer lodged a complaint with the store manager.", "choice1": "The sales associate undercharged the customer.", "choice2": "The sales associate acted rude to the customer.", "question": "cause", "idx": 9, "label": 1}
-{"premise": "The woman fixed her faucet.", "choice1": "The faucet was leaky.", "choice2": "The faucet was turned off.", "question": "cause", "idx": 10, "label": 0}
-{"premise": "The elderly woman experienced a stroke.", "choice1": "The woman's daughter came over to clean her house.", "choice2": "The woman's daughter moved in to take care of her.", "question": "effect", "idx": 11, "label": 1}
-{"premise": "During the winter, the pond became frozen.", "choice1": "People skated on the pond.", "choice2": "People brought boats to the pond.", "question": "effect", "idx": 12, "label": 0}
-{"premise": "The offender breached parole conditions.", "choice1": "She was sent back to jail.", "choice2": "She stole money from a church.", "question": "effect", "idx": 13, "label": 0}
-{"premise": "Water was poured on my friend as they slept.", "choice1": "My friend awoke.", "choice2": "My friend snored.", "question": "effect", "idx": 14, "label": 0}
-{"premise": "The girl let out a gasp.", "choice1": "Her friend stuck an ice cube down her back.", "choice2": "Her friend gave her a pat on the back.", "question": "cause", "idx": 15, "label": 0}
-{"premise": "The shirt reduced in size.", "choice1": "I poured bleach on it.", "choice2": "I put it in the dryer.", "question": "cause", "idx": 16, "label": 1}
-{"premise": "Nighttime set in.", "choice1": "Snowflakes began to fall from the sky.", "choice2": "The moon became visible in the sky.", "question": "effect", "idx": 17, "label": 1}
+{"premise": "A shadow appeared on the grass beside me.", "choice1": "The sun was rising.", "choice2": "The grass was cut.", "question": "cause", "idx": 0, "label": 0}
+{"premise": "The woman was patient with her friend's challenging attitude.", "choice1": "The woman knew her friend was going through a hard time.", "choice2": "The woman felt that her friend took advantage of her kindness.", "question": "cause", "idx": 1, "label": 0}
+{"premise": "The women gathered at a cafe.", "choice1": "The cafe reopened in a new location.", "choice2": "They wanted to catch up with each other.", "question": "cause", "idx": 2, "label": 1}
+{"premise": "Shorts were the runner's attire.", "choice1": "The forecast predicted high temperatures.", "choice2": "She planned to run along the beach.", "question": "cause", "idx": 3, "label": 0}
+{"premise": "During the gathering, the attendees positioned themselves out of sight behind the sofa.", "choice1": "It was a surprise party.", "choice2": "It was a birthday party.", "question": "cause", "idx": 4, "label": 0}
+{"premise": "The election was unsuccessful for the politician.", "choice1": "He ran negative campaign ads.", "choice2": "No one voted for him.", "question": "cause", "idx": 5, "label": 1}
+{"premise": "The shirt was no longer marked by the stain.", "choice1": "I patched the shirt.", "choice2": "I bleached the shirt.", "question": "cause", "idx": 6, "label": 1}
+{"premise": "The man managed to pay less for his grocery bill.", "choice1": "He greeted the cashier.", "choice2": "He used a coupon.", "question": "cause", "idx": 7, "label": 1}
+{"premise": "The doctor made an error in the patient's diagnosis.", "choice1": "The patient filed a malpractice lawsuit against the physician.", "choice2": "The patient disclosed confidential information to the physician.", "question": "effect", "idx": 8, "label": 0}
+{"premise": "The customer approached the store manager with a grievance.", "choice1": "The sales associate undercharged the customer.", "choice2": "The sales associate acted rude to the customer.", "question": "cause", "idx": 9, "label": 1}
+{"premise": "A woman attended to fixing her faucet.", "choice1": "The faucet was leaky.", "choice2": "The faucet was turned off.", "question": "cause", "idx": 10, "label": 0}
+{"premise": "An elderly woman experienced a medical event affecting her brain.", "choice1": "The woman's daughter came over to clean her house.", "choice2": "The woman's daughter moved in to take care of her.", "question": "effect", "idx": 11, "label": 1}
+{"premise": "Throughout the winter, the surface of the pond turned solid with ice.", "choice1": "People skated on the pond.", "choice2": "People brought boats to the pond.", "question": "effect", "idx": 12, "label": 0}
+{"premise": "Breaking the conditions set by parole occurred.", "choice1": "She was sent back to jail.", "choice2": "She stole money from a church.", "question": "effect", "idx": 13, "label": 0}
+{"premise": "A stream of water landed on my slumbering friend.", "choice1": "My friend awoke.", "choice2": "My friend snored.", "question": "effect", "idx": 14, "label": 0}
+{"premise": "A sudden gasp escaped from the girl.", "choice1": "Her friend stuck an ice cube down her back.", "choice2": "Her friend gave her a pat on the back.", "question": "cause", "idx": 15, "label": 0}
+{"premise": "The shirt became smaller.", "choice1": "I poured bleach on it.", "choice2": "I put it in the dryer.", "question": "cause", "idx": 16, "label": 1}
+{"premise": "As night approached, the sky lost its light.", "choice1": "Snowflakes began to fall from the sky.", "choice2": "The moon became visible in the sky.", "question": "effect", "idx": 17, "label": 1}
 {"premise": "I ended the call.", "choice1": "The caller said goodbye to me.", "choice2": "The caller identified himself to me.", "question": "cause", "idx": 18, "label": 0}
-{"premise": "The woman's ring fell off in the shower.", "choice1": "The woman polished the ring.", "choice2": "The ring went down the drain.", "question": "effect", "idx": 19, "label": 1}
-{"premise": "The girl was awarded a trophy.", "choice1": "She won a spelling bee.", "choice2": "She made a new friend.", "question": "cause", "idx": 20, "label": 0}
-{"premise": "The woman's date aimed to present himself as a gentleman.", "choice1": "He opened the door for her.", "choice2": "He asked her if she liked sushi.", "question": "effect", "idx": 21, "label": 0}
-{"premise": "The farmland required a water supply.", "choice1": "A canal was constructed.", "choice2": "A flood occurred.", "question": "effect", "idx": 22, "label": 0}
-{"premise": "The host called off the party.", "choice1": "She was certain she had the flu.", "choice2": "She worried she would catch the flu.", "question": "cause", "idx": 23, "label": 0}
-{"premise": "The woman shared her phone number with the man.", "choice1": "She was attracted to him.", "choice2": "She was repulsed by him.", "question": "cause", "idx": 24, "label": 0}
-{"premise": "The skydiver landed safely on the ground.", "choice1": "She opened her parachute.", "choice2": "She jumped out of the plane.", "question": "cause", "idx": 25, "label": 0}
-{"premise": "The toddler got irritable.", "choice1": "Her mother put her down for a nap.", "choice2": "Her mother fixed her hair into pigtails.", "question": "effect", "idx": 26, "label": 0}
-{"premise": "The child developed immunity to the disease.", "choice1": "He avoided exposure to the disease.", "choice2": "He received the vaccine for the disease.", "question": "cause", "idx": 27, "label": 1}
-{"premise": "The grape juice underwent fermentation.", "choice1": "The juice turned to wine.", "choice2": "The juice evaporated.", "question": "effect", "idx": 28, "label": 0}
-{"premise": "The friends' discussion seemed endless.", "choice1": "The friends saw eye to eye.", "choice2": "The friends were splitting hairs.", "question": "cause", "idx": 29, "label": 1}
-{"premise": "The woman quietly sang to herself.", "choice1": "She was nervous.", "choice2": "She was in a good mood.", "question": "cause", "idx": 30, "label": 1}
-{"premise": "The man disliked his new haircut.", "choice1": "He wore a hat.", "choice2": "He grew a beard.", "question": "effect", "idx": 31, "label": 0}
-{"premise": "The police pointed their guns at the fugitive.", "choice1": "The fugitive fell to the ground.", "choice2": "The fugitive dropped his gun.", "question": "effect", "idx": 32, "label": 1}
-{"premise": "The patient experienced dehydration.", "choice1": "The nurse tested his reflexes.", "choice2": "The nurse gave him an IV.", "question": "effect", "idx": 33, "label": 1}
-{"premise": "The girl discovered the lost puzzle piece.", "choice1": "She completed the puzzle.", "choice2": "She took apart the puzzle.", "question": "effect", "idx": 34, "label": 0}
-{"premise": "The man quickly sprang out of bed.", "choice1": "He wanted to shut off the alarm clock.", "choice2": "He wanted to iron his pants before work.", "question": "cause", "idx": 35, "label": 0}
-{"premise": "The papers were in disarray.", "choice1": "I made photocopies of them.", "choice2": "I put them into alphabetical order.", "question": "effect", "idx": 36, "label": 1}
-{"premise": "The woman hit the jackpot in the lottery.", "choice1": "She bought a yacht.", "choice2": "She joined a church.", "question": "effect", "idx": 37, "label": 0}
-{"premise": "The seamstress inserted the threaded needle into the fabric.", "choice1": "The thread wrapped around the needle.", "choice2": "The thread went through the fabric.", "question": "effect", "idx": 38, "label": 1}
-{"premise": "The woman engaged legal counsel.", "choice1": "She decided to sue her employer.", "choice2": "She decided to run for office.", "question": "cause", "idx": 39, "label": 0}
+{"premise": "During her shower, the woman's ring unexpectedly came loose.", "choice1": "The woman polished the ring.", "choice2": "The ring went down the drain.", "question": "effect", "idx": 19, "label": 1}

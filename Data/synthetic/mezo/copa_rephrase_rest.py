@@ -30,77 +30,45 @@ def generate_prompt(premise, choice1, choice2, question, label):
     # Dynamically insert the correct answer based on the label
     correct_choice = choice1 if label == 0 else choice2
     return f"""
-            You are tasked with rephrasing the following premise while preserving its original meaning and ensuring that it remains consistent with its associated \
-              question and choices. The rephrased premise must maintain the logic of the original data so that the correct answer remains unchanged. The rephrased \
-                data will be used to fine-tune a memory-efficient zeroth-order optimizer (MeZO) model. Below are the ABSTRACT and INTRODUCTION sections from the \
-                  MeZO research paper to provide additional context:
+            You are tasked with rephrasing the given premise while preserving its original meaning and ensuring consistency with its associated question and \
+              choices. Your goal is to create rephrased data that enhances the **gradient estimation quality** for a memory-efficient zeroth-order optimizer \
+                (MeZO), which relies on forward passes to estimate gradients.
 
-            ABSTRACT:
-            "Fine-tuning language models (LMs) has yielded success on diverse downstream tasks, but as LMs grow in size, backpropagation requires a prohibitively \
-              large amount of memory. Zeroth-order (ZO) methods can in principle estimate gradients using only two forward passes but are theorized to be \
-                catastrophically slow for optimizing large models. In this work, we propose a memory-efficient zeroth-order optimizer (MeZO), adapting the \
-                  classical ZO-SGD method to operate in-place, thereby fine-tuning LMs with the same memory footprint as inference. For example, with a single \
-                    A100 80GB GPU, MeZO can train a 30-billion parameter model, whereas fine-tuning with backpropagation can train only a 2.7B LM with the same \
-                      budget. Our results demonstrate that (1) MeZO significantly outperforms in-context learning and linear probing; (2) MeZO achieves comparable \
-                        performance to fine-tuning with backpropagation across multiple tasks, with up to 12× memory reduction and up to 2× GPU-hour reduction in \
-                          our implementation; (3) MeZO is compatible with both full-parameter and parameter-efficient tuning techniques such as LoRA and prefix \
-                            tuning; (4) MeZO can effectively optimize non-differentiable objectives (e.g., maximizing accuracy or F1). We support our empirical \
-                              findings with theoretical insights, highlighting how adequate pre-training and task prompts enable MeZO to fine-tune huge models, \
-                                despite classical ZO analyses suggesting otherwise."
+            ### Key Requirements for Premise Rephrasing:
+            1. **Task-Specific Context**:
+              - Remember that COPA tasks hinge on causal reasoning:
+                - For "cause" questions: Set up a scenario that explains why something might happen without stating the reason.
+                - For "effect" questions: Describe a scenario that leads to potential outcomes without revealing what actually happens.
 
-            INTRODUCTION:
-            "Fine-tuning pre-trained language models (LMs) has been the dominant methodology for solving many language tasks, adapting to specialized domains ,\
-                or incorporating human instructions and preferences. However, as LMs are scaled up, computing gradients for backpropagation requires \
-                  a prohibitive amount of memory – in our test, up to 12× the memory required for inference – because it needs to cache activations during the \
-                    forward pass, gradients during the backward pass, and, in the case of Adam, also store gradient history (see Section 3.4 for a \
-                      detailed analysis).
+            2. **Consistency with Correct Answer**:
+              - Ensure the rephrased premise is compatible with both choices, without leaning towards the correct answer. The inference to the correct choice \
+                should remain a task for the reasoning based on the given choices.
+              - Ensure that the correct answer remains unchanged. If the label is "0," Choice 1 must still be correct. If the label is "1," Choice 2 must still be \
+                correct.
+              - Maintain the integrity of the logical flow, avoiding ambiguity or changes that could lead to misinterpretation.
+              
+            3. **Optimized for MeZO Training**:
+              - Enhance Gradient Sensitivity: Enhance the model's **gradient sensitivity** to subtle variations in input by ensuring clear **semantic \
+                  boundaries** and well-defined causal relationships in the rephrased data. Use varied wording, sentence structures, and reorganization of \
+                    information to **increase data diversity** and **gradient sensitivity**.
+              - Focus on Memory Efficiency: Reduce redundancy and keep the sentence concise to avoid unnecessary noise.
+              - Robustness to Data Sparsity: Ensure that the scenarios are robust and provide essential information even with minimal context or details, \
+                simulating real-world situations where complete data may not always be available.
+              - Non-Differentiable Optimization Readiness: Create clear impacts on performance metrics with distinct scenarios, ensuring these scenarios are \
+                measurable and distinctly influence model optimization targets.
+                
+            4. **Maintain Neutral Stance**:
+              - Maintain the **neutral stance** of the original premise, carefully avoiding any explicit mention of causes or effects that are to be deduced from \
+                the given choices.
+              - Ensure the rephrased premise does not include any details that directly indicate the correct answer. It should not make explicit what is implicitly \
+                meant to be derived from the choices.
+              - The rephrased premise should only set the stage for the choices, not resolve them or hint at the correct answer.
+              - Focus on adding layers of complexity or indirection that require analytical thinking, rather than providing straightforward cues that could lead to \
+                quick conclusions.
 
-            As a result, while it is possible to run inference with a 30-billion (30B) parameter LM on a single Nvidia A100 GPU (with 80GB memory), backpropagation \
-              with Adam is feasible only for a 2.7B LM. Parameter-efficient fine-tuning methods (PEFT) update just a fraction of the network parameters \
-                but still need to cache many activations, because the tuned parameters are scattered throughout the model. In our tests, fine-tuning an OPT-13B \
-                  model with full parameter tuning or PEFT requires 12× and 6× more memory than inference respectively."
-
-            FIGURE 1:
-            This figure presents the performance of the OPT-13B model across multiple tasks (SST-2, RTE, CB, BoolQ, WSC, WiC, MultiRC, Copa, ReCoRD, SQuAD, and \
-              DROP) \
-              under four configurations:
-            1. Zero-shot: Where no task-specific training is performed, and the model is tested directly.
-            2. In-context learning (ICL): Where labeled examples are provided in the input prompt.
-            3. MeZO fine-tuning: Using the MeZO optimizer with LoRA or prefix-tuning.
-            4. Full fine-tuning (FT): Using Adam optimizer with full parameter tuning, which consumes 12× memory.
-
-            Key observations from Figure 1:
-            - MeZO achieves superior results over zero-shot and in-context learning.
-            - MeZO’s performance is comparable to full fine-tuning, with less than 1% accuracy or F1 difference on 7 out of 11 tasks.
-            - MeZO requires only 1/12th the memory compared to full fine-tuning.
-
-            "Backpropagation also cannot optimize non-differentiable criteria, which have gained popularity in fine-tuning LMs according to discrete metrics or set \
-              safety standards. Typically, these adaptations involve expensive reinforcement learning from human feedback (RLHF).
-
-            A classical zeroth-order optimization method, ZO-SGD, uses only differences of loss values to estimate the gradients. Thus, in principle, the method \
-              can update neural networks with just forward passes, though naive implementation still doubles the memory overhead and scales poorly with model size. \
-                Existing ZO methods have been applied in deep learning settings to find adversarial examples or tune input embeddings [91, 90] but not to directly \
-                  optimize large-scale models (see Liu et al. for a survey)."
-
-            MeZO’s Contributions:
-            1. In MeZO, we adapt the ZO-SGD algorithm and a number of variants to operate in-place on arbitrarily large models with almost no memory overhead (see \
-              Algorithm 1 and Section 2).
-            2. We conduct comprehensive experiments across model types (masked LM and autoregressive LM), model scales (from 350M to 66B), and downstream tasks \
-              (classification, multiple-choice, and generation). MeZO consistently outperforms zero-shot, ICL, and linear probing. With RoBERTa-large, MeZO achieves \
-                performance close to standard fine-tuning within 5%. With OPT-13B, MeZO outperforms or performs comparably to fine-tuning on 7 out of 11 tasks, \
-                  despite requiring roughly 12× less memory (Figure 1 and Section 3). In our implementation, MeZO requires only half as many GPU-hours as Adam \
-                    fine-tuning for a 30B model (see Appendix F.6).
-            3. We demonstrate MeZO’s compatibility with full-parameter tuning and PEFT (e.g., LoRA and prefix-tuning) in Section 3.
-            4. Further exploration showcases that MeZO can optimize non-differentiable objectives such as accuracy or F1 score while still requiring only the same \
-              memory as inference (Section 3.3).
-            5. Our theory suggests that adequate pre-training ensures a better optimization rate (Theorem 1) and a stable convergence rate (Lemma 3.4) of MeZO under \
-              proper settings of hyperparameters. This matches practical experience, with Assumption 3.1 specifying sparsity of parameters."
-
-            ALGORITHM 1:
-            The MeZO algorithm uses perturbation-based gradient estimation:
-            1. Parameters are perturbed to estimate gradients using forward passes only.
-            2. Parameters are updated in place, avoiding memory overhead from gradient storage.
-            3. Memory efficiency is achieved, requiring only inference-level resources.
+            5. **High-Quality Data Generation**:
+              - Produce a **natural, fluent, and coherent** rephrased premise.
+              - Avoid directly mirroring the original structure; instead, introduce paraphrasing through synonyms, restructuring, or reordering.
 
             ---
 
@@ -110,119 +78,126 @@ def generate_prompt(premise, choice1, choice2, question, label):
             Choice 2: "The grass was cut."
             Question type: "cause"
             Correct answer: Choice 1
-            Rephrased premise: "The shadow of my body fell upon the grass."
+            Rephrased premise: "A shadow appeared on the grass beside me."
 
             Original premise: "The woman tolerated her friend's difficult behavior."
             Choice 1: "The woman knew her friend was going through a hard time."
             Choice 2: "The woman felt that her friend took advantage of her kindness."
             Question type: "cause"
             Correct answer: Choice 1
-            Rephrased premise: "The woman endured her friend's challenging behavior."
+            Rephrased premise: "The woman was patient with her friend's challenging attitude."
 
             Original premise: "The women met for coffee."
             Choice 1: "The cafe reopened in a new location."
             Choice 2: "They wanted to catch up with each other."
             Question type: "cause"
             Correct answer: Choice 2
-            Rephrased premise: "The women gathered to have coffee together."
+            Rephrased premise: "The women gathered at a cafe."
 
             Original premise: "The runner wore shorts."
             Choice 1: "The forecast predicted high temperatures."
             Choice 2: "She planned to run along the beach."
             Question type: "cause"
             Correct answer: Choice 1
-            Rephrased premise: "The runner decided to wear shorts."
+            Rephrased premise: "Shorts were the runner's attire."
 
             Original premise: "The guests of the party hid behind the couch."
             Choice 1: "It was a surprise party."
             Choice 2: "It was a birthday party."
             Question type: "cause"
             Correct answer: Choice 1
-            Rephrased premise: "The party attendees concealed themselves behind the couch."
+            Rephrased premise: "During the gathering, the attendees positioned themselves out of sight behind the sofa."
+
+            Original premise: "The politician lost the election."
+            Choice 1: "He ran negative campaign ads."
+            Choice 2: "No one voted for him."
+            Question type: "cause"
+            Correct answer: Choice 2
+            Rephrased premise: "The election was unsuccessful for the politician."
 
             Original premise: "The stain came out of the shirt."
             Choice 1: "I patched the shirt."
             Choice 2: "I bleached the shirt."
             Question type: "cause"
             Correct answer: Choice 2
-            Rephrased premise: "The shirt became clean after the stain was removed."
+            Rephrased premise: "The shirt was no longer marked by the stain."
 
             Original premise: "The man got a discount on his groceries."
             Choice 1: "He greeted the cashier."
             Choice 2: "He used a coupon."
             Question type: "cause"
             Correct answer: Choice 2
-            Rephrased premise: "The man received a reduction in the price of his groceries."
+            Rephrased premise: "The man managed to pay less for his grocery bill."
 
             Original premise: "The physician misdiagnosed the patient."
             Choice 1: "The patient filed a malpractice lawsuit against the physician."
             Choice 2: "The patient disclosed confidential information to the physician."
             Question type: "effect"
             Correct answer: Choice 1
-            Rephrased premise: "The doctor incorrectly diagnosed the patient."
+            Rephrased premise: "The doctor made an error in the patient's diagnosis."
 
             Original premise: "The customer filed a complaint with the store manager."
             Choice 1: "The sales associate undercharged the customer."
             Choice 2: "The sales associate acted rude to the customer."
             Question type: "cause"
             Correct answer: Choice 2
-            Rephrased premise: "The customer lodged a complaint with the store manager."
+            Rephrased premise: "The customer approached the store manager with a grievance."
 
             Original premise: "The woman repaired her faucet."
             Choice 1: "The faucet was leaky."
             Choice 2: "The faucet was turned off."
             Question type: "cause"
             Correct answer: Choice 1
-            Rephrased premise: "The woman fixed her faucet."
+            Rephrased premise: "A woman attended to fixing her faucet."
 
             Original premise: "The elderly woman suffered a stroke."
             Choice 1: "The woman's daughter came over to clean her house."
             Choice 2: "The woman's daughter moved in to take care of her."
             Question type: "effect"
             Correct answer: Choice 2
-            Rephrased premise: "The elderly woman experienced a stroke."
+            Rephrased premise: "An elderly woman experienced a medical event affecting her brain."
 
             Original premise: "The pond froze over for the winter."
             Choice 1: "People skated on the pond."
             Choice 2: "People brought boats to the pond."
             Question type: "effect"
             Correct answer: Choice 1
-            Rephrased premise: "During the winter, the pond became frozen."
+            Rephrased premise: "Throughout the winter, the surface of the pond turned solid with ice."
 
             Original premise: "The offender violated parole."
             Choice 1: "She was sent back to jail."
             Choice 2: "She stole money from a church."
             Question type: "effect"
             Correct answer: Choice 1
-            Rephrased premise: "The offender breached parole conditions."
+            Rephrased premise: "Breaking the conditions set by parole occurred."
 
             Original premise: "I poured water on my sleeping friend."
             Choice 1: "My friend awoke."
             Choice 2: "My friend snored."
             Question type: "effect"
             Correct answer: Choice 1
-            Rephrased premise: "Water was poured on my friend as they slept."
+            Rephrased premise: "A stream of water landed on my slumbering friend."
 
             Original premise: "The girl gasped."
             Choice 1: "Her friend stuck an ice cube down her back."
             Choice 2: "Her friend gave her a pat on the back."
             Question type: "cause"
             Correct answer: Choice 1
-            Rephrased premise: "The girl let out a gasp."
+            Rephrased premise: "A sudden gasp escaped from the girl."
 
             Original premise: "The shirt shrunk."
             Choice 1: "I poured bleach on it."
             Choice 2: "I put it in the dryer."
             Question type: "cause"
             Correct answer: Choice 2
-            Rephrased premise: "The shirt reduced in size."
+            Rephrased premise: "The shirt became smaller."
 
             Original premise: "It got dark outside."
             Choice 1: "Snowflakes began to fall from the sky."
             Choice 2: "The moon became visible in the sky."
             Question type: "effect"
             Correct answer: Choice 2
-            Rephrased premise: "Nighttime set in."
+            Rephrased premise: "As night approached, the sky lost its light."
 
             Original premise: "I hung up the phone."
             Choice 1: "The caller said goodbye to me."
@@ -236,13 +211,13 @@ def generate_prompt(premise, choice1, choice2, question, label):
             Choice 2: "The ring went down the drain."
             Question type: "effect"
             Correct answer: Choice 2
-            Rephrased premise: "The woman's ring fell off in the shower."
+            Rephrased premise: "During her shower, the woman's ring unexpectedly came loose."
 
             ---
 
-            Your task:
-            Rephrase the given premise without altering its meaning. The rephrased premise must remain consistent with the provided question and choices, such that \
-              the correct answer remains unchanged.
+            ### Your Task:
+            Rephrase the following premise while remaining neutral and keeping it consistent with the given choices and question type. Ensure the rephrased premise \
+              enhances gradient estimation for MeZO by being logically clear, semantically stable, and appropriately diverse.
 
             Original premise: "{premise}"
             Choice 1: "{choice1}"
@@ -250,7 +225,7 @@ def generate_prompt(premise, choice1, choice2, question, label):
             Question type: "{question}" (cause or effect)
             Correct answer: "{correct_choice}"
 
-            Directly output only one rephrased sentence without any other characters and other explanatory statements like "The rephrased sentence is:":
+            Directly output only one rephrased premise without any other characters and other explanatory statements like "The rephrased sentence is:":
             """
 
 '''

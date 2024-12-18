@@ -14,10 +14,11 @@ eval_list = []
 
 def generate_prompt(original_premise, choice1, choice2, question, correct_choice, rephrased_premise):
     return f"""
-            You are tasked with judging if the rephrased premise has the same meaning as the original premise and checking if the rephrased premise remains \
-                consistent with its associated question and choices. If the rephrased premise remains consistent with its associated questions and options, the \
-                    choice inferred from the rephrased premise will be the same as the choice inferred from the original premise, meaning that the correct answer \
-                        remains the same. Below are the correctly rephrased examples:
+            Task Description:
+
+            You are tasked with verifying whether a rephrased premise maintains consistency with its associated question and answer choices. Specifically, \
+                determine if the correct answer inferred from the rephrased premise remains the same as that inferred from the original premise. Below are \
+                    correctly rephrased examples to guide you:
 
             ### Few-shot Examples:
             
@@ -26,56 +27,56 @@ def generate_prompt(original_premise, choice1, choice2, question, correct_choice
             Choice 2: "She made a new friend."
             Question type: "cause"
             Correct answer: Choice 1
-            Rephrased premise: "The girl was awarded a trophy."
+            Rephrased premise: "A trophy was awarded to the girl."
 
             Original premise: "The woman's date wanted to look like a gentleman."
             Choice 1: "He opened the door for her."
             Choice 2: "He asked her if she liked sushi."
             Question type: "effect"
             Correct answer: Choice 1
-            Rephrased premise: "The woman's date aimed to present himself as a gentleman."
+            Rephrased premise: "The woman's date aimed to present himself courteously."
 
             Original premise: "The farmland needed irrigation."
             Choice 1: "A canal was constructed."
             Choice 2: "A flood occurred."
             Question type: "effect"
             Correct answer: Choice 1
-            Rephrased premise: "The farmland required a water supply."
+            Rephrased premise: "The agricultural fields required watering."
 
             Original premise: "The host cancelled the party."
             Choice 1: "She was certain she had the flu."
             Choice 2: "She worried she would catch the flu."
             Question type: "cause"
             Correct answer: Choice 1
-            Rephrased premise: "The host called off the party."
+            Rephrased premise: "The host called off the event she planned."
 
             Original premise: "The woman gave the man her phone number."
             Choice 1: "She was attracted to him."
             Choice 2: "She was repulsed by him."
             Question type: "cause"
             Correct answer: Choice 1
-            Rephrased premise: "The woman shared her phone number with the man."
+            Rephrased premise: "The woman handed her contact information to the man."
 
             Original premise: "The skydiver glided safely to the ground."
             Choice 1: "She opened her parachute."
             Choice 2: "She jumped out of the plane."
             Question type: "cause"
             Correct answer: Choice 1
-            Rephrased premise: "The skydiver landed safely on the ground."
+            Rephrased premise: "The skydiver descended smoothly to the earth."
 
             Original premise: "The toddler became cranky."
             Choice 1: "Her mother put her down for a nap."
             Choice 2: "Her mother fixed her hair into pigtails."
             Question type: "effect"
             Correct answer: Choice 1
-            Rephrased premise: "The toddler got irritable."
+            Rephrased premise: "The toddler began to show signs of irritability."
 
             Original premise: "The child became immune to the disease."
             Choice 1: "He avoided exposure to the disease."
             Choice 2: "He received the vaccine for the disease."
             Question type: "cause"
             Correct answer: Choice 2
-            Rephrased premise: "The child developed immunity to the disease."
+            Rephrased premise: "The child developed resistance to the disease."
 
             Original premise: "The grape juice fermented."
             Choice 1: "The juice turned to wine."
@@ -89,35 +90,35 @@ def generate_prompt(original_premise, choice1, choice2, question, correct_choice
             Choice 2: "The friends were splitting hairs."
             Question type: "cause"
             Correct answer: Choice 2
-            Rephrased premise: "The friends' discussion seemed endless."
+            Rephrased premise: "The friends' discussion seemed to last forever."
 
             Original premise: "The woman hummed to herself."
             Choice 1: "She was nervous."
             Choice 2: "She was in a good mood."
             Question type: "cause"
             Correct answer: Choice 2
-            Rephrased premise: "The woman quietly sang to herself."
+            Rephrased premise: "The woman quietly sang a tune to herself."
 
             Original premise: "The man hated his new haircut."
             Choice 1: "He wore a hat."
             Choice 2: "He grew a beard."
             Question type: "effect"
             Correct answer: Choice 1
-            Rephrased premise: "The man disliked his new haircut."
+            Rephrased premise: "His dissatisfaction with the haircut was evident."
 
             Original premise: "The police aimed their weapons at the fugitive."
             Choice 1: "The fugitive fell to the ground."
             Choice 2: "The fugitive dropped his gun."
             Question type: "effect"
             Correct answer: Choice 2
-            Rephrased premise: "The police pointed their guns at the fugitive."
+            Rephrased premise: "Officers pointed their firearms at the escaping individual."
 
             Original premise: "The patient was dehydrated."
             Choice 1: "The nurse tested his reflexes."
             Choice 2: "The nurse gave him an IV."
             Question type: "effect"
             Correct answer: Choice 2
-            Rephrased premise: "The patient experienced dehydration."
+            Rephrased premise: "The patient experienced a lack of hydration."
 
             Original premise: "The girl found the missing puzzle piece."
             Choice 1: "She completed the puzzle."
@@ -131,43 +132,42 @@ def generate_prompt(original_premise, choice1, choice2, question, correct_choice
             Choice 2: "He wanted to iron his pants before work."
             Question type: "cause"
             Correct answer: Choice 1
-            Rephrased premise: "The man quickly sprang out of bed."
+            Rephrased premise: "The man swiftly jumped up from the bed."
 
             Original premise: "The papers were disorganized."
             Choice 1: "I made photocopies of them."
             Choice 2: "I put them into alphabetical order."
             Question type: "effect"
             Correct answer: Choice 2
-            Rephrased premise: "The papers were in disarray."
+            Rephrased premise: "The documents were in a state of disorder."
 
             Original premise: "The woman won the lottery."
             Choice 1: "She bought a yacht."
             Choice 2: "She joined a church."
             Question type: "effect"
             Correct answer: Choice 1
-            Rephrased premise: "The woman hit the jackpot in the lottery."
+            Rephrased premise: "The woman became a lottery winner."
 
             Original premise: "The seamstress pushed the threaded needle into the fabric."
             Choice 1: "The thread wrapped around the needle."
             Choice 2: "The thread went through the fabric."
             Question type: "effect"
             Correct answer: Choice 2
-            Rephrased premise: "The seamstress inserted the threaded needle into the fabric."
+            Rephrased premise: "The seamstress inserted the threaded needle into the cloth."
 
             Original premise: "The woman hired a lawyer."
             Choice 1: "She decided to sue her employer."
             Choice 2: "She decided to run for office."
             Question type: "cause"
             Correct answer: Choice 1
-            Rephrased premise: "The woman engaged legal counsel."
+            Rephrased premise: "The woman engaged the services of an attorney."
 
             ---
 
-            Your task:
-            For the given information below, determine whether the Rephrased premise and Original premise are the same. If the meaning and tone of the Rephrased \
-                premise and the Original premise are consistent, and the rephrased premise remains consistent with the provided questions and choices so that the \
-                    Correct answer remains unchanged, then the rephrased premise and the original premise can be determined to be the same, otherwise they are not \
-                        the same.
+            Your Task:
+
+            Evaluate the following data and determine whether the rephrased premise maintains consistency with the original premise regarding the correct answer \
+                choice.
 
             Original premise: "{original_premise}"
             Choice 1: "{choice1}"
@@ -176,8 +176,19 @@ def generate_prompt(original_premise, choice1, choice2, question, correct_choice
             Correct answer: "{correct_choice}"
             Rephrased premise: "{rephrased_premise}"
 
+            Example Input:
+            Original premise: "The girl received a trophy."
+            Choice 1: "She won a spelling bee."
+            Choice 2: "She made a new friend."
+            Question type: "cause"
+            Correct answer: "Choice 1"
+            Rephrased premise: "A trophy was awarded to the girl."
+
+            Expected Output: same
+
             Directly output [same/not the same] without any explanation:
-            """ 
+
+            """
 
 def correct_choice(choice1, choice2, label):
     correct_choice = choice1 if label == 0 else choice2
