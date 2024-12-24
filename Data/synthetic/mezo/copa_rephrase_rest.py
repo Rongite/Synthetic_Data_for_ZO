@@ -20,8 +20,8 @@ export CUDA_HOME=/soft/compilers/cudatoolkit/cuda-11.8.0
 '''
 
 client = OpenAI(
-    # api_key = 'sk-eYvV5PulUcRh5gX40d10873c274b41C3B596F4F1F06e1a34', # office
-    api_key = 'sk-eWSYPo0CvhRYgcJs55B0C3F00aC74f6e95F47c1f4772292c', # my
+    api_key = 'sk-eYvV5PulUcRh5gX40d10873c274b41C3B596F4F1F06e1a34', # office
+    # api_key = 'sk-eWSYPo0CvhRYgcJs55B0C3F00aC74f6e95F47c1f4772292c', # my
     base_url = "https://api2.aigcbest.top/v1"
 )
 
@@ -78,112 +78,112 @@ def generate_prompt(premise, choice1, choice2, question, label):
             Choice 2: "The grass was cut."
             Question type: "cause"
             Correct answer: Choice 1
-            Rephrased premise: "A shadow appeared on the grass beside me."
+            Rephrased premise: "A shadow fell on the grass from my body."
 
             Original premise: "The woman tolerated her friend's difficult behavior."
             Choice 1: "The woman knew her friend was going through a hard time."
             Choice 2: "The woman felt that her friend took advantage of her kindness."
             Question type: "cause"
             Correct answer: Choice 1
-            Rephrased premise: "The woman was patient with her friend's challenging attitude."
+            Rephrased premise: "In response to her friend's challenging demeanor, the woman remained patient."
 
             Original premise: "The women met for coffee."
             Choice 1: "The cafe reopened in a new location."
             Choice 2: "They wanted to catch up with each other."
             Question type: "cause"
             Correct answer: Choice 2
-            Rephrased premise: "The women gathered at a cafe."
+            Rephrased premise: "The women gathered to have coffee together."
 
             Original premise: "The runner wore shorts."
             Choice 1: "The forecast predicted high temperatures."
             Choice 2: "She planned to run along the beach."
             Question type: "cause"
             Correct answer: Choice 1
-            Rephrased premise: "Shorts were the runner's attire."
+            Rephrased premise: "Wearing shorts was the runner's attire."
 
             Original premise: "The guests of the party hid behind the couch."
             Choice 1: "It was a surprise party."
             Choice 2: "It was a birthday party."
             Question type: "cause"
             Correct answer: Choice 1
-            Rephrased premise: "During the gathering, the attendees positioned themselves out of sight behind the sofa."
+            Rephrased premise: "The attendees of the gathering concealed themselves behind the sofa."
 
             Original premise: "The politician lost the election."
             Choice 1: "He ran negative campaign ads."
             Choice 2: "No one voted for him."
             Question type: "cause"
             Correct answer: Choice 2
-            Rephrased premise: "The election was unsuccessful for the politician."
+            Rephrased premise: "The election results did not favor the politician."
 
             Original premise: "The stain came out of the shirt."
             Choice 1: "I patched the shirt."
             Choice 2: "I bleached the shirt."
             Question type: "cause"
             Correct answer: Choice 2
-            Rephrased premise: "The shirt was no longer marked by the stain."
+            Rephrased premise: "A mark was removed from the shirt."
 
             Original premise: "The man got a discount on his groceries."
             Choice 1: "He greeted the cashier."
             Choice 2: "He used a coupon."
             Question type: "cause"
             Correct answer: Choice 2
-            Rephrased premise: "The man managed to pay less for his grocery bill."
+            Rephrased premise: "A discount was applied to the man's grocery purchase."
 
             Original premise: "The physician misdiagnosed the patient."
             Choice 1: "The patient filed a malpractice lawsuit against the physician."
             Choice 2: "The patient disclosed confidential information to the physician."
             Question type: "effect"
             Correct answer: Choice 1
-            Rephrased premise: "The doctor made an error in the patient's diagnosis."
+            Rephrased premise: "A misjudgment occurred in the doctor's evaluation of the patient's condition."
 
             Original premise: "The customer filed a complaint with the store manager."
             Choice 1: "The sales associate undercharged the customer."
             Choice 2: "The sales associate acted rude to the customer."
             Question type: "cause"
             Correct answer: Choice 2
-            Rephrased premise: "The customer approached the store manager with a grievance."
+            Rephrased premise: "A complaint was raised by the customer to the store manager."
 
             Original premise: "The woman repaired her faucet."
             Choice 1: "The faucet was leaky."
             Choice 2: "The faucet was turned off."
             Question type: "cause"
             Correct answer: Choice 1
-            Rephrased premise: "A woman attended to fixing her faucet."
+            Rephrased premise: "The woman fixed her faucet."
 
             Original premise: "The elderly woman suffered a stroke."
             Choice 1: "The woman's daughter came over to clean her house."
             Choice 2: "The woman's daughter moved in to take care of her."
             Question type: "effect"
             Correct answer: Choice 2
-            Rephrased premise: "An elderly woman experienced a medical event affecting her brain."
+            Rephrased premise: "An elderly woman experienced a sudden health issue."
 
             Original premise: "The pond froze over for the winter."
             Choice 1: "People skated on the pond."
             Choice 2: "People brought boats to the pond."
             Question type: "effect"
             Correct answer: Choice 1
-            Rephrased premise: "Throughout the winter, the surface of the pond turned solid with ice."
+            Rephrased premise: "During the winter season, the surface of the pond turned to ice."
 
             Original premise: "The offender violated parole."
             Choice 1: "She was sent back to jail."
             Choice 2: "She stole money from a church."
             Question type: "effect"
             Correct answer: Choice 1
-            Rephrased premise: "Breaking the conditions set by parole occurred."
+            Rephrased premise: "The parolee broke the terms of her release."
 
             Original premise: "I poured water on my sleeping friend."
             Choice 1: "My friend awoke."
             Choice 2: "My friend snored."
             Question type: "effect"
             Correct answer: Choice 1
-            Rephrased premise: "A stream of water landed on my slumbering friend."
+            Rephrased premise: "As my friend was asleep, I poured water on them."
 
             Original premise: "The girl gasped."
             Choice 1: "Her friend stuck an ice cube down her back."
             Choice 2: "Her friend gave her a pat on the back."
             Question type: "cause"
             Correct answer: Choice 1
-            Rephrased premise: "A sudden gasp escaped from the girl."
+            Rephrased premise: "A sudden intake of breath escaped the girl's lips."
 
             Original premise: "The shirt shrunk."
             Choice 1: "I poured bleach on it."
@@ -197,7 +197,7 @@ def generate_prompt(premise, choice1, choice2, question, label):
             Choice 2: "The moon became visible in the sky."
             Question type: "effect"
             Correct answer: Choice 2
-            Rephrased premise: "As night approached, the sky lost its light."
+            Rephrased premise: "Night began to settle in."
 
             Original premise: "I hung up the phone."
             Choice 1: "The caller said goodbye to me."
@@ -211,7 +211,7 @@ def generate_prompt(premise, choice1, choice2, question, label):
             Choice 2: "The ring went down the drain."
             Question type: "effect"
             Correct answer: Choice 2
-            Rephrased premise: "During her shower, the woman's ring unexpectedly came loose."
+            Rephrased premise: "In the shower, the woman's ring unexpectedly loosened from her finger."
 
             ---
 
@@ -272,7 +272,7 @@ for i in tqdm(range(len(data))):
         messages=[
             {"role": "user", "content": prompt}
         ],
-        temperature=0.0 
+        temperature=1.0 
     )
     
     # print(output)

@@ -20,8 +20,8 @@ export CUDA_HOME=/soft/compilers/cudatoolkit/cuda-11.8.0
 '''
 
 client = OpenAI(
-    # api_key = 'sk-eYvV5PulUcRh5gX40d10873c274b41C3B596F4F1F06e1a34', # office
-    api_key = 'sk-eWSYPo0CvhRYgcJs55B0C3F00aC74f6e95F47c1f4772292c', # my
+    api_key = 'sk-eYvV5PulUcRh5gX40d10873c274b41C3B596F4F1F06e1a34', # office
+    # api_key = 'sk-eWSYPo0CvhRYgcJs55B0C3F00aC74f6e95F47c1f4772292c', # my
     base_url = "https://api2.aigcbest.top/v1"
 )
 
@@ -126,7 +126,7 @@ for i in tqdm(range(len(data))):
         messages=[
             {"role": "user", "content": prompt}
         ],
-        temperature=0.0 
+        temperature=1.0 
     )
     
     # print(output)
