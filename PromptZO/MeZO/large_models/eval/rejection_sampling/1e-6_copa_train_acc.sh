@@ -7,3 +7,4 @@ python /home/jlong1/Downloads/Synthetic_Data_for_ZO/PromptZO/MeZO/large_models/e
     --trainer none \
     --num_eval 1000 \
     --train_set_seed 0
+    

@@ -5,8 +5,8 @@ from tqdm import tqdm
 import os
 
 client = OpenAI(
-    api_key = 'sk-eYvV5PulUcRh5gX40d10873c274b41C3B596F4F1F06e1a34', # office
-    # api_key = 'sk-eWSYPo0CvhRYgcJs55B0C3F00aC74f6e95F47c1f4772292c', # my
+    # api_key = 'sk-eYvV5PulUcRh5gX40d10873c274b41C3B596F4F1F06e1a34', # office
+    api_key = 'sk-eWSYPo0CvhRYgcJs55B0C3F00aC74f6e95F47c1f4772292c', # my
     base_url = "https://api2.aigcbest.top/v1"
 )
 
@@ -34,84 +34,84 @@ def generate_prompt(original_premise, choice1, choice2, question, correct_choice
             Choice 2: "He asked her if she liked sushi."
             Question type: "effect"
             Correct answer: Choice 1
-            Rephrased premise: "The woman's companion aimed to present himself as courteous."
+            Rephrased premise: "The woman's date aimed to present himself courteously."
 
             Original premise: "The farmland needed irrigation."
             Choice 1: "A canal was constructed."
             Choice 2: "A flood occurred."
             Question type: "effect"
             Correct answer: Choice 1
-            Rephrased premise: "The agricultural land required additional water sources."
+            Rephrased premise: "The agricultural fields required watering."
 
             Original premise: "The host cancelled the party."
             Choice 1: "She was certain she had the flu."
             Choice 2: "She worried she would catch the flu."
             Question type: "cause"
             Correct answer: Choice 1
-            Rephrased premise: "The host called off the gathering."
+            Rephrased premise: "The host called off the event she planned."
 
             Original premise: "The woman gave the man her phone number."
             Choice 1: "She was attracted to him."
             Choice 2: "She was repulsed by him."
             Question type: "cause"
             Correct answer: Choice 1
-            Rephrased premise: "The woman shared her phone number with the man."
+            Rephrased premise: "The woman handed her contact information to the man."
 
             Original premise: "The skydiver glided safely to the ground."
             Choice 1: "She opened her parachute."
             Choice 2: "She jumped out of the plane."
             Question type: "cause"
             Correct answer: Choice 1
-            Rephrased premise: "The skydiver landed smoothly on the ground."
+            Rephrased premise: "The skydiver descended smoothly to the earth."
 
             Original premise: "The toddler became cranky."
             Choice 1: "Her mother put her down for a nap."
             Choice 2: "Her mother fixed her hair into pigtails."
             Question type: "effect"
             Correct answer: Choice 1
-            Rephrased premise: "The toddler grew irritable."
+            Rephrased premise: "The toddler began to show signs of irritability."
 
             Original premise: "The child became immune to the disease."
             Choice 1: "He avoided exposure to the disease."
             Choice 2: "He received the vaccine for the disease."
             Question type: "cause"
             Correct answer: Choice 2
-            Rephrased premise: "The child developed immunity to the disease."
+            Rephrased premise: "The child developed resistance to the disease."
 
             Original premise: "The grape juice fermented."
             Choice 1: "The juice turned to wine."
             Choice 2: "The juice evaporated."
             Question type: "effect"
             Correct answer: Choice 1
-            Rephrased premise: "The grape juice underwent a fermentation process."
+            Rephrased premise: "The grape juice underwent fermentation."
 
             Original premise: "The friends' debate dragged on interminably."
             Choice 1: "The friends saw eye to eye."
             Choice 2: "The friends were splitting hairs."
             Question type: "cause"
             Correct answer: Choice 2
-            Rephrased premise: "The debate among the friends extended without end."
+            Rephrased premise: "The friends' discussion seemed to last forever."
 
             Original premise: "The woman hummed to herself."
             Choice 1: "She was nervous."
             Choice 2: "She was in a good mood."
             Question type: "cause"
             Correct answer: Choice 2
-            Rephrased premise: "A melody quietly emerged from the woman's lips."
+            Rephrased premise: "The woman quietly sang a tune to herself."
 
             Original premise: "The man hated his new haircut."
             Choice 1: "He wore a hat."
             Choice 2: "He grew a beard."
             Question type: "effect"
             Correct answer: Choice 1
-            Rephrased premise: "His dissatisfaction with the haircut was apparent."
+            Rephrased premise: "His dissatisfaction with the haircut was evident."
 
             Original premise: "The police aimed their weapons at the fugitive."
             Choice 1: "The fugitive fell to the ground."
             Choice 2: "The fugitive dropped his gun."
             Question type: "effect"
             Correct answer: Choice 2
-            Rephrased premise: "The officers pointed their guns at the fleeing suspect."
+            Rephrased premise: "Officers pointed their firearms at the escaping individual."
 
             Original premise: "The patient was dehydrated."
             Choice 1: "The nurse tested his reflexes."
@@ -125,21 +125,21 @@ def generate_prompt(original_premise, choice1, choice2, question, correct_choice
             Choice 2: "She took apart the puzzle."
             Question type: "effect"
             Correct answer: Choice 1
-            Rephrased premise: "The girl located the lost puzzle piece."
+            Rephrased premise: "The girl discovered the lost puzzle piece."
 
             Original premise: "The man urgently leaped out of bed."
             Choice 1: "He wanted to shut off the alarm clock."
             Choice 2: "He wanted to iron his pants before work."
             Question type: "cause"
             Correct answer: Choice 1
-            Rephrased premise: "The man swiftly got out of bed."
+            Rephrased premise: "The man swiftly jumped up from the bed."
 
             Original premise: "The papers were disorganized."
             Choice 1: "I made photocopies of them."
             Choice 2: "I put them into alphabetical order."
             Question type: "effect"
             Correct answer: Choice 2
-            Rephrased premise: "The papers lacked organization."
+            Rephrased premise: "The documents were in a state of disorder."
 
             Original premise: "The woman won the lottery."
             Choice 1: "She bought a yacht."
@@ -153,14 +153,14 @@ def generate_prompt(original_premise, choice1, choice2, question, correct_choice
             Choice 2: "The thread went through the fabric."
             Question type: "effect"
             Correct answer: Choice 2
-            Rephrased premise: "The seamstress inserted the needle with thread into the fabric."
+            Rephrased premise: "The seamstress inserted the threaded needle into the cloth."
 
             Original premise: "The woman hired a lawyer."
             Choice 1: "She decided to sue her employer."
             Choice 2: "She decided to run for office."
             Question type: "cause"
             Correct answer: Choice 1
-            Rephrased premise: "A lawyer was employed by the woman."
+            Rephrased premise: "The woman engaged the services of an attorney."
 
             ---
 
@@ -224,19 +224,19 @@ total_answer = 0
 
 for i in tqdm(range(len(eval_list))):
     output_data = {}
-    if 20 <= i < 40:
-        eval_list[i]['eval_result'] = "same"
-        output_data["premise"] = eval_list[i]["rephrased"]
-        output_data["choice1"] = eval_list[i]["choice1"]
-        output_data["choice2"] = eval_list[i]["choice2"]
-        output_data["question"] = eval_list[i]["question"]
-        output_data["idx"] = eval_list[i]["idx"]
-        output_data["label"] = eval_list[i]["label"]
-        correct_answer += 1
-        total_answer += 1
-        out_file.write(json.dumps(output_data) + "\n")
-        out_file.flush()
-        continue
+    # if 20 <= i < 40:
+    #     eval_list[i]['eval_result'] = "same"
+    #     output_data["premise"] = eval_list[i]["rephrased"]
+    #     output_data["choice1"] = eval_list[i]["choice1"]
+    #     output_data["choice2"] = eval_list[i]["choice2"]
+    #     output_data["question"] = eval_list[i]["question"]
+    #     output_data["idx"] = eval_list[i]["idx"]
+    #     output_data["label"] = eval_list[i]["label"]
+    #     correct_answer += 1
+    #     total_answer += 1
+    #     out_file.write(json.dumps(output_data) + "\n")
+    #     out_file.flush()
+    #     continue
 
     the_correct_choice = correct_choice(eval_list[i]["choice1"], eval_list[i]["choice2"], eval_list[i]["label"])
     prompt = generate_prompt(eval_list[i]["original"], eval_list[i]["choice1"], eval_list[i]["choice2"], eval_list[i]["question"], \

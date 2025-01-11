@@ -1,0 +1,20 @@
+{"premise": "A shadow formed on the grass from my body.", "choice1": "The sun was rising.", "choice2": "The grass was cut.", "question": "cause", "idx": 0, "label": 0}
+{"premise": "The woman put up with her friend's challenging actions.", "choice1": "The woman knew her friend was going through a hard time.", "choice2": "The woman felt that her friend took advantage of her kindness.", "question": "cause", "idx": 1, "label": 0}
+{"premise": "The women gathered to have some coffee.", "choice1": "The cafe reopened in a new location.", "choice2": "They wanted to catch up with each other.", "question": "cause", "idx": 2, "label": 1}
+{"premise": "The runner was dressed in shorts.", "choice1": "The forecast predicted high temperatures.", "choice2": "She planned to run along the beach.", "question": "cause", "idx": 3, "label": 0}
+{"premise": "During the party, attendees positioned themselves out of sight behind the couch.", "choice1": "It was a surprise party.", "choice2": "It was a birthday party.", "question": "cause", "idx": 4, "label": 0}
+{"premise": "The politician did not win the election.", "choice1": "He ran negative campaign ads.", "choice2": "No one voted for him.", "question": "cause", "idx": 5, "label": 1}
+{"premise": "The shirt no longer had a stain on it.", "choice1": "I patched the shirt.", "choice2": "I bleached the shirt.", "question": "cause", "idx": 6, "label": 1}
+{"premise": "A man received a reduction on the price of his groceries.", "choice1": "He greeted the cashier.", "choice2": "He used a coupon.", "question": "cause", "idx": 7, "label": 1}
+{"premise": "The doctor provided an incorrect medical evaluation for the patient.", "choice1": "The patient filed a malpractice lawsuit against the physician.", "choice2": "The patient disclosed confidential information to the physician.", "question": "effect", "idx": 8, "label": 0}
+{"premise": "A customer approached the store manager with a grievance.", "choice1": "The sales associate undercharged the customer.", "choice2": "The sales associate acted rude to the customer.", "question": "cause", "idx": 9, "label": 1}
+{"premise": "The woman fixed her faucet.", "choice1": "The faucet was leaky.", "choice2": "The faucet was turned off.", "question": "cause", "idx": 10, "label": 0}
+{"premise": "An elderly woman experienced a medical emergency.", "choice1": "The woman's daughter came over to clean her house.", "choice2": "The woman's daughter moved in to take care of her.", "question": "effect", "idx": 11, "label": 1}
+{"premise": "During the winter season, the pond turned into a sheet of ice.", "choice1": "People skated on the pond.", "choice2": "People brought boats to the pond.", "question": "effect", "idx": 12, "label": 0}
+{"premise": "The individual breached the conditions of their parole.", "choice1": "She was sent back to jail.", "choice2": "She stole money from a church.", "question": "effect", "idx": 13, "label": 0}
+{"premise": "I drenched my friend with water while they were asleep.", "choice1": "My friend awoke.", "choice2": "My friend snored.", "question": "effect", "idx": 14, "label": 0}
+{"premise": "A sudden intake of breath came from the girl.", "choice1": "Her friend stuck an ice cube down her back.", "choice2": "Her friend gave her a pat on the back.", "question": "cause", "idx": 15, "label": 0}
+{"premise": "The shirt became smaller.", "choice1": "I poured bleach on it.", "choice2": "I put it in the dryer.", "question": "cause", "idx": 16, "label": 1}
+{"premise": "Night descended over the area.", "choice1": "Snowflakes began to fall from the sky.", "choice2": "The moon became visible in the sky.", "question": "effect", "idx": 17, "label": 1}
+{"premise": "The phone conversation ended.", "choice1": "The caller said goodbye to me.", "choice2": "The caller identified himself to me.", "question": "cause", "idx": 18, "label": 0}
+{"premise": "While taking a shower, the woman noticed her ring had fallen off.", "choice1": "The woman polished the ring.", "choice2": "The ring went down the drain.", "question": "effect", "idx": 19, "label": 1}

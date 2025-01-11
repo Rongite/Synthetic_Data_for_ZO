@@ -13,7 +13,7 @@ client = OpenAI(
 test_set = [
     {
         "original_premise": "The tenant misplaced his keys to his apartment.",
-        "rephrased_premise": "The tenant lost track of where his apartment keys were.",
+        "rephrased_premise": "The tenant lost his apartment keys.",
         "choice1": "His landlord unlocked the door.",
         "choice2": "His landlord repaired the door.",
         "question_type": "effect",
@@ -22,7 +22,7 @@ test_set = [
     },
     {
         "original_premise": "My favorite song came on the radio.",
-        "rephrased_premise": "The radio began playing my favorite song.",
+        "rephrased_premise": "A song I love started playing on the radio.",
         "choice1": "I covered my ears.",
         "choice2": "I sang along to it.",
         "question_type": "effect",
@@ -31,7 +31,7 @@ test_set = [
     },
     {
         "original_premise": "The executive decided not to hire the applicant.",
-        "rephrased_premise": "The executive opted against offering employment to the applicant.",
+        "rephrased_premise": "The executive opted against offering the applicant a position.",
         "choice1": "The applicant failed a background check.",
         "choice2": "The applicant had experience for the job.",
         "question_type": "cause",
@@ -40,7 +40,7 @@ test_set = [
     },
     {
         "original_premise": "The man's eye became infected.",
-        "rephrased_premise": "A man's eye developed an infection.",
+        "rephrased_premise": "An infection developed in the man's eye.",
         "choice1": "He went blind.",
         "choice2": "He put on glasses.",
         "question_type": "effect",
@@ -67,7 +67,7 @@ test_set = [
     },
     {
         "original_premise": "The woman shivered as she got out the pool.",
-        "rephrased_premise": "\nStepping out of the pool, the woman felt a chill run through her body.",
+        "rephrased_premise": "A chill ran through the woman as she emerged from the pool.",
         "choice1": "She wrapped herself in a towel.",
         "choice2": "She poured herself some lemonade.",
         "question_type": "effect",
@@ -76,7 +76,7 @@ test_set = [
     },
     {
         "original_premise": "The nurse prepared the needle for the patient's injection.",
-        "rephrased_premise": "The nurse readied the syringe for the patient's shot.",
+        "rephrased_premise": "The nurse readied the needle for administering the injection to the patient.",
         "choice1": "The patient bled.",
         "choice2": "The patient tensed up.",
         "question_type": "effect",
@@ -85,7 +85,7 @@ test_set = [
     },
     {
         "original_premise": "The man threw out the bread.",
-        "rephrased_premise": "The man discarded the bread.",
+        "rephrased_premise": "The man discarded the loaf of bread.",
         "choice1": "It was fresh.",
         "choice2": "It was stale.",
         "question_type": "cause",
@@ -94,7 +94,7 @@ test_set = [
     },
     {
         "original_premise": "The children knocked over a lamp.",
-        "rephrased_premise": "The children caused a lamp to topple over.",
+        "rephrased_premise": "A lamp was tipped over by the children.",
         "choice1": "They had a pillow fight.",
         "choice2": "They jumped on the bed.",
         "question_type": "cause",
@@ -112,7 +112,7 @@ test_set = [
     },
     {
         "original_premise": "The homeowners disliked their nosy neighbors.",
-        "rephrased_premise": "The homeowners were not fond of their inquisitive neighbors.",
+        "rephrased_premise": "Displeased with their intrusive neighbors, the homeowners took action.",
         "choice1": "They built a fence around their property.",
         "choice2": "They hosted a barbeque in their backyard.",
         "question_type": "effect",
@@ -121,7 +121,7 @@ test_set = [
     },
     {
         "original_premise": "The bodybuilder lifted weights.",
-        "rephrased_premise": "A bodybuilder engaged in weightlifting.",
+        "rephrased_premise": "Weights were lifted by the bodybuilder.",
         "choice1": "The gym closed.",
         "choice2": "Her muscles became fatigued.",
         "question_type": "effect",
@@ -130,7 +130,7 @@ test_set = [
     },
     {
         "original_premise": "The cook stirred the ingredients in the bowl.",
-        "rephrased_premise": "The chef mixed the contents of the bowl.",
+        "rephrased_premise": "The cook mixed the contents within the bowl.",
         "choice1": "The ingredients melted.",
         "choice2": "The ingredients blended together.",
         "question_type": "effect",
@@ -139,7 +139,7 @@ test_set = [
     },
     {
         "original_premise": "The man signed the document.",
-        "rephrased_premise": "The man put his signature on the document.",
+        "rephrased_premise": "The document was signed by the man.",
         "choice1": "The transaction was voided.",
         "choice2": "The transaction became official.",
         "question_type": "effect",
@@ -148,7 +148,7 @@ test_set = [
     },
     {
         "original_premise": "The police officer dropped the gun.",
-        "rephrased_premise": "The gun slipped from the police officer's hands.",
+        "rephrased_premise": "The gun slipped from the police officer's grasp.",
         "choice1": "The gun recoiled.",
         "choice2": "The gun went off.",
         "question_type": "effect",
@@ -157,7 +157,7 @@ test_set = [
     },
     {
         "original_premise": "The woman felt compelled to help someone in need.",
-        "rephrased_premise": "Driven by a sense of duty, the woman took action to assist someone in distress.",
+        "rephrased_premise": "The woman experienced a strong urge to assist a person in distress.",
         "choice1": "She donated blood.",
         "choice2": "She wrote a poem.",
         "question_type": "effect",
@@ -166,7 +166,7 @@ test_set = [
     },
     {
         "original_premise": "The woman felt lonely.",
-        "rephrased_premise": "The woman experienced a sense of solitude.",
+        "rephrased_premise": "The woman experienced a sense of isolation.",
         "choice1": "She renovated her kitchen.",
         "choice2": "She adopted a cat.",
         "question_type": "effect",
@@ -175,7 +175,7 @@ test_set = [
     },
     {
         "original_premise": "I rubbed sandpaper on the wood.",
-        "rephrased_premise": "Applying sandpaper to the wood surface.",
+        "rephrased_premise": "The wood was treated with sandpaper.",
         "choice1": "The wood became smooth.",
         "choice2": "The wood became sticky.",
         "question_type": "effect",
@@ -202,7 +202,7 @@ test_set = [
     },
     {
         "original_premise": "My stomach growled.",
-        "rephrased_premise": "Hunger pangs emanated from my stomach.",
+        "rephrased_premise": "A rumbling sound came from my stomach.",
         "choice1": "I forgot to eat breakfast.",
         "choice2": "I was full from breakfast.",
         "question_type": "cause",
@@ -229,7 +229,7 @@ test_set = [
     },
     {
         "original_premise": "The family took their dog to the veterinarian.",
-        "rephrased_premise": "The family brought their dog to the animal doctor.",
+        "rephrased_premise": "The family brought their dog to see the veterinarian.",
         "choice1": "The dog chewed on a bone.",
         "choice2": "The dog injured his paw.",
         "question_type": "cause",
@@ -238,7 +238,7 @@ test_set = [
     },
     {
         "original_premise": "The woman dangled the biscuit above the dog.",
-        "rephrased_premise": "The woman held a biscuit above the dog's head.",
+        "rephrased_premise": "The biscuit was held aloft by the woman, just above the dog.",
         "choice1": "The dog jumped up.",
         "choice2": "The dog scratched its fur.",
         "question_type": "effect",
@@ -247,7 +247,7 @@ test_set = [
     },
     {
         "original_premise": "I learned how to play the board game.",
-        "rephrased_premise": "Knowledge of the board game was gained by me.",
+        "rephrased_premise": "I acquired the skills to play the board game.",
         "choice1": "My friend explained the rules to me.",
         "choice2": "My friend got the rules wrong.",
         "question_type": "cause",
@@ -256,7 +256,7 @@ test_set = [
     },
     {
         "original_premise": "The man went away for the weekend.",
-        "rephrased_premise": "The man left town for the weekend.",
+        "rephrased_premise": "The man left town for a weekend getaway.",
         "choice1": "He wanted to relax.",
         "choice2": "He felt content.",
         "question_type": "cause",
@@ -265,7 +265,7 @@ test_set = [
     },
     {
         "original_premise": "The shop was closed.",
-        "rephrased_premise": "The store was not open.",
+        "rephrased_premise": "The shop was not open for business.",
         "choice1": "The owner was helping customers.",
         "choice2": "The shop was undergoing renovation.",
         "question_type": "cause",
@@ -301,7 +301,7 @@ test_set = [
     },
     {
         "original_premise": "The authorities vowed to protect the identity of the crime victim.",
-        "rephrased_premise": "The officials committed to keeping the crime victim's identity confidential.",
+        "rephrased_premise": "The authorities committed to keeping the crime victim's identity confidential.",
         "choice1": "The victim struggled to recall details about the crime.",
         "choice2": "They withheld the victim's name from the public.",
         "question_type": "effect",
@@ -310,7 +310,7 @@ test_set = [
     },
     {
         "original_premise": "The man's clothes fit loosely.",
-        "rephrased_premise": "The man's clothes appeared oversized on him.",
+        "rephrased_premise": "The man's attire appeared baggy.",
         "choice1": "He bought them on sale.",
         "choice2": "He lost weight.",
         "question_type": "cause",
@@ -319,7 +319,7 @@ test_set = [
     },
     {
         "original_premise": "The clock stopped ticking.",
-        "rephrased_premise": "The clock ceased its ticking motion.",
+        "rephrased_premise": "The clock ceased its ticking.",
         "choice1": "I took extra time to get ready.",
         "choice2": "The clock showed the wrong time.",
         "question_type": "effect",
@@ -328,7 +328,7 @@ test_set = [
     },
     {
         "original_premise": "The man closed the umbrella.",
-        "rephrased_premise": "The umbrella was folded by the man.",
+        "rephrased_premise": "The man folded the umbrella.",
         "choice1": "He got out of the car.",
         "choice2": "He approached the building.",
         "question_type": "cause",
@@ -337,7 +337,7 @@ test_set = [
     },
     {
         "original_premise": "The man craved a cigarette.",
-        "rephrased_premise": "A cigarette was intensely desired by the man.",
+        "rephrased_premise": "The man had a strong desire to smoke a cigarette.",
         "choice1": "His family urged him to quit smoking.",
         "choice2": "He was addicted to nicotine.",
         "question_type": "cause",
@@ -346,7 +346,7 @@ test_set = [
     },
     {
         "original_premise": "The man dropped food on the floor.",
-        "rephrased_premise": "Food fell from the man's hands onto the floor.",
+        "rephrased_premise": "Food fell from the man's hand onto the floor.",
         "choice1": "His dog jumped up on him.",
         "choice2": "His dog ran over to eat the food.",
         "question_type": "effect",
@@ -364,7 +364,7 @@ test_set = [
     },
     {
         "original_premise": "The fugitive hid from the police.",
-        "rephrased_premise": "The fugitive concealed themselves to avoid police detection.",
+        "rephrased_premise": "The fugitive concealed themselves from law enforcement.",
         "choice1": "The police dropped the case.",
         "choice2": "The fugitive remained at large.",
         "question_type": "effect",
@@ -399,84 +399,84 @@ def generate_prompt(original_premise, choice1, choice2, question, correct_choice
             Choice 2: "He asked her if she liked sushi."
             Question type: "effect"
             Correct answer: Choice 1
-            Rephrased premise: "The woman's companion aimed to present himself as courteous."
+            Rephrased premise: "The woman's date aimed to present himself courteously."
 
             Original premise: "The farmland needed irrigation."
             Choice 1: "A canal was constructed."
             Choice 2: "A flood occurred."
             Question type: "effect"
             Correct answer: Choice 1
-            Rephrased premise: "The agricultural land required additional water sources."
+            Rephrased premise: "The agricultural fields required watering."
 
             Original premise: "The host cancelled the party."
             Choice 1: "She was certain she had the flu."
             Choice 2: "She worried she would catch the flu."
             Question type: "cause"
             Correct answer: Choice 1
-            Rephrased premise: "The host called off the gathering."
+            Rephrased premise: "The host called off the event she planned."
 
             Original premise: "The woman gave the man her phone number."
             Choice 1: "She was attracted to him."
             Choice 2: "She was repulsed by him."
             Question type: "cause"
             Correct answer: Choice 1
-            Rephrased premise: "The woman shared her phone number with the man."
+            Rephrased premise: "The woman handed her contact information to the man."
 
             Original premise: "The skydiver glided safely to the ground."
             Choice 1: "She opened her parachute."
             Choice 2: "She jumped out of the plane."
             Question type: "cause"
             Correct answer: Choice 1
-            Rephrased premise: "The skydiver landed smoothly on the ground."
+            Rephrased premise: "The skydiver descended smoothly to the earth."
 
             Original premise: "The toddler became cranky."
             Choice 1: "Her mother put her down for a nap."
             Choice 2: "Her mother fixed her hair into pigtails."
             Question type: "effect"
             Correct answer: Choice 1
-            Rephrased premise: "The toddler grew irritable."
+            Rephrased premise: "The toddler began to show signs of irritability."
 
             Original premise: "The child became immune to the disease."
             Choice 1: "He avoided exposure to the disease."
             Choice 2: "He received the vaccine for the disease."
             Question type: "cause"
             Correct answer: Choice 2
-            Rephrased premise: "The child developed immunity to the disease."
+            Rephrased premise: "The child developed resistance to the disease."
 
             Original premise: "The grape juice fermented."
             Choice 1: "The juice turned to wine."
             Choice 2: "The juice evaporated."
             Question type: "effect"
             Correct answer: Choice 1
-            Rephrased premise: "The grape juice underwent a fermentation process."
+            Rephrased premise: "The grape juice underwent fermentation."
 
             Original premise: "The friends' debate dragged on interminably."
             Choice 1: "The friends saw eye to eye."
             Choice 2: "The friends were splitting hairs."
             Question type: "cause"
             Correct answer: Choice 2
-            Rephrased premise: "The debate among the friends extended without end."
+            Rephrased premise: "The friends' discussion seemed to last forever."
 
             Original premise: "The woman hummed to herself."
             Choice 1: "She was nervous."
             Choice 2: "She was in a good mood."
             Question type: "cause"
             Correct answer: Choice 2
-            Rephrased premise: "A melody quietly emerged from the woman's lips."
+            Rephrased premise: "The woman quietly sang a tune to herself."
 
             Original premise: "The man hated his new haircut."
             Choice 1: "He wore a hat."
             Choice 2: "He grew a beard."
             Question type: "effect"
             Correct answer: Choice 1
-            Rephrased premise: "His dissatisfaction with the haircut was apparent."
+            Rephrased premise: "His dissatisfaction with the haircut was evident."
 
             Original premise: "The police aimed their weapons at the fugitive."
             Choice 1: "The fugitive fell to the ground."
             Choice 2: "The fugitive dropped his gun."
             Question type: "effect"
             Correct answer: Choice 2
-            Rephrased premise: "The officers pointed their guns at the fleeing suspect."
+            Rephrased premise: "Officers pointed their firearms at the escaping individual."
 
             Original premise: "The patient was dehydrated."
             Choice 1: "The nurse tested his reflexes."
@@ -490,21 +490,21 @@ def generate_prompt(original_premise, choice1, choice2, question, correct_choice
             Choice 2: "She took apart the puzzle."
             Question type: "effect"
             Correct answer: Choice 1
-            Rephrased premise: "The girl located the lost puzzle piece."
+            Rephrased premise: "The girl discovered the lost puzzle piece."
 
             Original premise: "The man urgently leaped out of bed."
             Choice 1: "He wanted to shut off the alarm clock."
             Choice 2: "He wanted to iron his pants before work."
             Question type: "cause"
             Correct answer: Choice 1
-            Rephrased premise: "The man swiftly got out of bed."
+            Rephrased premise: "The man swiftly jumped up from the bed."
 
             Original premise: "The papers were disorganized."
             Choice 1: "I made photocopies of them."
             Choice 2: "I put them into alphabetical order."
             Question type: "effect"
             Correct answer: Choice 2
-            Rephrased premise: "The papers lacked organization."
+            Rephrased premise: "The documents were in a state of disorder."
 
             Original premise: "The woman won the lottery."
             Choice 1: "She bought a yacht."
@@ -518,14 +518,14 @@ def generate_prompt(original_premise, choice1, choice2, question, correct_choice
             Choice 2: "The thread went through the fabric."
             Question type: "effect"
             Correct answer: Choice 2
-            Rephrased premise: "The seamstress inserted the needle with thread into the fabric."
+            Rephrased premise: "The seamstress inserted the threaded needle into the cloth."
 
             Original premise: "The woman hired a lawyer."
             Choice 1: "She decided to sue her employer."
             Choice 2: "She decided to run for office."
             Question type: "cause"
             Correct answer: Choice 1
-            Rephrased premise: "A lawyer was employed by the woman."
+            Rephrased premise: "The woman engaged the services of an attorney."
 
             ---
 
