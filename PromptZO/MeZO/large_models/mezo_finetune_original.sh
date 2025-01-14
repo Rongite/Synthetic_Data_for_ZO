@@ -58,29 +58,10 @@ echo "SEED: $SEED"
 echo "MODE: $MODE"
 echo "Extra args: $EXTRA_ARGS $TASK_ARGS"
 
-python run.py \
-    --model_name $MODEL \
-    --task_name $TASK \
-    --output_dir /home/jlong1/Downloads/models/synthetic_data/zo/original/$TASK_NAME-${MODEL_NAME}-$TAG --tag $TAG --train_set_seed $SEED --num_train $TRAIN --num_dev $DEV --num_eval $EVAL --logging_steps 10 \
-    --max_steps $STEPS \
-    --trainer zo --fp16 \
-    --learning_rate $LR --per_device_train_batch_size $BS \
-    --load_best_model_at_end --evaluation_strategy steps --save_strategy steps --save_total_limit 1 \
-    --train_as_classification \
-    --eval_steps 500 \
-    --save_steps 500 \
-    --use_full_zo_update \
-    --zo_eps $EPS \
-    --record_time \
-    --use_full_zo_update \
-    $EXTRA_ARGS \
-    $TASK_ARGS \
-    "$@"
-
 # python run.py \
 #     --model_name $MODEL \
 #     --task_name $TASK \
-#     --output_dir /grand/sbi-fair/jikaiLoong/models/synthetic_data/zo/original/$TASK_NAME-${MODEL_NAME}-$TAG --tag $TAG --train_set_seed $SEED --num_train $TRAIN --num_dev $DEV --num_eval $EVAL --logging_steps 10 \
+#     --output_dir /home/jlong1/Downloads/models/synthetic_data/zo/original/$TASK_NAME-${MODEL_NAME}-$TAG --tag $TAG --train_set_seed $SEED --num_train $TRAIN --num_dev $DEV --num_eval $EVAL --logging_steps 10 \
 #     --max_steps $STEPS \
 #     --trainer zo --fp16 \
 #     --learning_rate $LR --per_device_train_batch_size $BS \
@@ -95,3 +76,22 @@ python run.py \
 #     $EXTRA_ARGS \
 #     $TASK_ARGS \
 #     "$@"
+
+python run.py \
+    --model_name $MODEL \
+    --task_name $TASK \
+    --output_dir /grand/sbi-fair/jikaiLoong/models/synthetic_data/zo/original/$TASK_NAME-${MODEL_NAME}-$TAG --tag $TAG --train_set_seed $SEED --num_train $TRAIN --num_dev $DEV --num_eval $EVAL --logging_steps 10 \
+    --max_steps $STEPS \
+    --trainer zo --fp16 \
+    --learning_rate $LR --per_device_train_batch_size $BS \
+    --load_best_model_at_end --evaluation_strategy steps --save_strategy steps --save_total_limit 1 \
+    --train_as_classification \
+    --eval_steps 500 \
+    --save_steps 500 \
+    --use_full_zo_update \
+    --zo_eps $EPS \
+    --record_time \
+    --use_full_zo_update \
+    $EXTRA_ARGS \
+    $TASK_ARGS \
+    "$@"
