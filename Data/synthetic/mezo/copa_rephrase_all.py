@@ -272,7 +272,7 @@ for i in tqdm(range(len(data))):
         messages=[
             {"role": "user", "content": prompt}
         ],
-        temperature=0.8
+        temperature=0.9
     )
     
     # print(output)
