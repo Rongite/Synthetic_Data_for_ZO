@@ -28,7 +28,8 @@ def get_task(task_name, args):
     # If it's a local path
     if os.path.exists(task_name):
         print(f"Detected local path: {task_name}")
-        task_group = os.path.basename(task_name).split("_")[0].lower()  # Extract task name
+        task_group = os.path.basename(task_name).lower()  # Extract task name
+        # import pdb; pdb.set_trace()
         args.path = task_name  # Set local path
     else:
         # If it's a predefined task name
@@ -48,7 +49,9 @@ def get_task(task_name, args):
         "rte": "RTEDataset",
         "squad": "SQuADDataset",
         "drop": "DROPDataset",
-        "winogrande": "WinoGrandeDataset"
+        "winogrande": "WinoGrandeDataset",
+        "arcc_mc": "ArcC_MCDataset",
+        "arcc_cloze": "ArcC_ClozeDataset"
     }
 
     # Check if the task name is supported
@@ -65,10 +68,12 @@ def get_task(task_name, args):
     # Instantiate the task class
     return class_(path=args.path, args=args)
 
+
 @dataclass
 class Sample:
     id: int = None
     data: dict = None
+    question_string: str = None
     correct_candidate: Union[str, List[str]] = None
     candidates: List[str] = None
 
@@ -786,3 +791,90 @@ class WinoGrandeDataset(Dataset):
             return WinoGrandeTemplate()
         else:
             raise NotImplementedError(f"Template version {template_version} not implemented for WinoGrande")
+
+
+class ArcC_ClozeDataset(Dataset): # 输出答案文本
+    def __init__(self, path=None, **kwargs) -> None:
+        super().__init__()
+        self.samples = {"train": [], "valid": []}
+        self.load_dataset(path, **kwargs)
+
+    def load_dataset(self, path, **kwargs):
+        if path and os.path.isdir(path):  # 从本地 JSONL 读取
+            print(f"Loading ARC-Challenge from local path: {path}")
+            self.samples["train"] = self.load_jsonl(os.path.join(path, "ARC-Challenge_train.jsonl"))
+            self.samples["valid"] = self.load_jsonl(os.path.join(path, "ARC-Challenge_validation.jsonl"))
+        else:  # 从 Hugging Face 数据集加载
+            print("Loading ARC-Challenge from Hugging Face...")
+            train_set = load_dataset('allenai/ai2_arc', 'ARC-Challenge', split='train')
+            valid_set = load_dataset('allenai/ai2_arc', 'ARC-Challenge', split='validation')
+            self.samples["train"] = [self.build_sample(example) for example in train_set]
+            self.samples["valid"] = [self.build_sample(example) for example in valid_set]
+
+    def load_jsonl(self, file_path):
+        samples = []
+        if os.path.exists(file_path):
+            with open(file_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    example = json.loads(line.strip())
+                    samples.append(self.build_sample(example))
+        return samples
+
+    def build_sample(self, example):
+        """ 确保返回 Sample 对象，而不是 dict """
+        return Sample(
+            id=example['id'],
+            data=example,
+            candidates=example['choices']['text'],  # 候选项文本
+            correct_candidate=example['choices']['text'][example['choices']['label'].index(example['answerKey'])],
+        )
+
+    def get_template(self, template_version=0):
+        return Arc_ClozeTemplate() if template_version == 0 else NotImplementedError()
+
+
+class ArcC_MCDataset(Dataset): # 输出答案编号
+    def __init__(self, path=None, **kwargs) -> None:
+        super().__init__()
+        self.samples = {"train": [], "valid": []}
+        self.load_dataset(path, **kwargs)
+
+    def load_dataset(self, path, **kwargs):
+        if path and os.path.isdir(path):  # 读取本地 JSONL 数据
+            print(f"Loading ARC-Challenge from local path: {path}")
+            self.samples["train"] = self.load_jsonl(os.path.join(path, "ARC-Challenge_train.jsonl"))
+            self.samples["valid"] = self.load_jsonl(os.path.join(path, "ARC-Challenge_validation.jsonl"))
+        else:  # 从 Hugging Face 加载数据
+            print("Loading ARC-Challenge from Hugging Face...")
+            train_set = load_dataset('allenai/ai2_arc', 'ARC-Challenge', split='train')
+            valid_set = load_dataset('allenai/ai2_arc', 'ARC-Challenge', split='validation')
+            self.samples["train"] = [self.build_sample(example) for example in train_set]
+            self.samples["valid"] = [self.build_sample(example) for example in valid_set]
+
+    def load_jsonl(self, file_path):
+        samples = []
+        if os.path.exists(file_path):
+            with open(file_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    example = json.loads(line.strip())
+                    samples.append(self.build_sample(example))
+        return samples
+
+    def build_sample(self, example):
+        """ 确保返回 Sample 对象，而不是 dict """
+        mcf_string = "\n".join([
+            f"({l}) {example['choices']['text'][i]}" 
+            for i, l in enumerate(example['choices']['label'])
+        ])
+        question_string = f"Question: {example['question']}\n{mcf_string}"
+
+        return Sample(
+            id=example['id'],
+            data=example,
+            question_string=question_string,  # 关键：多项选择题格式化后的问题字符串
+            candidates=example['choices']['label'],  # ["A", "B", "C", "D"]
+            correct_candidate=example['answerKey']
+        )
+
+    def get_template(self, template_version=0):
+        return Arc_MCTemplate() if template_version == 0 else NotImplementedError()

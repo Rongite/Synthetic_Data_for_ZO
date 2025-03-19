@@ -460,3 +460,33 @@ class WinoGrandeTemplate(Template):
 
     def verbalize_sfc(self, sample, candidate):
         return candidate
+
+
+class Arc_ClozeTemplate(Template):
+    def encode(self, sample):
+        return f"Question: {sample.data['question']}"
+
+    def verbalize(self, sample, candidate):
+        return f"Question: {sample.data['question']}\nAnswer: {candidate}"
+
+    def encode_sfc(self, sample):
+        raise NotImplementedError()
+
+    def verbalize_sfc(self, sample, candidate):
+        raise NotImplementedError()
+    
+
+class Arc_MCTemplate(Template):
+    def encode(self, sample):
+        return sample.question_string
+
+    def verbalize(self, sample, candidate):
+        question_mcf_string = self.encode(sample)
+        return f"{question_mcf_string}\nAnswer: {candidate}"
+
+    def encode_sfc(self, sample):
+        raise NotImplementedError()
+
+    def verbalize_sfc(self, sample, candidate):
+        raise NotImplementedError()
+    
