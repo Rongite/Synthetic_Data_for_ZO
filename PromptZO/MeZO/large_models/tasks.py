@@ -131,7 +131,7 @@ class Dataset:
                     # print("num_train有多大: ", num_train)
                     train_samples.append(self.sample_subset(data_split="train", seed=set_seed, num=num_train+num_dev)) # dev set is included at the end of train set
                     if num_train + num_dev > len(self.samples["train"]):
-                        logger.warn("num_train + num_dev > available training examples")
+                        logger.warning("num_train + num_dev > available training examples")
                 else:
                     train_samples.append(self.sample_subset(data_split="train", seed=set_seed, num=num_train))
                 if num_dev is not None:
