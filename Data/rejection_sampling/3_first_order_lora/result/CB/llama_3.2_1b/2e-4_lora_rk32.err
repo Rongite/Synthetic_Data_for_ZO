@@ -1,0 +1,49 @@
+2025-04-08 15:10:50,995 - INFO - Note: NumExpr detected 32 cores but "NUMEXPR_MAX_THREADS" not set, so enforcing safe limit of 8.
+2025-04-08 15:10:50,995 - INFO - NumExpr defaulting to 8 threads.
+wandb: Currently logged in as: rongite2022 (loongjk). Use `wandb login --relogin` to force relogin
+wandb: wandb version 0.19.9 is available!  To upgrade, please run:
+wandb:  $ pip install wandb --upgrade
+wandb: Tracking run with wandb version 0.16.5
+wandb: Run data is saved locally in /home/jlong1/Downloads/Synthetic_Data_for_ZO/PromptZO/MeZO/large_models/wandb/run-20250408_151052-muonxh9m
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run misunderstood-music-36
+wandb: ⭐️ View project at https://wandb.ai/loongjk/Synthetic_Data_for_ZO-PromptZO_MeZO_large_models
+wandb: 🚀 View run at https://wandb.ai/loongjk/Synthetic_Data_for_ZO-PromptZO_MeZO_large_models/runs/muonxh9m/workspace
+2025-04-08 15:10:55,588 - INFO - We will use 90% of the memory on device 0 for storing the model, and 10% for the buffer to avoid OOM. You can set `max_memory` in to a higher value to use more memory (at your own risk).
+max_steps is given, it will override any value given in num_train_epochs
+2025-04-08 15:11:06,567 - INFO - ***** Running training *****
+2025-04-08 15:11:06,567 - INFO -   Num examples = 150
+2025-04-08 15:11:06,567 - INFO -   Num Epochs = 2000
+2025-04-08 15:11:06,567 - INFO -   Instantaneous batch size per device = 16
+2025-04-08 15:11:06,567 - INFO -   Total train batch size (w. parallel, distributed & accumulation) = 16
+2025-04-08 15:11:06,567 - INFO -   Gradient Accumulation steps = 1
+2025-04-08 15:11:06,567 - INFO -   Total optimization steps = 20000
+2025-04-08 15:11:06,568 - INFO -   Number of trainable parameters = 22544384
+  0%|          | 0/20000 [00:00<?, ?it/s]You're using a PreTrainedTokenizerFast tokenizer. Please note that with a fast tokenizer, using the `__call__` method is faster than using a method to encode the text followed by a call to the `pad` method to get a padded encoding.
+Traceback (most recent call last):
+  File "/home/jlong1/Downloads/Synthetic_Data_for_ZO/PromptZO/MeZO/large_models/run.py", line 669, in <module>
+    main()
+  File "/home/jlong1/Downloads/Synthetic_Data_for_ZO/PromptZO/MeZO/large_models/run.py", line 631, in main
+    framework.train(train_samples, dev_samples if dev_samples is not None else eval_samples, eval_samples)
+  File "/home/jlong1/Downloads/Synthetic_Data_for_ZO/PromptZO/MeZO/large_models/run.py", line 566, in train
+    self.trainer.train(resume_from_checkpoint=last_checkpoint)
+  File "/home/jlong1/miniconda3/envs/mezo/lib/python3.10/site-packages/transformers/trainer.py", line 1938, in train
+    return inner_training_loop(
+  File "/home/jlong1/Downloads/Synthetic_Data_for_ZO/PromptZO/MeZO/large_models/trainer.py", line 1089, in _inner_training_loop
+    tr_loss_step = self.training_step(model, inputs)
+  File "/home/jlong1/Downloads/Synthetic_Data_for_ZO/PromptZO/MeZO/large_models/trainer.py", line 529, in training_step
+    loss = self.compute_loss(model, inputs)
+  File "/home/jlong1/Downloads/Synthetic_Data_for_ZO/PromptZO/MeZO/large_models/trainer.py", line 593, in compute_loss
+    outputs = model(**inputs)
+  File "/home/jlong1/miniconda3/envs/mezo/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1518, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/jlong1/miniconda3/envs/mezo/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1527, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/jlong1/Downloads/Synthetic_Data_for_ZO/PromptZO/MeZO/large_models/utils.py", line 44, in forward_wrap_with_option_len
+    outputs = self.original_forward(input_ids=input_ids, **kwargs)
+  File "/home/jlong1/miniconda3/envs/mezo/lib/python3.10/site-packages/transformers/models/llama/modeling_llama.py", line 1161, in forward
+    logits = logits.float()
+torch.cuda.OutOfMemoryError: CUDA out of memory. Tried to allocate 2.75 GiB. GPU 0 has a total capacty of 47.41 GiB of which 573.25 MiB is free. Process 3361284 has 27.62 GiB memory in use. Including non-PyTorch memory, this process has 19.20 GiB memory in use. Of the allocated memory 18.62 GiB is allocated by PyTorch, and 275.18 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting max_split_size_mb to avoid fragmentation.  See documentation for Memory Management and PYTORCH_CUDA_ALLOC_CONF
+wandb: - 0.006 MB of 0.006 MB uploadedwandb: \ 0.026 MB of 0.026 MB uploadedwandb: 🚀 View run misunderstood-music-36 at: https://wandb.ai/loongjk/Synthetic_Data_for_ZO-PromptZO_MeZO_large_models/runs/muonxh9m/workspace
+wandb: Synced 6 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
+wandb: Find logs at: ./wandb/run-20250408_151052-muonxh9m/logs

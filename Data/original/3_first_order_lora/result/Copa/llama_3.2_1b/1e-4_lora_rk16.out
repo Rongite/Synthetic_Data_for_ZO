@@ -1,0 +1,382 @@
+firstorder-meta-llama/Llama-3.2-1B-/home/jlong1/Downloads/Synthetic_Data_for_ZO/Data/original/Copa-lora-16-1e-4-0-lora-16
+STEPS: 20000
+BS: 16
+LR: 1e-4
+EPS: 1e-3
+SEED: 0
+MODE: lora
+LoRA RANK: 16
+Extra args: --lora --lora_rank 16 --train_as_classification False
+firstorder-meta-llama/Llama-3.2-1B-/home/jlong1/Downloads/Synthetic_Data_for_ZO/Data/original/Copa-lora-16-1e-4-0-lora-16
+STEPS: 20000
+BS: 16
+LR: 1e-4
+EPS: 1e-3
+SEED: 0
+MODE: lora
+LoRA RANK: 16
+Extra args: --lora --lora_rank 16 --train_as_classification False
+OurArguments(
+C4_grad_addr=None,
+C4_grad_mask=False,
+GraSP_mask=False,
+_n_gpu=1,
+accelerator_config={'split_batches': False, 'dispatch_batches': None, 'even_batches': True, 'use_seedable_sampler': True, 'non_blocking': False, 'gradient_accumulation_kwargs': None, 'use_configured_state': False},
+adafactor=False,
+adam_beta1=0.9,
+adam_beta2=0.999,
+adam_epsilon=1e-08,
+auto_find_batch_size=False,
+batch_eval_metrics=False,
+bf16=False,
+bf16_full_eval=False,
+data_seed=None,
+dataloader_drop_last=False,
+dataloader_num_workers=0,
+dataloader_persistent_workers=False,
+dataloader_pin_memory=True,
+dataloader_prefetch_factor=None,
+ddp_backend=None,
+ddp_broadcast_buffers=None,
+ddp_bucket_cap_mb=None,
+ddp_find_unused_parameters=None,
+ddp_timeout=1800,
+debug=[],
+deepspeed=None,
+disable_tqdm=False,
+dispatch_batches=None,
+do_eval=True,
+do_predict=False,
+do_train=False,
+dynamic_mask=False,
+dynamic_mask_step=100,
+eos_token=<EOS_TOKEN>,
+eval_accumulation_steps=None,
+eval_delay=0,
+eval_do_concat_batches=True,
+eval_on_start=False,
+eval_steps=500,
+eval_strategy=steps,
+eval_use_gather_object=False,
+evaluation_strategy=steps,
+fp16=True,
+fp16_backend=auto,
+fp16_full_eval=False,
+fp16_opt_level=O1,
+fsdp=[],
+fsdp_config={'min_num_params': 0, 'xla': False, 'xla_fsdp_v2': False, 'xla_fsdp_grad_ckpt': False},
+fsdp_min_num_params=0,
+fsdp_transformer_layer_cls_to_wrap=None,
+full_determinism=False,
+grad_mask=False,
+grad_save_path=None,
+gradient_accumulation_steps=1,
+gradient_checkpointing=False,
+gradient_checkpointing_kwargs=None,
+greater_is_better=False,
+group_by_length=False,
+half_precision_backend=auto,
+head_tuning=False,
+hub_always_push=False,
+hub_model_id=None,
+hub_private_repo=False,
+hub_strategy=every_save,
+hub_token=<HUB_TOKEN>,
+icl_sfc=False,
+ignore_data_skip=False,
+include_inputs_for_metrics=False,
+include_num_input_tokens_seen=False,
+include_tokens_per_second=False,
+jit_mode_eval=False,
+label_names=None,
+label_smoothing_factor=0.0,
+learning_rate=0.0001,
+length_column_name=length,
+linear_probing=False,
+load_best_model_at_end=True,
+load_bfloat16=False,
+load_float16=False,
+load_int8=False,
+local_rank=0,
+log_level=passive,
+log_level_replica=warning,
+log_on_each_node=True,
+logging_dir=/home/jlong1/Downloads/models/synthetic_data/fo_lora/original/Copa-Llama-3.2-1B-firstorder-meta-llama/Llama-3.2-1B-/home/jlong1/Downloads/Synthetic_Data_for_ZO/Data/original/Copa-lora-16-1e-4-0-lora-16/runs/Apr08_01-42-24_siai-3,
+logging_first_step=False,
+logging_nan_inf_filter=True,
+logging_steps=10,
+logging_strategy=steps,
+lora=True,
+lora_alpha=16,
+lora_rank=16,
+lp_early_stopping=False,
+lr_scheduler_kwargs={},
+lr_scheduler_type=linear,
+mask_path=None,
+max_grad_norm=1.0,
+max_length=2048,
+max_new_tokens=50,
+max_steps=20000,
+memory_limit_scenario=False,
+metric_for_best_model=loss,
+model_name=meta-llama/Llama-3.2-1B,
+model_weight_path=None,
+mp_parameters=,
+n_tokens=2,
+neftune_noise_alpha=None,
+no_auto_device=False,
+no_cuda=False,
+no_eval=False,
+no_flash_attn_2=False,
+no_reparam=True,
+non_diff=False,
+num_beams=1,
+num_dev=100,
+num_eval=1000,
+num_prefix=5,
+num_train=1000,
+num_train_epochs=3.0,
+num_train_sets=None,
+only_train_option=True,
+optim=sgd,
+optim_args=None,
+optim_target_modules=None,
+other_task_mask=False,
+outlier=False,
+outlier_percentage=0.005,
+output_dir=/home/jlong1/Downloads/models/synthetic_data/fo_lora/original/Copa-Llama-3.2-1B-firstorder-meta-llama/Llama-3.2-1B-/home/jlong1/Downloads/Synthetic_Data_for_ZO/Data/original/Copa-lora-16-1e-4-0-lora-16,
+overwrite_output_dir=False,
+past_index=-1,
+per_device_eval_batch_size=8,
+per_device_train_batch_size=16,
+prediction_loss_only=False,
+prefix_init_by_real_act=True,
+prefix_layer_id=None,
+prefix_tuning=False,
+prefix_tuning_one_layer=False,
+push_to_hub=False,
+push_to_hub_model_id=None,
+push_to_hub_organization=None,
+push_to_hub_token=<PUSH_TO_HUB_TOKEN>,
+random_subset_weights=False,
+ray_scope=last,
+record_time=True,
+remove_unused_columns=True,
+report_to=['tensorboard', 'wandb'],
+restore_callback_states_from_checkpoint=False,
+result_file=None,
+resume_from_checkpoint=None,
+run_name=/home/jlong1/Downloads/models/synthetic_data/fo_lora/original/Copa-Llama-3.2-1B-firstorder-meta-llama/Llama-3.2-1B-/home/jlong1/Downloads/Synthetic_Data_for_ZO/Data/original/Copa-lora-16-1e-4-0-lora-16,
+samples=1,
+sampling=True,
+save_grad=False,
+save_model=False,
+save_model_addr=None,
+save_on_each_node=False,
+save_on_interrupt=False,
+save_only_model=False,
+save_safetensors=True,
+save_steps=500,
+save_strategy=steps,
+save_total_limit=1,
+seed=42,
+sfc=False,
+skip_memory_metrics=True,
+smaller_weight_mask=False,
+split_batches=None,
+squeezellm_ckpt=None,
+squeezellm_wbits=4,
+tag=firstorder-meta-llama/Llama-3.2-1B-/home/jlong1/Downloads/Synthetic_Data_for_ZO/Data/original/Copa-lora-16-1e-4-0-lora-16,
+task_name=/home/jlong1/Downloads/Synthetic_Data_for_ZO/Data/original/Copa,
+temperature=1.0,
+tf32=None,
+top_k=None,
+top_p=0.95,
+torch_compile=False,
+torch_compile_backend=None,
+torch_compile_mode=None,
+torch_empty_cache_steps=None,
+torchdynamo=None,
+tpu_metrics_debug=False,
+tpu_num_cores=None,
+train_as_classification=False,
+train_set_seed=0,
+trainer=regular,
+use_adam=False,
+use_cpu=False,
+use_full_zo_update=False,
+use_ipex=False,
+use_legacy_prediction_loop=False,
+use_momentum=False,
+use_mps_device=False,
+use_sgd=False,
+use_squeezellm=False,
+use_squeezellm_peft=False,
+verbose=False,
+warmup_ratio=0.0,
+warmup_steps=0,
+weight_decay=0.0,
+zo_eps=0.001,
+)
+Detected local path: /home/jlong1/Downloads/Synthetic_Data_for_ZO/Data/original/Copa
+Loading COPA dataset from local JSONL files at: /home/jlong1/Downloads/Synthetic_Data_for_ZO/Data/original/Copa
+Loaded 400 samples from /home/jlong1/Downloads/Synthetic_Data_for_ZO/Data/original/Copa/copa_train.jsonl
+Loaded 100 samples from /home/jlong1/Downloads/Synthetic_Data_for_ZO/Data/original/Copa/copa_validation.jsonl
+Training samples: 400
+Validation samples: 100
+The training set is completely sequential
+Loading model...
+Done with 2.64s
+Inject lora to layer 0
+Inject lora to layer 1
+Inject lora to layer 2
+Inject lora to layer 3
+Inject lora to layer 4
+Inject lora to layer 5
+Inject lora to layer 6
+Inject lora to layer 7
+Inject lora to layer 8
+Inject lora to layer 9
+Inject lora to layer 10
+Inject lora to layer 11
+Inject lora to layer 12
+Inject lora to layer 13
+Inject lora to layer 14
+Inject lora to layer 15
+Tokenizing training samples...
+Done with 0.09s
+[2025-04-08 01:42:35,174] [INFO] [real_accelerator.py:219:get_accelerator] Setting ds_accelerator to cuda (auto detect)
+SGD (
+Parameter Group 0
+    dampening: 0
+    differentiable: False
+    foreach: None
+    lr: 0.0001
+    maximize: False
+    momentum: 0
+    nesterov: False
+    weight_decay: 0
+)
+{'loss': 2.3816, 'learning_rate': 9.75e-05, 'epoch': 26.32}
+{'eval_dev_loss': 2.356289863586426, 'eval_dev_model_preparation_time': 0.002, 'eval_dev_runtime': 0.5648, 'eval_dev_samples_per_second': 177.046, 'eval_dev_steps_per_second': 23.016, 'epoch': 26.32}
+{'eval_test_loss': 2.370560646057129, 'eval_test_model_preparation_time': 0.002, 'eval_test_runtime': 0.4063, 'eval_test_samples_per_second': 246.134, 'eval_test_steps_per_second': 31.997, 'epoch': 26.32}
+{'loss': 2.1913, 'learning_rate': 9.5e-05, 'epoch': 52.63}
+{'eval_dev_loss': 2.0659520626068115, 'eval_dev_model_preparation_time': 0.002, 'eval_dev_runtime': 0.5607, 'eval_dev_samples_per_second': 178.36, 'eval_dev_steps_per_second': 23.187, 'epoch': 52.63}
+{'eval_test_loss': 2.0651755332946777, 'eval_test_model_preparation_time': 0.002, 'eval_test_runtime': 0.3258, 'eval_test_samples_per_second': 306.919, 'eval_test_steps_per_second': 39.899, 'epoch': 52.63}
+{'loss': 1.7883, 'learning_rate': 9.250000000000001e-05, 'epoch': 78.95}
+{'eval_dev_loss': 1.7788810729980469, 'eval_dev_model_preparation_time': 0.002, 'eval_dev_runtime': 0.5584, 'eval_dev_samples_per_second': 179.081, 'eval_dev_steps_per_second': 23.281, 'epoch': 78.95}
+{'eval_test_loss': 1.7635388374328613, 'eval_test_model_preparation_time': 0.002, 'eval_test_runtime': 0.4386, 'eval_test_samples_per_second': 228.013, 'eval_test_steps_per_second': 29.642, 'epoch': 78.95}
+{'loss': 1.5782, 'learning_rate': 9e-05, 'epoch': 105.26}
+{'eval_dev_loss': 1.702549934387207, 'eval_dev_model_preparation_time': 0.002, 'eval_dev_runtime': 0.5402, 'eval_dev_samples_per_second': 185.116, 'eval_dev_steps_per_second': 24.065, 'epoch': 105.26}
+{'eval_test_loss': 1.6894488334655762, 'eval_test_model_preparation_time': 0.002, 'eval_test_runtime': 0.5115, 'eval_test_samples_per_second': 195.507, 'eval_test_steps_per_second': 25.416, 'epoch': 105.26}
+{'loss': 1.4787, 'learning_rate': 8.75e-05, 'epoch': 131.58}
+{'eval_dev_loss': 1.6748515367507935, 'eval_dev_model_preparation_time': 0.002, 'eval_dev_runtime': 0.5483, 'eval_dev_samples_per_second': 182.374, 'eval_dev_steps_per_second': 23.709, 'epoch': 131.58}
+{'eval_test_loss': 1.6696290969848633, 'eval_test_model_preparation_time': 0.002, 'eval_test_runtime': 0.3784, 'eval_test_samples_per_second': 264.257, 'eval_test_steps_per_second': 34.353, 'epoch': 131.58}
+{'loss': 1.404, 'learning_rate': 8.5e-05, 'epoch': 157.89}
+{'eval_dev_loss': 1.6698614358901978, 'eval_dev_model_preparation_time': 0.002, 'eval_dev_runtime': 0.544, 'eval_dev_samples_per_second': 183.825, 'eval_dev_steps_per_second': 23.897, 'epoch': 157.89}
+{'eval_test_loss': 1.6732183694839478, 'eval_test_model_preparation_time': 0.002, 'eval_test_runtime': 0.4595, 'eval_test_samples_per_second': 217.643, 'eval_test_steps_per_second': 28.294, 'epoch': 157.89}
+{'loss': 1.3435, 'learning_rate': 8.25e-05, 'epoch': 184.21}
+{'eval_dev_loss': 1.6787077188491821, 'eval_dev_model_preparation_time': 0.002, 'eval_dev_runtime': 0.5385, 'eval_dev_samples_per_second': 185.693, 'eval_dev_steps_per_second': 24.14, 'epoch': 184.21}
+{'eval_test_loss': 1.6910187005996704, 'eval_test_model_preparation_time': 0.002, 'eval_test_runtime': 0.4978, 'eval_test_samples_per_second': 200.884, 'eval_test_steps_per_second': 26.115, 'epoch': 184.21}
+{'loss': 1.2897, 'learning_rate': 8e-05, 'epoch': 210.53}
+{'eval_dev_loss': 1.6980781555175781, 'eval_dev_model_preparation_time': 0.002, 'eval_dev_runtime': 0.5561, 'eval_dev_samples_per_second': 179.84, 'eval_dev_steps_per_second': 23.379, 'epoch': 210.53}
+{'eval_test_loss': 1.7225050926208496, 'eval_test_model_preparation_time': 0.002, 'eval_test_runtime': 0.5427, 'eval_test_samples_per_second': 184.259, 'eval_test_steps_per_second': 23.954, 'epoch': 210.53}
+{'loss': 1.2382, 'learning_rate': 7.75e-05, 'epoch': 236.84}
+{'eval_dev_loss': 1.7291146516799927, 'eval_dev_model_preparation_time': 0.002, 'eval_dev_runtime': 0.5523, 'eval_dev_samples_per_second': 181.073, 'eval_dev_steps_per_second': 23.539, 'epoch': 236.84}
+{'eval_test_loss': 1.7659109830856323, 'eval_test_model_preparation_time': 0.002, 'eval_test_runtime': 0.4208, 'eval_test_samples_per_second': 237.637, 'eval_test_steps_per_second': 30.893, 'epoch': 236.84}
+{'loss': 1.1874, 'learning_rate': 7.500000000000001e-05, 'epoch': 263.16}
+{'eval_dev_loss': 1.7770861387252808, 'eval_dev_model_preparation_time': 0.002, 'eval_dev_runtime': 0.5492, 'eval_dev_samples_per_second': 182.081, 'eval_dev_steps_per_second': 23.671, 'epoch': 263.16}
+{'eval_test_loss': 1.82090425491333, 'eval_test_model_preparation_time': 0.002, 'eval_test_runtime': 0.4154, 'eval_test_samples_per_second': 240.735, 'eval_test_steps_per_second': 31.296, 'epoch': 263.16}
+{'loss': 1.1354, 'learning_rate': 7.25e-05, 'epoch': 289.47}
+{'eval_dev_loss': 1.8323142528533936, 'eval_dev_model_preparation_time': 0.002, 'eval_dev_runtime': 0.5509, 'eval_dev_samples_per_second': 181.537, 'eval_dev_steps_per_second': 23.6, 'epoch': 289.47}
+{'eval_test_loss': 1.8837162256240845, 'eval_test_model_preparation_time': 0.002, 'eval_test_runtime': 0.3807, 'eval_test_samples_per_second': 262.646, 'eval_test_steps_per_second': 34.144, 'epoch': 289.47}
+{'loss': 1.0864, 'learning_rate': 7e-05, 'epoch': 315.79}
+{'eval_dev_loss': 1.8954815864562988, 'eval_dev_model_preparation_time': 0.002, 'eval_dev_runtime': 0.5467, 'eval_dev_samples_per_second': 182.928, 'eval_dev_steps_per_second': 23.781, 'epoch': 315.79}
+{'eval_test_loss': 1.9582678079605103, 'eval_test_model_preparation_time': 0.002, 'eval_test_runtime': 0.5332, 'eval_test_samples_per_second': 187.564, 'eval_test_steps_per_second': 24.383, 'epoch': 315.79}
+{'loss': 1.0345, 'learning_rate': 6.750000000000001e-05, 'epoch': 342.11}
+{'eval_dev_loss': 1.9428372383117676, 'eval_dev_model_preparation_time': 0.002, 'eval_dev_runtime': 0.5827, 'eval_dev_samples_per_second': 171.603, 'eval_dev_steps_per_second': 22.308, 'epoch': 342.11}
+{'eval_test_loss': 2.025761127471924, 'eval_test_model_preparation_time': 0.002, 'eval_test_runtime': 0.561, 'eval_test_samples_per_second': 178.257, 'eval_test_steps_per_second': 23.173, 'epoch': 342.11}
+{'loss': 0.9848, 'learning_rate': 6.500000000000001e-05, 'epoch': 368.42}
+{'eval_dev_loss': 2.01035213470459, 'eval_dev_model_preparation_time': 0.002, 'eval_dev_runtime': 0.5673, 'eval_dev_samples_per_second': 176.265, 'eval_dev_steps_per_second': 22.915, 'epoch': 368.42}
+{'eval_test_loss': 2.130985736846924, 'eval_test_model_preparation_time': 0.002, 'eval_test_runtime': 0.5537, 'eval_test_samples_per_second': 180.59, 'eval_test_steps_per_second': 23.477, 'epoch': 368.42}
+{'loss': 0.9286, 'learning_rate': 6.25e-05, 'epoch': 394.74}
+{'eval_dev_loss': 2.099560260772705, 'eval_dev_model_preparation_time': 0.002, 'eval_dev_runtime': 0.5604, 'eval_dev_samples_per_second': 178.436, 'eval_dev_steps_per_second': 23.197, 'epoch': 394.74}
+{'eval_test_loss': 2.25573468208313, 'eval_test_model_preparation_time': 0.002, 'eval_test_runtime': 0.5507, 'eval_test_samples_per_second': 181.589, 'eval_test_steps_per_second': 23.607, 'epoch': 394.74}
+{'loss': 0.8718, 'learning_rate': 6e-05, 'epoch': 421.05}
+{'eval_dev_loss': 2.2116403579711914, 'eval_dev_model_preparation_time': 0.002, 'eval_dev_runtime': 0.5455, 'eval_dev_samples_per_second': 183.335, 'eval_dev_steps_per_second': 23.834, 'epoch': 421.05}
+{'eval_test_loss': 2.386129140853882, 'eval_test_model_preparation_time': 0.002, 'eval_test_runtime': 0.5114, 'eval_test_samples_per_second': 195.548, 'eval_test_steps_per_second': 25.421, 'epoch': 421.05}
+{'loss': 0.8217, 'learning_rate': 5.7499999999999995e-05, 'epoch': 447.37}
+{'eval_dev_loss': 2.291367292404175, 'eval_dev_model_preparation_time': 0.002, 'eval_dev_runtime': 0.5901, 'eval_dev_samples_per_second': 169.456, 'eval_dev_steps_per_second': 22.029, 'epoch': 447.37}
+{'eval_test_loss': 2.4500532150268555, 'eval_test_model_preparation_time': 0.002, 'eval_test_runtime': 0.5438, 'eval_test_samples_per_second': 183.893, 'eval_test_steps_per_second': 23.906, 'epoch': 447.37}
+{'loss': 0.777, 'learning_rate': 5.500000000000001e-05, 'epoch': 473.68}
+{'eval_dev_loss': 2.3879237174987793, 'eval_dev_model_preparation_time': 0.002, 'eval_dev_runtime': 0.5629, 'eval_dev_samples_per_second': 177.653, 'eval_dev_steps_per_second': 23.095, 'epoch': 473.68}
+{'eval_test_loss': 2.5320186614990234, 'eval_test_model_preparation_time': 0.002, 'eval_test_runtime': 0.5554, 'eval_test_samples_per_second': 180.06, 'eval_test_steps_per_second': 23.408, 'epoch': 473.68}
+{'loss': 0.7299, 'learning_rate': 5.25e-05, 'epoch': 500.0}
+{'eval_dev_loss': 2.4985265731811523, 'eval_dev_model_preparation_time': 0.002, 'eval_dev_runtime': 0.5625, 'eval_dev_samples_per_second': 177.787, 'eval_dev_steps_per_second': 23.112, 'epoch': 500.0}
+{'eval_test_loss': 2.6250908374786377, 'eval_test_model_preparation_time': 0.002, 'eval_test_runtime': 0.5478, 'eval_test_samples_per_second': 182.545, 'eval_test_steps_per_second': 23.731, 'epoch': 500.0}
+{'loss': 0.6857, 'learning_rate': 5e-05, 'epoch': 526.32}
+{'eval_dev_loss': 2.675679922103882, 'eval_dev_model_preparation_time': 0.002, 'eval_dev_runtime': 0.5547, 'eval_dev_samples_per_second': 180.284, 'eval_dev_steps_per_second': 23.437, 'epoch': 526.32}
+{'eval_test_loss': 2.7819855213165283, 'eval_test_model_preparation_time': 0.002, 'eval_test_runtime': 0.4563, 'eval_test_samples_per_second': 219.151, 'eval_test_steps_per_second': 28.49, 'epoch': 526.32}
+{'loss': 0.6413, 'learning_rate': 4.75e-05, 'epoch': 552.63}
+{'eval_dev_loss': 2.8248353004455566, 'eval_dev_model_preparation_time': 0.002, 'eval_dev_runtime': 0.5666, 'eval_dev_samples_per_second': 176.502, 'eval_dev_steps_per_second': 22.945, 'epoch': 552.63}
+{'eval_test_loss': 2.918637990951538, 'eval_test_model_preparation_time': 0.002, 'eval_test_runtime': 0.5495, 'eval_test_samples_per_second': 181.981, 'eval_test_steps_per_second': 23.657, 'epoch': 552.63}
+{'loss': 0.5969, 'learning_rate': 4.5e-05, 'epoch': 578.95}
+{'eval_dev_loss': 3.0395288467407227, 'eval_dev_model_preparation_time': 0.002, 'eval_dev_runtime': 0.5488, 'eval_dev_samples_per_second': 182.209, 'eval_dev_steps_per_second': 23.687, 'epoch': 578.95}
+{'eval_test_loss': 3.1188836097717285, 'eval_test_model_preparation_time': 0.002, 'eval_test_runtime': 0.5091, 'eval_test_samples_per_second': 196.416, 'eval_test_steps_per_second': 25.534, 'epoch': 578.95}
+{'loss': 0.5556, 'learning_rate': 4.25e-05, 'epoch': 605.26}
+{'eval_dev_loss': 3.2049169540405273, 'eval_dev_model_preparation_time': 0.002, 'eval_dev_runtime': 0.5566, 'eval_dev_samples_per_second': 179.67, 'eval_dev_steps_per_second': 23.357, 'epoch': 605.26}
+{'eval_test_loss': 3.258178949356079, 'eval_test_model_preparation_time': 0.002, 'eval_test_runtime': 0.5522, 'eval_test_samples_per_second': 181.102, 'eval_test_steps_per_second': 23.543, 'epoch': 605.26}
+{'loss': 0.5154, 'learning_rate': 4e-05, 'epoch': 631.58}
+{'eval_dev_loss': 3.2432706356048584, 'eval_dev_model_preparation_time': 0.002, 'eval_dev_runtime': 0.6251, 'eval_dev_samples_per_second': 159.965, 'eval_dev_steps_per_second': 20.795, 'epoch': 631.58}
+{'eval_test_loss': 3.294171094894409, 'eval_test_model_preparation_time': 0.002, 'eval_test_runtime': 0.5551, 'eval_test_samples_per_second': 180.143, 'eval_test_steps_per_second': 23.419, 'epoch': 631.58}
+{'loss': 0.474, 'learning_rate': 3.7500000000000003e-05, 'epoch': 657.89}
+{'eval_dev_loss': 3.3978681564331055, 'eval_dev_model_preparation_time': 0.002, 'eval_dev_runtime': 0.6106, 'eval_dev_samples_per_second': 163.778, 'eval_dev_steps_per_second': 21.291, 'epoch': 657.89}
+{'eval_test_loss': 3.420295000076294, 'eval_test_model_preparation_time': 0.002, 'eval_test_runtime': 0.549, 'eval_test_samples_per_second': 182.137, 'eval_test_steps_per_second': 23.678, 'epoch': 657.89}
+{'loss': 0.4392, 'learning_rate': 3.5e-05, 'epoch': 684.21}
+{'eval_dev_loss': 3.691221237182617, 'eval_dev_model_preparation_time': 0.002, 'eval_dev_runtime': 0.548, 'eval_dev_samples_per_second': 182.498, 'eval_dev_steps_per_second': 23.725, 'epoch': 684.21}
+{'eval_test_loss': 3.65206241607666, 'eval_test_model_preparation_time': 0.002, 'eval_test_runtime': 0.5458, 'eval_test_samples_per_second': 183.217, 'eval_test_steps_per_second': 23.818, 'epoch': 684.21}
+{'loss': 0.4026, 'learning_rate': 3.2500000000000004e-05, 'epoch': 710.53}
+{'eval_dev_loss': 3.8642046451568604, 'eval_dev_model_preparation_time': 0.002, 'eval_dev_runtime': 0.5469, 'eval_dev_samples_per_second': 182.85, 'eval_dev_steps_per_second': 23.771, 'epoch': 710.53}
+{'eval_test_loss': 3.790219306945801, 'eval_test_model_preparation_time': 0.002, 'eval_test_runtime': 0.464, 'eval_test_samples_per_second': 215.502, 'eval_test_steps_per_second': 28.015, 'epoch': 710.53}
+{'loss': 0.371, 'learning_rate': 3e-05, 'epoch': 736.84}
+{'eval_dev_loss': 3.8178205490112305, 'eval_dev_model_preparation_time': 0.002, 'eval_dev_runtime': 0.5772, 'eval_dev_samples_per_second': 173.25, 'eval_dev_steps_per_second': 22.522, 'epoch': 736.84}
+{'eval_test_loss': 3.7259066104888916, 'eval_test_model_preparation_time': 0.002, 'eval_test_runtime': 0.5419, 'eval_test_samples_per_second': 184.543, 'eval_test_steps_per_second': 23.991, 'epoch': 736.84}
+{'loss': 0.3408, 'learning_rate': 2.7500000000000004e-05, 'epoch': 763.16}
+{'eval_dev_loss': 3.9099950790405273, 'eval_dev_model_preparation_time': 0.002, 'eval_dev_runtime': 0.5839, 'eval_dev_samples_per_second': 171.275, 'eval_dev_steps_per_second': 22.266, 'epoch': 763.16}
+{'eval_test_loss': 3.79172945022583, 'eval_test_model_preparation_time': 0.002, 'eval_test_runtime': 0.5492, 'eval_test_samples_per_second': 182.079, 'eval_test_steps_per_second': 23.67, 'epoch': 763.16}
+{'loss': 0.3129, 'learning_rate': 2.5e-05, 'epoch': 789.47}
+{'eval_dev_loss': 4.080715179443359, 'eval_dev_model_preparation_time': 0.002, 'eval_dev_runtime': 0.588, 'eval_dev_samples_per_second': 170.066, 'eval_dev_steps_per_second': 22.109, 'epoch': 789.47}
+{'eval_test_loss': 4.015355110168457, 'eval_test_model_preparation_time': 0.002, 'eval_test_runtime': 0.5508, 'eval_test_samples_per_second': 181.538, 'eval_test_steps_per_second': 23.6, 'epoch': 789.47}
+{'loss': 0.2873, 'learning_rate': 2.25e-05, 'epoch': 815.79}
+{'eval_dev_loss': 4.32553243637085, 'eval_dev_model_preparation_time': 0.002, 'eval_dev_runtime': 0.5918, 'eval_dev_samples_per_second': 168.975, 'eval_dev_steps_per_second': 21.967, 'epoch': 815.79}
+{'eval_test_loss': 4.311054229736328, 'eval_test_model_preparation_time': 0.002, 'eval_test_runtime': 0.5365, 'eval_test_samples_per_second': 186.398, 'eval_test_steps_per_second': 24.232, 'epoch': 815.79}
+{'loss': 0.2615, 'learning_rate': 2e-05, 'epoch': 842.11}
+{'eval_dev_loss': 4.187460422515869, 'eval_dev_model_preparation_time': 0.002, 'eval_dev_runtime': 0.6264, 'eval_dev_samples_per_second': 159.639, 'eval_dev_steps_per_second': 20.753, 'epoch': 842.11}
+{'eval_test_loss': 4.132809638977051, 'eval_test_model_preparation_time': 0.002, 'eval_test_runtime': 0.5478, 'eval_test_samples_per_second': 182.563, 'eval_test_steps_per_second': 23.733, 'epoch': 842.11}
+{'loss': 0.2371, 'learning_rate': 1.75e-05, 'epoch': 868.42}
+{'eval_dev_loss': 4.3047261238098145, 'eval_dev_model_preparation_time': 0.002, 'eval_dev_runtime': 0.6659, 'eval_dev_samples_per_second': 150.18, 'eval_dev_steps_per_second': 19.523, 'epoch': 868.42}
+{'eval_test_loss': 4.278629302978516, 'eval_test_model_preparation_time': 0.002, 'eval_test_runtime': 0.5437, 'eval_test_samples_per_second': 183.913, 'eval_test_steps_per_second': 23.909, 'epoch': 868.42}
+{'loss': 0.2155, 'learning_rate': 1.5e-05, 'epoch': 894.74}
+{'eval_dev_loss': 4.3004350662231445, 'eval_dev_model_preparation_time': 0.002, 'eval_dev_runtime': 0.673, 'eval_dev_samples_per_second': 148.583, 'eval_dev_steps_per_second': 19.316, 'epoch': 894.74}
+{'eval_test_loss': 4.285682201385498, 'eval_test_model_preparation_time': 0.002, 'eval_test_runtime': 0.5367, 'eval_test_samples_per_second': 186.318, 'eval_test_steps_per_second': 24.221, 'epoch': 894.74}
+{'loss': 0.1955, 'learning_rate': 1.25e-05, 'epoch': 921.05}
+{'eval_dev_loss': 4.352715492248535, 'eval_dev_model_preparation_time': 0.002, 'eval_dev_runtime': 0.6831, 'eval_dev_samples_per_second': 146.385, 'eval_dev_steps_per_second': 19.03, 'epoch': 921.05}
+{'eval_test_loss': 4.362974643707275, 'eval_test_model_preparation_time': 0.002, 'eval_test_runtime': 0.5474, 'eval_test_samples_per_second': 182.696, 'eval_test_steps_per_second': 23.751, 'epoch': 921.05}
+{'loss': 0.1761, 'learning_rate': 1e-05, 'epoch': 947.37}
+{'eval_dev_loss': 4.511021614074707, 'eval_dev_model_preparation_time': 0.002, 'eval_dev_runtime': 0.6193, 'eval_dev_samples_per_second': 161.479, 'eval_dev_steps_per_second': 20.992, 'epoch': 947.37}
+{'eval_test_loss': 4.531093597412109, 'eval_test_model_preparation_time': 0.002, 'eval_test_runtime': 0.5527, 'eval_test_samples_per_second': 180.933, 'eval_test_steps_per_second': 23.521, 'epoch': 947.37}
+{'loss': 0.1598, 'learning_rate': 7.5e-06, 'epoch': 973.68}
+{'eval_dev_loss': 4.569364070892334, 'eval_dev_model_preparation_time': 0.002, 'eval_dev_runtime': 0.615, 'eval_dev_samples_per_second': 162.589, 'eval_dev_steps_per_second': 21.137, 'epoch': 973.68}
+{'eval_test_loss': 4.590009689331055, 'eval_test_model_preparation_time': 0.002, 'eval_test_runtime': 0.5508, 'eval_test_samples_per_second': 181.555, 'eval_test_steps_per_second': 23.602, 'epoch': 973.68}
+{'loss': 0.145, 'learning_rate': 5e-06, 'epoch': 1000.0}
+{'eval_dev_loss': 4.6589741706848145, 'eval_dev_model_preparation_time': 0.002, 'eval_dev_runtime': 0.5792, 'eval_dev_samples_per_second': 172.663, 'eval_dev_steps_per_second': 22.446, 'epoch': 1000.0}
+{'eval_test_loss': 4.677066802978516, 'eval_test_model_preparation_time': 0.002, 'eval_test_runtime': 0.5535, 'eval_test_samples_per_second': 180.666, 'eval_test_steps_per_second': 23.487, 'epoch': 1000.0}
+{'loss': 0.1305, 'learning_rate': 2.5e-06, 'epoch': 1026.32}
+{'eval_dev_loss': 4.7746100425720215, 'eval_dev_model_preparation_time': 0.002, 'eval_dev_runtime': 0.585, 'eval_dev_samples_per_second': 170.949, 'eval_dev_steps_per_second': 22.223, 'epoch': 1026.32}
+{'eval_test_loss': 4.789755344390869, 'eval_test_model_preparation_time': 0.002, 'eval_test_runtime': 0.5466, 'eval_test_samples_per_second': 182.935, 'eval_test_steps_per_second': 23.782, 'epoch': 1026.32}
+{'loss': 0.1186, 'learning_rate': 0.0, 'epoch': 1052.63}
+{'eval_dev_loss': 4.85786771774292, 'eval_dev_model_preparation_time': 0.002, 'eval_dev_runtime': 0.6487, 'eval_dev_samples_per_second': 154.158, 'eval_dev_steps_per_second': 20.041, 'epoch': 1052.63}
+{'eval_test_loss': 4.873267650604248, 'eval_test_model_preparation_time': 0.002, 'eval_test_runtime': 0.5358, 'eval_test_samples_per_second': 186.638, 'eval_test_steps_per_second': 24.263, 'epoch': 1052.63}
+{'train_runtime': 3081.9419, 'train_samples_per_second': 103.831, 'train_steps_per_second': 6.489, 'train_loss': 0.7878306306838989, 'epoch': 1052.63}
+===== Train set 0 =====
+{'accuracy': 0.75, 'dev_accuracy': 0.79}

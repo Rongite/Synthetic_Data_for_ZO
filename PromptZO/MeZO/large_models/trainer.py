@@ -163,7 +163,7 @@ class OurTrainer(Trainer):
         # NOTE: This is llama-specific
         # For other models, replace this with proper names for all linear layers
         if model_type in ['mistral', 'llama']:
-            return [
+            return[
                 layer.self_attn.q_proj,
                 layer.self_attn.k_proj,
                 layer.self_attn.v_proj,
@@ -173,7 +173,7 @@ class OurTrainer(Trainer):
                 layer.mlp.down_proj,
             ]
         elif model_type in ['opt']:
-            return [
+            return[
                 layer.self_attn.q_proj,
                 layer.self_attn.k_proj,
                 layer.self_attn.v_proj,
@@ -183,6 +183,7 @@ class OurTrainer(Trainer):
             ]
         else:
             raise NotImplementedError()
+
 
     def get_grad_and_load_to_model(self, model: nn.Module, grad_save_path,
                                    microbatch=1, minibatch=1000):
@@ -198,7 +199,7 @@ class OurTrainer(Trainer):
             _layers = _model.layers
             model_type = 'llama'
 
-        elif 'opt' in self.args.model_name.lower():
+        elif 'opt' in self.args.model_name.lower():       
             _layers = _model.decoder.layers
             model_type = 'opt'
 
@@ -207,17 +208,17 @@ class OurTrainer(Trainer):
 
         for n, p in model.named_parameters():
             p.requires_grad_(False)
-
+        
         for layer in _layers:
             for module in self.get_modules(layer, model_type):
                 module.weight.requires_grad_(True)
-
+        
         minibatch = min(minibatch, len(self.get_train_dataloader()))
         counter = tqdm(range(minibatch))
         continue_count = 0
         with torch.enable_grad():
             for sampled_batch in self.get_train_dataloader():
-                sampled_batch = {k: v.cuda() for k, v in sampled_batch.items()}
+                sampled_batch = {k: v.cuda() for k, v in sampled_batch.items()}    
                 if sampled_batch['input_ids'].shape[0] * sampled_batch['input_ids'].shape[1] > 2700:
                     continue_count += 1
                     print(continue_count)
@@ -231,27 +232,27 @@ class OurTrainer(Trainer):
                 torch.cuda.empty_cache()
                 count += 1
                 counter.update(1)
-
-                if count >= minibatch:
+                
+                if count >= minibatch: 
                     break
 
-        _grad_module_dict = {(i, j): torch.zeros_like(module.weight, device='cpu')
-                             for i, layer in enumerate(_layers)
-                             for j, module in enumerate(self.get_modules(layer, model_type))
-                             }
+        _grad_module_dict = { (i, j): torch.zeros_like(module.weight, device='cpu')
+            for i, layer in enumerate(_layers) 
+            for j, module in enumerate(self.get_modules(layer, model_type)) 
+        }
         for i, layer in enumerate(_layers):
             for j, module in enumerate(self.get_modules(layer, model_type)):
                 _grad_module_dict[(i, j)] = module.weight.grad.data / count
         model.zero_grad(set_to_none=True)
+        
+        torch.save(_grad_module_dict, grad_save_path)   
 
-        torch.save(_grad_module_dict, grad_save_path)
 
     @torch.no_grad()
     def get_outlier_masks(self, model, percentile=0.005):
         mask_dict = dict()
         for n, p in model.named_parameters():
-            if 'weight' not in n or 'layer_norm' in n or 'embed' in n or 'lm_head' in n or 'norm' in n:
-                continue
+            if 'weight' not in n or 'layer_norm' in n or 'embed' in n or 'lm_head' in n or 'norm' in n: continue
             top_cutoff = int(p.numel() * percentile)
             mask = torch.zeros(p.numel(), dtype=torch.bool, device=p.device)
             mask[-p.view(-1).abs().argsort()[:top_cutoff]] = True
@@ -262,8 +263,7 @@ class OurTrainer(Trainer):
     def get_smaller_weight_masks(self, model, percentile=0.20):
         mask_dict = dict()
         for n, p in model.named_parameters():
-            if 'weight' not in n or 'layer_norm' in n or 'embed' in n or 'lm_head' in n or 'norm' in n:
-                continue
+            if 'weight' not in n or 'layer_norm' in n or 'embed' in n or 'lm_head' in n or 'norm' in n: continue
             top_cutoff = int(p.numel() * percentile)
             mask = torch.zeros(p.numel(), dtype=torch.bool, device=p.device)
             mask[(p.view(-1).abs()).argsort()[:top_cutoff]] = True
@@ -272,20 +272,58 @@ class OurTrainer(Trainer):
             torch.cuda.empty_cache()
         return mask_dict
 
+
     @torch.no_grad()
     def get_random_masks(self, model, percentile=0.005):
         mask_dict = dict()
         for n, p in model.named_parameters():
-            if 'weight' not in n or 'layer_norm' in n or 'embed' in n or 'lm_head' in n or 'norm' in n:
-                continue
+            if 'weight' not in n or 'layer_norm' in n or 'embed' in n or 'lm_head' in n or 'norm' in n: continue
             random_indices = torch.randperm(p.numel(), device=p.device)[:int(p.numel() * percentile)]
             mask_dict[n] = random_indices.clone()
             torch.cuda.empty_cache()
         return mask_dict
 
+
+
+    # https://arxiv.org/pdf/1810.02340.pdf, SNIP approach
+    # def get_gradient_weight_product_masks(self, model: nn.Module,
+    #                                 percentile=5e-3, microbatch=1, minibatch=32):
+    #     assert minibatch % microbatch == 0
+    #     count = 0
+    #     old_batch_size = self._train_batch_size
+    #     self._train_batch_size = microbatch
+    #     with torch.enable_grad():
+    #         for sampled_batch in self.get_train_dataloader():
+    #             sampled_batch = {k: v.cuda() for k, v in sampled_batch.items()}    
+    #             count += len(sampled_batch['input_ids'])
+    #             outputs = model(**sampled_batch)
+    #             if hasattr(outputs, 'loss'):
+    #                 loss = outputs.loss
+    #             else:
+    #                 loss = outputs[0]
+    #             loss /= (minibatch/microbatch)
+    #             loss.backward()
+    #             if count >= minibatch: 
+    #                 break
+        
+    #     mask_dict = dict()
+    #     with torch.no_grad():
+    #         for n, p in model.named_parameters():
+    #             if not p.requires_grad: continue
+    #             if 'weight' not in n or 'layer_norm' in n or 'embed' in n or 'lm_head' in n or 'norm' in n: continue
+    #             per_layer_scores = p.grad.float() ** 2
+    #             top_cutoff = int(p.numel() * percentile)
+    #             mask = torch.zeros(*p.shape, dtype=torch.bool, device=p.device)
+    #             mask.view(-1)[(-per_layer_scores.view(-1)).argsort()[:top_cutoff]] = True
+    #             mask_dict[n] = mask
+    #             p.grad = None
+
+    #     return mask_dict
+
     @torch.no_grad()
+    # https://arxiv.org/pdf/2002.07376.pdf, GraSP paper
     def get_GraSP_mask(self, model: nn.Module,
-                       percentile=5e-3, microbatch=1, minibatch=16):
+                            percentile=5e-3, microbatch=1, minibatch=16):
         assert minibatch % microbatch == 0
         count = 0
         old_batch_size = self._train_batch_size
@@ -293,45 +331,45 @@ class OurTrainer(Trainer):
 
         weights = []
         for n, p in model.named_parameters():
-            if 'weight' not in n or 'layer_norm' in n or 'embed' in n or 'lm_head' in n or 'norm' in n:
+            if 'weight' not in n or 'layer_norm' in n or 'embed' in n or 'lm_head' in n or 'norm' in n: 
                 p.requires_grad_(False)
             else:
                 weights.append(p)
 
-        hessian_grad_prod = {n: torch.zeros_like(p, device='cpu')
+        hessian_grad_prod = {n : torch.zeros_like(p, device='cpu') 
                              for n, p in model.named_parameters() if p.requires_grad}
-
-        weight_params = {n: p for n, p in model.named_parameters()}
+        
+        weight_params = {n : p for n, p in model.named_parameters()}
 
         with torch.enable_grad():
             for sampled_batch in self.get_train_dataloader():
-                sampled_batch = {k: v.cuda() for k, v in sampled_batch.items()}
+                sampled_batch = {k: v.cuda() for k, v in sampled_batch.items()}    
                 count += 1
                 outputs = model(**sampled_batch)
                 if hasattr(outputs, 'loss'):
                     loss = outputs.loss
                 else:
                     loss = outputs[0]
-                loss /= (minibatch / microbatch)
-                grads = torch.autograd.grad(loss, weights, create_graph=True, retain_graph=True)
+                loss /= (minibatch/microbatch)
+                grads = torch.autograd.grad(loss, weights, 
+                                            create_graph=True, retain_graph=True)
 
                 inner_prod = torch.tensor(0.0, requires_grad=True, device=grads[0].device, dtype=torch.bfloat16)
                 for g in grads:
                     inner_prod = inner_prod + torch.inner(g.view(-1), g.data.view(-1))
                 del grads
-
+                
                 inner_prod.backward()
                 for n, p in model.named_parameters():
-                    if not p.requires_grad:
-                        continue
+                    if not p.requires_grad: continue
                     hessian_grad_prod[n] = (hessian_grad_prod[n].cuda() + p.grad).cpu()
                     p.grad = None
-
+                
                 torch.cuda.empty_cache()
-
-                if count >= minibatch:
+                
+                if count >= minibatch: 
                     break
-
+        
         mask_dict = dict()
 
         with torch.no_grad():
@@ -345,34 +383,33 @@ class OurTrainer(Trainer):
         self._train_batch_size = old_batch_size
         return mask_dict
 
+
     @torch.no_grad()
     def get_gradient_masks(self, model: nn.Module,
-                           percentile=5e-3, microbatch=1, minibatch=16):
+                                    percentile=5e-3, microbatch=1, minibatch=16):
         assert minibatch % microbatch == 0
         count = 0
         old_batch_size = self._train_batch_size
         self._train_batch_size = microbatch
         with torch.enable_grad():
             for sampled_batch in self.get_train_dataloader():
-                sampled_batch = {k: v.cuda() for k, v in sampled_batch.items()}
+                sampled_batch = {k: v.cuda() for k, v in sampled_batch.items()}    
                 count += 1
                 outputs = model(**sampled_batch)
                 if hasattr(outputs, 'loss'):
                     loss = outputs.loss
                 else:
                     loss = outputs[0]
-                loss /= (minibatch / microbatch)
+                loss /= (minibatch/microbatch)
                 loss.backward()
-                if count >= minibatch:
+                if count >= minibatch: 
                     break
-
+        
         mask_dict = dict()
         with torch.no_grad():
             for n, p in model.named_parameters():
-                if not p.requires_grad:
-                    continue
-                if 'weight' not in n or 'layer_norm' in n or 'embed' in n or 'lm_head' in n or 'norm' in n:
-                    continue
+                if not p.requires_grad: continue
+                if 'weight' not in n or 'layer_norm' in n or 'embed' in n or 'lm_head' in n or 'norm' in n: continue
                 per_layer_scores = p.grad ** 2
                 top_cutoff = int(p.numel() * percentile)
                 mask = torch.zeros(p.numel(), dtype=torch.bool, device=p.device)
@@ -389,13 +426,11 @@ class OurTrainer(Trainer):
         grad = transformers.AutoModelForCausalLM.from_pretrained(
             C4_grad_addr,
         )
-        grad_dict = {n: p for n, p in grad.named_parameters()}
+        grad_dict = {n : p for n, p in grad.named_parameters()}
         with torch.no_grad():
             for n, p in model.named_parameters():
-                if not p.requires_grad:
-                    continue
-                if 'weight' not in n or 'layer_norm' in n or 'embed' in n or 'lm_head' in n or 'norm' in n:
-                    continue
+                if not p.requires_grad: continue
+                if 'weight' not in n or 'layer_norm' in n or 'embed' in n or 'lm_head' in n or 'norm' in n: continue
                 per_layer_scores = grad_dict[n].cuda().abs()
                 top_cutoff = int(p.numel() * percentile)
                 mask = torch.zeros(p.numel(), dtype=torch.bool, device=p.device)
@@ -404,12 +439,13 @@ class OurTrainer(Trainer):
 
         return mask_dict
 
+
     @torch.no_grad()
     def add_to_weight(self, model, vec, scale):
         counter = 0
         for p in model.parameters():
             if p.requires_grad:
-                p.data.add_(vec[counter: counter + p.numel()].view(p.shape), alpha=scale)
+                p.data.add_(vec[counter : counter + p.numel()].view(p.shape), alpha=scale)
                 counter += p.numel()
 
     def get_grad(self, model, inputs, random_seed):
@@ -422,8 +458,8 @@ class OurTrainer(Trainer):
         torch.manual_seed(random_seed)
         ret_grad_dict = dict()
         for name, param in model.named_parameters():
-            if not param.requires_grad:
-                continue
+            if not param.requires_grad: continue
+            # Resample z
             z = torch.normal(mean=0, std=1, size=param.data.size(), device=param.data.device, dtype=param.data.dtype)
             ret_grad_dict[name] = global_projected_grad * z
         return ret_grad_dict, loss1
@@ -438,8 +474,8 @@ class OurTrainer(Trainer):
         torch.manual_seed(random_seed)
         ret_grad_dict = dict()
         for name, param in model.named_parameters():
-            if not param.requires_grad:
-                continue
+            if not param.requires_grad: continue
+            # Resample z
             z = torch.randint(low=0, high=2, size=param.data.size(), device=param.data.device, dtype=param.data.dtype)
             z[z == 0] = -1
             ret_grad_dict[name] = global_projected_grad * z
@@ -447,11 +483,18 @@ class OurTrainer(Trainer):
 
     @torch.inference_mode()
     def set_grad_with_mask(self, model, inputs, mask_dict, random_seed):
+        # with self.profiler('perturb'):
         self.zo_perturb_parameters_with_mask(scaling_factor=1, random_seed=random_seed, mask_dict=mask_dict)
+        # with self.profiler('forward'):
         loss1 = self.zo_forward(model, inputs)
+        # with self.profiler('perturb'):
         self.zo_perturb_parameters_with_mask(scaling_factor=-2, random_seed=random_seed, mask_dict=mask_dict)
+        # with self.profiler('forward'):
         loss2 = self.zo_forward(model, inputs)
+        # with self.profiler('perturb'):
         self.zo_perturb_parameters_with_mask(scaling_factor=1, random_seed=random_seed, mask_dict=mask_dict)
+
+        # with self.profiler('optimizer'):
         global_projected_grad = ((loss1 - loss2) / (2 * self.args.zo_eps)).item()
         torch.manual_seed(random_seed)
         for name, selected_param in self.named_parameters_to_optim.items():
@@ -459,167 +502,125 @@ class OurTrainer(Trainer):
             selected_param.grad = global_projected_grad * z
         return loss1
 
+
     def training_step(self, model: nn.Module, inputs: Dict[str, Union[torch.Tensor, Any]]) -> torch.Tensor:
         """
-        Perform a training step on a batch of inputs using standard first-order backpropagation.
+        Perform a training step on a batch of inputs.
+
+        Subclass and override to inject custom behavior.
+
+        Args:
+            model (`nn.Module`):
+                The model to train.
+            inputs (`Dict[str, Union[torch.Tensor, Any]]`):
+                The inputs and targets of the model.
+
+                The dictionary will be unpacked before being fed to the model. Most models expect the targets under the
+                argument `labels`. Check your model's documentation for all accepted arguments.
+
+        Return:
+            `torch.Tensor`: The tensor with training loss on this batch.
         """
         model.train()
         inputs = self._prepare_inputs(inputs)
-        with self.compute_loss_context_manager():
-            loss = self.compute_loss(model, inputs)
+
+        with self.profiler('forward-backward'):
+            with self.compute_loss_context_manager():
+                loss = self.compute_loss(model, inputs)
+
         if self.args.n_gpu > 1:
-            loss = loss.mean()
+            loss = loss.mean()  # mean() to average on multi-gpu parallel training
+
         if self.args.gradient_accumulation_steps > 1 and not self.deepspeed:
+            # deepspeed handles loss scaling by gradient_accumulation_steps in its `backward`
             loss = loss / self.args.gradient_accumulation_steps
+
         if self.use_apex:
             with amp.scale_loss(loss, self.optimizer) as scaled_loss:
                 scaled_loss.backward()
         elif self.deepspeed:
+            # loss gets scaled under gradient_accumulation_steps in deepspeed
             loss = self.deepspeed.backward(loss)
         else:
-            loss.backward()
+            with self.profiler('forward-backward'):
+                loss.backward()
+
         return loss.detach()
-
-    @torch.inference_mode()
-    def zo_forward(self, model, inputs):
-        model.eval()
-        if self.args.non_diff:
-            return self.zo_forward_nondiff(model, inputs)
-        with torch.inference_mode():
-            inputs = self._prepare_inputs(inputs)
-            with self.compute_loss_context_manager():
-                loss = self.compute_loss(model, inputs)
-            if self.args.n_gpu > 1:
-                loss = loss.mean()
-        return loss.detach()
-
-    def zo_forward_nondiff(self, model, inputs):
-        model.eval()
-        assert self.args.task_name == "SQuAD", "Non differentiable objective only supports SQuAD for now."
-        with torch.inference_mode():
-            inputs = self._prepare_inputs(inputs)
-            args = self.args
-            outputs = self.model.generate(
-                inputs["input_ids"],
-                do_sample=args.sampling,
-                temperature=args.temperature,
-                num_beams=args.num_beams,
-                top_p=args.top_p,
-                top_k=args.top_k,
-                max_new_tokens=min(args.max_new_tokens, args.max_length - inputs["input_ids"].size(1)),
-                num_return_sequences=1,
-                eos_token_id=[self.tokenizer.encode(args.eos_token, add_special_tokens=False)[0], self.tokenizer.eos_token_id],
-            )
-            output_text = []
-            for i in range(len(outputs)):
-                output_text.append(self.tokenizer.decode(outputs[i][inputs["input_ids"].size(1):], skip_special_tokens=True).strip())
-            f1s = [f1(output_text[i], inputs['gold'][i]) for i in range(len(output_text))]
-        return -torch.tensor(np.mean(f1s), dtype=torch.float32)
-
-    @torch.inference_mode()
-    def set_squeezellm_sparse_grad(self, model, inputs):
-        self.zo_random_seed = np.random.randint(1000000000)
-        self.squeezellm_zo_perturb_parameters(self.zo_random_seed, scaling_factor=1)
-        loss1 = self.zo_forward(model, inputs)
-        self.squeezellm_zo_perturb_parameters(self.zo_random_seed, scaling_factor=-2)
-        loss2 = self.zo_forward(model, inputs)
-        self.projected_grad = ((loss1 - loss2) / (2 * self.args.zo_eps)).item()
-        self.squeezellm_zo_perturb_parameters(self.zo_random_seed, scaling_factor=1)
-        torch.manual_seed(self.zo_random_seed)
-        for name, buffer in self.dequantized_weight_list:
-            sensitive_vals = self.sqllm_sparse_weight_dict[name]
-            z = torch.normal(mean=0, std=1, size=sensitive_vals.size(), device=sensitive_vals.device, dtype=sensitive_vals.dtype)
-            sensitive_vals.grad = self.projected_grad * z
-        return (loss1 + loss2) / 2
-
-    @torch.inference_mode()
-    def perturb_and_update_squeezellm_sparse_grad_memory_limited(self, model, inputs):
-        self.zo_random_seed = np.random.randint(1000000000)
-        self.squeezellm_zo_perturb_parameters_memory_limited(self.zo_random_seed, scaling_factor=1)
-        loss1 = self.zo_forward(model, inputs)
-        self.squeezellm_zo_perturb_parameters_memory_limited(self.zo_random_seed, scaling_factor=-2)
-        loss2 = self.zo_forward(model, inputs)
-        self.projected_grad = ((loss1 - loss2) / (2 * self.args.zo_eps)).item()
-        self.squeezellm_zo_perturb_parameters_memory_limited(self.zo_random_seed, scaling_factor=1)
-        torch.manual_seed(self.zo_random_seed)
-        for name, buffer in self.sqllm_sparse_weight_dict.items():
-            z = torch.randn_like(buffer, device=buffer.device, dtype=buffer.dtype)
-            buffer.add_(z, alpha=-(self.args.learning_rate * self.projected_grad))
-        return (loss1 + loss2) / 2
-
-    @torch.inference_mode()
-    def zo_step(self, model, inputs):
-        self.named_parameters_to_optim = []
-        for name, param in model.named_parameters():
-            if param.requires_grad:
-                self.named_parameters_to_optim.append((name, param))
-        self.zo_random_seed = np.random.randint(1000000000)
-        self.zo_perturb_parameters(scaling_factor=1)
-        loss1 = self.zo_forward(model, inputs)
-        self.zo_perturb_parameters(scaling_factor=-2)
-        loss2 = self.zo_forward(model, inputs)
-        self.projected_grad = ((loss1 - loss2) / (2 * self.args.zo_eps)).item()
-        self.zo_perturb_parameters(scaling_factor=1)
-        return (loss1 + loss2) / 2
-
-    def set_zo_grad_as_grad(self):
-        torch.manual_seed(self.zo_random_seed)
-        for name, param in self.named_parameters_to_optim:
-            z = torch.normal(mean=0, std=1, size=param.size(), device=param.device, dtype=param.dtype)
-            param.grad = self.projected_grad * z
 
     @torch.no_grad()
-    def full_zo_update(self):
-        torch.manual_seed(self.zo_random_seed)
-        for name, param in self.named_parameters_to_optim:
-            z = torch.normal(mean=0, std=1, size=param.size(), device=param.device, dtype=param.dtype)
-            param.data.add_(z, alpha=-(self.args.learning_rate * self.projected_grad))
+    def perturb_parameters_one_column_LoRA(self,
+                                           model: nn.Module, 
+                                       column_idx, 
+                                       column_full_param_pair_list, 
+                                       need_perturb=False,
+                                       random_vectors=None, 
+                                       eps=-1,
+                                       scaling_factor=-1):
+        if random_vectors is None:
+            random_vectors = dict()
+        for n, p in model.named_parameters():
+            if not p.requires_grad: 
+                continue
+            else:
+                if 'lora_A' in n:
+                    col, mat = column_full_param_pair_list[n]
+                    if need_perturb:
+                        if n not in random_vectors:
+                            random_vectors[n] = torch.randn_like(col)
+                        p[column_idx, :].add_(random_vectors[n], alpha=scaling_factor*eps)
+                    else:
+                        p.data.copy_(mat)
+                else:
+                    col, mat = column_full_param_pair_list[n]
+                    if need_perturb:
+                        if n not in random_vectors:
+                            random_vectors[n] = torch.randn_like(col)
+                        p[:, column_idx].add_(random_vectors[n], alpha=scaling_factor*eps)
+                    else:
+                        p.data.copy_(mat)
+        return model, random_vectors
 
-    ############## Misc overload functions ##############
+    def compute_loss(self, model, inputs, return_outputs=False):
+        """
+        How the loss is computed by Trainer. By default, all models return the loss in the first element.
 
-    def _set_signature_columns_if_needed(self):
-        if self._signature_columns is None:
-            signature = inspect.signature(self.model.forward)
-            self._signature_columns = list(signature.parameters.keys())
-            self._signature_columns += list(set(["label", "label_ids"] + self.label_names))
-            self._signature_columns += ["gold"]
+        Subclass and override for custom behavior.
+        """
+        if self.label_smoother is not None and "labels" in inputs:
+            labels = inputs.pop("labels")
+        else:
+            labels = None
+        outputs = model(**inputs)
+        # Save past state if it exists
+        # TODO: this needs to be fixed and made cleaner later.
+        if self.args.past_index >= 0:
+            self._past = outputs[self.args.past_index]
 
-    def save_model(self, output_dir: Optional[str] = None, _internal_call: bool = False):
-        if output_dir is None:
-            output_dir = self.args.output_dir
-        if is_torch_tpu_available():
-            self._save_tpu(output_dir)
-        elif is_sagemaker_mp_enabled():
-            os.makedirs(output_dir, exist_ok=True)
-            state_dict = self.model_wrapped.state_dict()
-            if self.args.should_save:
-                self._save(output_dir, state_dict=state_dict)
-        elif self.deepspeed:
-            if self.args.should_save:
-                self._save(output_dir)
-            if is_deepspeed_zero3_enabled():
-                file = os.path.join(output_dir, WEIGHTS_NAME)
-                if os.path.isfile(file):
-                    os.remove(file)
-                if not self.deepspeed.save_16bit_model(output_dir, WEIGHTS_NAME):
-                    logger.warning(
-                        "deepspeed.save_16bit_model didn't save the model, since"
-                        " stage3_gather_16bit_weights_on_model_save=false. Saving the full checkpoint instead, use"
-                        " zero_to_fp32.py to recover weights"
-                    )
-                    self.deepspeed.save_checkpoint(output_dir)
-        elif self.args.should_save:
-            self._save(output_dir)
-        if self.args.push_to_hub and not _internal_call:
-            self.push_to_hub(commit_message="Model save")
+        if labels is not None:
+            if unwrap_model(model)._get_name() in MODEL_FOR_CAUSAL_LM_MAPPING_NAMES.values():
+                loss = self.label_smoother(outputs, labels, shift_labels=True)
+            else:
+                loss = self.label_smoother(outputs, labels)
+        else:
+            if isinstance(outputs, dict) and "loss" not in outputs:
+                raise ValueError(
+                    "The model did not return a loss from the inputs, only the following keys: "
+                    f"{','.join(outputs.keys())}. For reference, the inputs it received are {','.join(inputs.keys())}."
+                )
+            # We don't use .loss here since the model may return tuples instead of ModelOutput.
+            loss = outputs["loss"] if isinstance(outputs, dict) else outputs[0]
+
+        return (loss, outputs) if return_outputs else loss
 
     def evaluate_test_set(self):
-        predictions = []
+        # Prediction loop
+        predictions = []  
         train_samples = self.train_samples
         for eval_id, eval_sample in enumerate(tqdm(self.test_samples)):
             predictions.append(
                 self.one_step_pred(train_samples, eval_sample)
             )
+        # Calculate metrics 
         metric_name = getattr(self.task, "metric_name", "accuracy")
         metrics = {metric_name: calculate_metric(predictions, metric_name)}
         print(metrics, flush=True)
@@ -627,80 +628,71 @@ class OurTrainer(Trainer):
         return metrics
 
     def one_step_pred(self, train_samples, eval_sample):
+        """
+        Return the prediction on the eval sample. In ICL, use train_samples as demonstrations
+        """
+
+        # Encode (add prompt and tokenize) the sample; if multiple-choice/classification, encode all candidates (options)
         encoded_candidates, option_lens = encode_prompt(
-            self.task, self.task.get_template(), train_samples, eval_sample, self.tokenizer,
-            max_length=self.args.max_length,
-            generation=self.task.generation,
-            max_new_tokens=self.args.max_new_tokens
+            self.task, self.task.get_template(), train_samples, eval_sample, self.tokenizer, max_length=self.args.max_length, 
+            generation=self.task.generation, max_new_tokens=self.args.max_new_tokens
         )
+
+        # Calibration
         if self.args.sfc or self.args.icl_sfc:
-            sfc_encoded_candidates, sfc_option_lens = encode_prompt(
-                self.task, self.task.get_template(), train_samples, eval_sample, self.tokenizer,
-                max_length=self.args.max_length,
-                sfc=self.args.sfc,
-                icl_sfc=self.args.icl_sfc,
-                generation=self.task.generation,
+            sfc_encoded_candidates, sfc_option_lens = encode_prompt(self.task, self.task.get_template(), 
+                train_samples, eval_sample, self.tokenizer, max_length=self.args.max_length,
+                sfc=self.args.sfc, icl_sfc=self.args.icl_sfc, generation=self.task.generation, 
                 max_new_tokens=self.args.max_new_tokens
             )
+
         outputs = []
         if self.task.generation:
+            # For generation tasks, return the autoregressively-generated text
             output_text = self.test_forward(encoded_candidates[0], generation=True)
             return Prediction(correct_candidate=eval_sample.correct_candidate, predicted_candidate=output_text)
         else:
+            # For classification/multiple-choice, calculate the probabilities of all candidates
             for candidate_id, encoded_candidate in enumerate(encoded_candidates):
                 selected_log_probs = self.test_forward(encoded_candidate, option_len=option_lens[candidate_id])
+
                 if self.args.sfc or self.args.icl_sfc:
                     sfc_selected_log_probs = self.test_forward(sfc_encoded_candidates[candidate_id], option_len=sfc_option_lens[candidate_id])
+
                 outputs.append({"log_probs": selected_log_probs, "sfc_log_probs": sfc_selected_log_probs if self.args.sfc or self.args.icl_sfc else None})
+
             if self.args.sfc or self.args.icl_sfc:
+                # Calibrated probabilities (surface form competition; https://arxiv.org/pdf/2104.08315.pdf)
+                # log p(candidate | input) = log p_lm(candidate | input) - log p_lm(candidate | sfc prompt)
                 scores = [x['log_probs'].sum().item() - x['sfc_log_probs'].sum().item() for x in outputs]
             else:
+                # (Default) length-normalized log probabilities
+                # log p(candidate | input) = log p_lm(candidate | input) / |candidate #tokens|
                 scores = [x['log_probs'].mean().item() for x in outputs]
+
             if isinstance(eval_sample.correct_candidate, list):
+                # For some datasets there are multiple correct answers
                 correct_candidate_id = [eval_sample.candidates.index(c) for c in eval_sample.correct_candidate]
             else:
                 correct_candidate_id = eval_sample.candidates.index(eval_sample.correct_candidate)
+
             return Prediction(correct_candidate=correct_candidate_id, predicted_candidate=int(np.argmax(scores)))
+
 
     def _inner_training_loop(
         self, batch_size=None, args=None, resume_from_checkpoint=None, trial=None, ignore_keys_for_eval=None
     ):
         """
-        重载内部训练循环，支持两种模式：
-        - 当 self.args.trainer == "zo" 时，使用零阶优化（MeZO）的更新方式；
-        - 否则（例如当 trainer=="first"）直接使用标准第一阶反向传播进行更新。
-        其它数据预处理、评估、日志输出和checkpoint保存均保持一致，均只保存dev_acc最高时的模型checkpoint。
+        We overload the original training loop to add linear probing and MeZO. Search key word "MeZO added"
+        for those updates.
         """
         self._train_batch_size = batch_size
+        # Data loader and number of training steps
         train_dataloader = self.get_train_dataloader()
 
-        if has_length(train_dataloader):
-            len_dataloader = len(train_dataloader)
-            num_update_steps_per_epoch = len_dataloader // args.gradient_accumulation_steps
-            num_update_steps_per_epoch = max(num_update_steps_per_epoch, 1)
-            num_examples = self.num_examples(train_dataloader)
-            if args.max_steps > 0:
-                max_steps = args.max_steps
-                num_train_epochs = args.max_steps // num_update_steps_per_epoch + int(
-                    args.max_steps % num_update_steps_per_epoch > 0
-                )
-                num_train_samples = args.max_steps * (args.train_batch_size * args.gradient_accumulation_steps * args.world_size)
-            else:
-                max_steps = math.ceil(args.num_train_epochs * num_update_steps_per_epoch)
-                num_train_epochs = math.ceil(args.num_train_epochs)
-                num_train_samples = self.num_examples(train_dataloader) * args.num_train_epochs
-        elif args.max_steps > 0:
-            max_steps = args.max_steps
-            num_train_epochs = sys.maxsize
-            num_update_steps_per_epoch = max_steps
-            num_train_samples = args.max_steps * (args.train_batch_size * args.gradient_accumulation_steps * args.world_size)
-        else:
-            raise ValueError(
-                "args.max_steps must be set to a positive value if dataloader does not have a length, was"
-                f" {args.max_steps}"
-            )
-
+        # MeZO added: Linear probing
         if self.args.linear_probing:
+
             def _get_token_prediction_layer(model):
                 if model.config.model_type == "opt":
                     return model.lm_head
@@ -708,9 +700,11 @@ class OurTrainer(Trainer):
                     raise NotImplementedError(model.config.model_type)
 
             def _extract_features(model, *args, **kwargs):
+                """some magic for getting features pre last layer"""
                 features = {}
                 def __hook(model_, input_, output_):
                     features["features"] = input_[0].detach()
+
                 _get_token_prediction_layer(model).register_forward_hook(__hook)
                 model.forward(*args, **kwargs)
                 return features["features"]
@@ -724,42 +718,56 @@ class OurTrainer(Trainer):
                     for k, v in inputs.items():
                         if isinstance(v, torch.Tensor):
                             inputs[k] = v.to(self.model.device)
+                        
                     feature = _extract_features(self.model, **inputs)
                     target = inputs["labels"]
+
+                    # Shift the target (bc it's autoregressive LM) and add the corresponding part
                     assert not self.args.train_as_classification and self.args.only_train_option
                     feature, target = feature[:, :-1], target[:, 1:]
                     for _i, _len in enumerate(inputs["option_len"]):
                         features.append(feature[_i, -_len:])
                         targets.append(target[_i, -_len:])
+
             logger.info("Finished getting features for training dataset")
+
             features = torch.cat(features, dim=0).cpu().numpy()
             targets = torch.cat(targets, dim=0).cpu().numpy()
+            # Whether to use bias
             if self.model.config.model_type in ["opt", "gpt2"]:
                 use_bias = False
             else:
                 raise NotImplementedError
-            tol = 0.01 if self.args.lp_early_stopping else 1e-4
+            # Set early stopping
+            tol = 0.01 if self.args.lp_early_stopping else 1e-4 # 1e-4 is scipy default
             max_iter = 1000 if self.args.lp_early_stopping else 5000
+
             logger.info("Fitting logistic regression...")
-            reg = LogisticRegressionCV(max_iter=max_iter, fit_intercept=use_bias, multi_class="multinomial",
-                                       random_state=0, tol=tol, n_jobs=-1).fit(features, targets)
+            reg = LogisticRegressionCV(max_iter=max_iter, fit_intercept=use_bias, multi_class="multinomial", random_state=0, tol=tol, n_jobs=-1).fit(features, targets)
             logger.info("Done")
+
             logger.info("Assigning weights to model")
             decoder = _get_token_prediction_layer(self.model)
             coef_torch = torch.tensor(reg.coef_, device=decoder.weight.device, dtype=decoder.weight.dtype)
             if use_bias:
                 bias_torch = torch.tensor(reg.intercept_, device=decoder.weight.device, dtype=decoder.weight.dtype)
-            if coef_torch.shape[0] == 1:
+            if coef_torch.shape[0] == 1: # The regressor only detects two classes
                 assert len(reg.classes_) == 2
                 coef_torch = torch.cat([-coef_torch / 2, coef_torch / 2], dim=0)
                 if use_bias:
                     bias_torch = torch.cat([-bias_torch / 2, bias_torch / 2], dim=0)
+
             for _i, token_id in enumerate(reg.classes_):
                 decoder.weight.data[token_id] = coef_torch[_i]
                 if use_bias:
                     decoder.bias.data[token_id] = bias_torch[_i]
+
             return None
 
+        # Setting up training control variables:
+        # number of training epochs: num_train_epochs
+        # number of training steps per epoch: num_update_steps_per_epoch
+        # total number of training steps to execute: max_steps
         total_train_batch_size = args.train_batch_size * args.gradient_accumulation_steps * args.world_size
 
         len_dataloader = None
@@ -773,15 +781,19 @@ class OurTrainer(Trainer):
                 num_train_epochs = args.max_steps // num_update_steps_per_epoch + int(
                     args.max_steps % num_update_steps_per_epoch > 0
                 )
+                # May be slightly incorrect if the last batch in the training dataloader has a smaller size but it's
+                # the best we can do.
                 num_train_samples = args.max_steps * total_train_batch_size
             else:
                 max_steps = math.ceil(args.num_train_epochs * num_update_steps_per_epoch)
                 num_train_epochs = math.ceil(args.num_train_epochs)
                 num_train_samples = self.num_examples(train_dataloader) * args.num_train_epochs
-        elif args.max_steps > 0:
+        elif args.max_steps > 0:  # Rely on max_steps when dataloader does not have a working size
             max_steps = args.max_steps
+            # Setting a very large number of epochs so we go as many times as necessary over the iterator.
             num_train_epochs = sys.maxsize
             num_update_steps_per_epoch = max_steps
+            num_examples = total_train_batch_size * args.max_steps
             num_train_samples = args.max_steps * total_train_batch_size
         else:
             raise ValueError(
@@ -790,6 +802,16 @@ class OurTrainer(Trainer):
             )
 
         if self.args.save_grad:
+            # self.model.__class__.forward = self.model.forward
+            # self.model.__class__.forward_wrap_with_option_len = self.model.forward
+            # addr = self.args.model_weight_path
+            # for e in [0, 4, 9]:
+            #     with torch.no_grad():
+            #         other_model_parameters_dict = torch.load(f'{addr}/epoch-{e}.pt', map_location='cpu')
+            #         for n, p in self.model.named_parameters():
+            #             p.data.copy_(other_model_parameters_dict[n])
+            #         del other_model_parameters_dict
+            #     self.get_grad_and_load_to_model(self.model, self.args.grad_save_path + os.path.sep + f'epoch-{e}.pt')
             self.get_grad_and_load_to_model(self.model, self.args.grad_save_path + os.path.sep + f'start.pt')
             raise RuntimeError('finished')
 
@@ -809,6 +831,7 @@ class OurTrainer(Trainer):
         self.state = TrainerState()
         self.state.is_hyper_param_search = trial is not None
 
+        # Activate gradient checkpointing if needed
         if args.gradient_checkpointing:
             self.model.gradient_checkpointing_enable()
 
@@ -820,42 +843,55 @@ class OurTrainer(Trainer):
             sys.stdout.flush()
             self.outlier_masks = self.get_smaller_weight_masks(model, self.args.outlier_percentage)
             has_mask = True
+            
         elif self.args.outlier:
             print(f'outlier mask {self.args.outlier_percentage}', flush=True)
             sys.stdout.flush()
             self.outlier_masks = self.get_outlier_masks(model, self.args.outlier_percentage)
             has_mask = True
+
         elif self.args.random_subset_weights:
             print(f'random mask {self.args.outlier_percentage}', flush=True)
             sys.stdout.flush()
             self.outlier_masks = self.get_random_masks(model, self.args.outlier_percentage)
             has_mask = True
+
         elif self.args.grad_mask:
             print(f'grad mask {self.args.outlier_percentage}', flush=True)
             sys.stdout.flush()
             self.outlier_masks = self.get_gradient_masks(model, self.args.outlier_percentage)
             has_mask = True
+
         elif self.args.C4_grad_mask:
             print(f'C4 grad mask {self.args.outlier_percentage}', flush=True)
             sys.stdout.flush()
             self.outlier_masks = self.get_C4_gradient_masks(model, self.args.C4_grad_addr, self.args.outlier_percentage)
+            # self.outlier_masks = torch.load('C4_grad_mask_1e_3.pt')
             has_mask = True
+
         elif self.args.GraSP_mask:
             print(f'GraSP mask {self.args.outlier_percentage}', flush=True)
             sys.stdout.flush()
             self.outlier_masks = self.get_GraSP_mask(model, self.args.outlier_percentage)
             has_mask = True
 
+        # for the rest of this function `model` is the outside model, whether it was wrapped or not
         if model is not self.model:
             self.model_wrapped = model
 
         if delay_optimizer_creation:
             self.create_optimizer_and_scheduler(num_training_steps=max_steps)
 
+        # Check if saved optimizer or scheduler states exist
         self._load_optimizer_and_scheduler(resume_from_checkpoint)
 
         self.named_parameters_to_optim = [(name, param) for name, param in model.named_parameters() if param.requires_grad]
 
+        # important: at this point:
+        # self.model         is the Transformers Model
+        # self.model_wrapped is DDP(Transformers Model), Deepspeed(Transformers Model), etc.
+
+        # Train!
         logger.info("***** Running training *****")
         logger.info(f"  Num examples = {num_examples}")
         logger.info(f"  Num Epochs = {num_train_epochs}")
@@ -863,7 +899,9 @@ class OurTrainer(Trainer):
         logger.info(f"  Total train batch size (w. parallel, distributed & accumulation) = {total_train_batch_size}")
         logger.info(f"  Gradient Accumulation steps = {args.gradient_accumulation_steps}")
         logger.info(f"  Total optimization steps = {max_steps}")
-        logger.info(f"  Number of trainable parameters = {sum(p.numel() for p in model.parameters() if p.requires_grad)}")
+        logger.info(
+            f"  Number of trainable parameters = {sum(p.numel() for p in model.parameters() if p.requires_grad)}"
+        )
 
         self.state.epoch = 0
         start_time = time.time()
@@ -871,7 +909,10 @@ class OurTrainer(Trainer):
         steps_trained_in_current_epoch = 0
         steps_trained_progress_bar = None
 
-        if resume_from_checkpoint is not None and os.path.isfile(os.path.join(resume_from_checkpoint, TRAINER_STATE_NAME)):
+        # Check if continuing training from a checkpoint
+        if resume_from_checkpoint is not None and os.path.isfile(
+            os.path.join(resume_from_checkpoint, TRAINER_STATE_NAME)
+        ):
             self.state = TrainerState.load_from_json(os.path.join(resume_from_checkpoint, TRAINER_STATE_NAME))
             epochs_trained = self.state.global_step // num_update_steps_per_epoch
             if not args.ignore_data_skip:
@@ -885,37 +926,48 @@ class OurTrainer(Trainer):
             logger.info(f"  Continuing training from global step {self.state.global_step}")
             if not args.ignore_data_skip:
                 logger.info(
-                    f"  Will skip the first {epochs_trained} epochs then the first {steps_trained_in_current_epoch} batches in the first epoch."
+                    f"  Will skip the first {epochs_trained} epochs then the first {steps_trained_in_current_epoch} "
+                    "batches in the first epoch. If this takes a lot of time, you can add the `--ignore_data_skip` "
+                    "flag to your launch command, but you will resume the training on data already seen by your model."
                 )
                 if self.is_local_process_zero() and not args.disable_tqdm:
                     steps_trained_progress_bar = tqdm(total=steps_trained_in_current_epoch)
                     steps_trained_progress_bar.set_description("Skipping the first batches")
 
+        # Update the references
         self.callback_handler.model = self.model
         self.callback_handler.optimizer = self.optimizer
         self.callback_handler.lr_scheduler = self.lr_scheduler
         self.callback_handler.train_dataloader = train_dataloader
         if self.hp_name is not None and self._trial is not None:
+            # use self._trial because the SigOpt/Optuna hpo only call `_hp_search_setup(trial)` instead of passing trial
+            # parameter to Train when using DDP.
             self.state.trial_name = self.hp_name(self._trial)
         if trial is not None:
             assignments = trial.assignments if self.hp_search_backend == HPSearchBackend.SIGOPT else trial
             self.state.trial_params = hp_params(assignments)
         else:
             self.state.trial_params = None
+        # This should be the same if the state has been saved but in case the training arguments changed, it's safer
+        # to set this after the load.
         self.state.max_steps = max_steps
         self.state.num_train_epochs = num_train_epochs
         self.state.is_local_process_zero = self.is_local_process_zero()
         self.state.is_world_process_zero = self.is_world_process_zero()
 
+        # tr_loss is a tensor to avoid synchronization of TPUs through .item()
         tr_loss = torch.tensor(0.0).to(args.device)
+        # _total_loss_scalar is updated everytime .item() has to be called on tr_loss and stores the sum of all losses
         self._total_loss_scalar = 0.0
         self._globalstep_last_logged = self.state.global_step
         model.zero_grad(set_to_none=True)
 
         self.control = self.callback_handler.on_train_begin(args, self.state, self.control)
+        # if args.trainer != 'zo':
         if args.report_to != []:
             wandb.run.name = self.args.tag
 
+        # Skip the first epochs_trained epochs to get the random state of the dataloader at the right point.
         if not args.ignore_data_skip:
             for epoch in range(epochs_trained):
                 _ = list(train_dataloader.sampler)
@@ -925,10 +977,10 @@ class OurTrainer(Trainer):
         self.record_loss = []
 
         if self.args.use_squeezellm:
-            self.named_buffers = {name: buffer for name, buffer in model.named_buffers()}
+            self.named_buffers = { name : buffer for name, buffer in model.named_buffers() }
             self.sqllm_sparse_weight_dict = dict()
             if self.args.memory_limit_scenario:
-                self.sqllm_sparse_weight_dict = {name: buffer.requires_grad_(True) for name, buffer in model.named_buffers() if 'sensitive_vals' in name}
+                self.sqllm_sparse_weight_dict = { name : buffer.requires_grad_(True) for name, buffer in model.named_buffers() if 'sensitive_vals' in name}
             else:
                 self.dequantized_weight_list = [(name, buffer) for name, buffer in model.named_buffers() if 'dequantized_weight' in name]
                 for name, buffer in self.dequantized_weight_list:
@@ -937,8 +989,7 @@ class OurTrainer(Trainer):
 
         if has_mask:
             self.named_parameters_to_optim = {
-                n: p.view(-1)[self.outlier_masks[n]].detach().clone().requires_grad_(True)
-                for n, p in model.named_parameters() if n in self.outlier_masks
+                n : p.view(-1)[self.outlier_masks[n]].detach().clone().requires_grad_(True) for n, p in model.named_parameters() if n in self.outlier_masks
             }
 
         if args.use_adam:
@@ -947,7 +998,9 @@ class OurTrainer(Trainer):
             elif has_mask:
                 self.optimizer = torch.optim.Adam(list(self.named_parameters_to_optim.values()), lr=self.args.learning_rate)
             else:
+                # with self.profiler('optimizer'):
                 self.optimizer = torch.optim.Adam(model.parameters(), lr=self.args.learning_rate)
+        
         elif args.use_momentum:
             if self.args.use_squeezellm:
                 self.optimizer = torch.optim.SGD(list(self.sqllm_sparse_weight_dict.values()), lr=self.args.learning_rate, momentum=0.9)
@@ -955,8 +1008,10 @@ class OurTrainer(Trainer):
                 self.optimizer = torch.optim.SGD(list(self.named_parameters_to_optim.values()), lr=self.args.learning_rate, momentum=0.9)
             else:
                 self.optimizer = torch.optim.SGD(model.parameters(), lr=self.args.learning_rate, momentum=0.9)
+
         else:
             if self.args.use_squeezellm:
+                # with self.profiler('optimizer'):
                 self.optimizer = torch.optim.SGD(list(self.sqllm_sparse_weight_dict.values()), lr=self.args.learning_rate)
             elif has_mask:
                 self.optimizer = torch.optim.SGD(list(self.named_parameters_to_optim.values()), lr=self.args.learning_rate)
@@ -976,10 +1031,15 @@ class OurTrainer(Trainer):
             else:
                 epoch_iterator = train_dataloader
 
+            # Reset the past mems state at the beginning of each epoch if necessary.
             if args.past_index >= 0:
                 self._past = None
 
-            steps_in_epoch = len(epoch_iterator) if len_dataloader is not None else args.max_steps * args.gradient_accumulation_steps
+            steps_in_epoch = (
+                len(epoch_iterator)
+                if len_dataloader is not None
+                else args.max_steps * args.gradient_accumulation_steps
+            )
             self.control = self.callback_handler.on_epoch_begin(args, self.state, self.control)
 
             if epoch == epochs_trained and resume_from_checkpoint is not None and steps_trained_in_current_epoch == 0:
@@ -1008,32 +1068,39 @@ class OurTrainer(Trainer):
                         tr_loss_step = self.perturb_and_update_squeezellm_sparse_grad_memory_limited(model, inputs)
                     else:
                         tr_loss_step = self.set_squeezellm_sparse_grad(model, inputs)
+                    
                 elif args.trainer == 'zo' and has_mask:
                     zo_random_seed = np.random.randint(1000000000)
                     tr_loss_step = self.set_grad_with_mask(model, inputs, self.outlier_masks, zo_random_seed)
                     if self.args.record_time:
                         self.record_loss.append(tr_loss_step)
+                    
                 elif args.trainer == 'zo':
                     tr_loss_step = self.zo_step(model, inputs)
                     if self.args.record_time:
                         self.record_loss.append(tr_loss_step)
                     if self.args.use_full_zo_update:
+                        # with self.profiler('optimizer'):
                         self.full_zo_update()
                     else:
                         self.set_zo_grad_as_grad()
+
                 else:
-                    # First-order fine-tuning: directly use standard backpropagation via training_step.
                     tr_loss_step = self.training_step(model, inputs)
                     with torch.no_grad():
                         if has_mask:
-                            grad_dict = {n: p.grad for n, p in self.model.named_parameters() if p.requires_grad}
+                            grad_dict = {n : p.grad for n, p in self.model.named_parameters() if p.requires_grad}
                             for name, selected_param in self.named_parameters_to_optim.items():
                                 selected_param.grad = grad_dict[name].view(-1)[self.outlier_masks[name]].clone()
                             for n, p in self.model.named_parameters():
                                 p.grad = None
 
-                if (args.logging_nan_inf_filter and not is_torch_tpu_available() and
-                    (torch.isnan(tr_loss_step) or torch.isinf(tr_loss_step))):
+                if (
+                    args.logging_nan_inf_filter
+                    and not is_torch_tpu_available()
+                    and (torch.isnan(tr_loss_step) or torch.isinf(tr_loss_step))
+                ):
+                    # if loss is nan or inf simply add the average of previous logged losses
                     tr_loss += tr_loss / (1 + self.state.global_step - self._globalstep_last_logged)
                 else:
                     tr_loss += tr_loss_step
@@ -1041,58 +1108,81 @@ class OurTrainer(Trainer):
                 self.current_flos += float(self.floating_point_ops(inputs))
 
                 if (step + 1) % args.gradient_accumulation_steps == 0 or (
-                    steps_in_epoch <= args.gradient_accumulation_steps and (step + 1) == steps_in_epoch
+                    # last step in epoch but step is always smaller than gradient_accumulation_steps
+                    steps_in_epoch <= args.gradient_accumulation_steps
+                    and (step + 1) == steps_in_epoch
                 ):
                     if args.trainer == 'zo' and (not args.memory_limit_scenario):
                         if not args.use_full_zo_update:
+                            # with self.profiler('optimizer'):
                             self.optimizer.step()
                             self.optimizer.zero_grad(set_to_none=True)
+                    
                         if self.args.use_squeezellm:
+                            # with self.profiler('copy'):              
                             for name, buffer in self.dequantized_weight_list:
                                 sensitive_vals = self.sqllm_sparse_weight_dict[name]
                                 indices = self.named_buffers[name.replace('dequantized_weight', 'sensitive_indices')]
                                 buffer[indices[0], indices[1]] = sensitive_vals
-                    elif args.trainer != 'zo':
+
+                    elif args.trainer != 'zo':   
                         with self.profiler('optimizer'):
                             self.optimizer.step()
                             self.lr_scheduler.step()
                             self.optimizer.zero_grad(set_to_none=True)
+
                     torch.cuda.empty_cache()
+                    # if self.state.global_step == 5:
+                    #     # print(self.profiler.summary()['cuda-max']['forward'].sum().item()/48)
+                    #     import pdb; pdb.set_trace()
                     if has_mask:
+                        # with self.profiler('copy'):
                         with torch.no_grad():
+                            # with self.profiler('optimizer'):
                             for name, param in model.named_parameters():
-                                if name not in self.named_parameters_to_optim:
-                                    continue
+                                if not name in self.named_parameters_to_optim: continue
                                 param.view(-1)[self.outlier_masks[name]] = self.named_parameters_to_optim[name]
-                        if self.args.dynamic_mask and (self.state.global_step + 1) % self.args.dynamic_mask_step == 0:
+
+                        if self.args.dynamic_mask and \
+                                (self.state.global_step + 1) % self.args.dynamic_mask_step == 0:
                             assert not self.args.use_momentum and not self.args.use_adam
+
                             if self.args.smaller_weight_mask:
                                 del self.outlier_masks
                                 self.outlier_masks = self.get_smaller_weight_masks(model, self.args.outlier_percentage)
+                            
                             elif self.args.outlier:
                                 del self.outlier_masks
                                 self.outlier_masks = self.get_outlier_masks(model, self.args.outlier_percentage)
+
                             elif self.args.random_subset_weights:
                                 del self.outlier_masks
                                 self.outlier_masks = self.get_random_masks(model, self.args.outlier_percentage)
+
                             elif self.args.grad_mask:
                                 del self.outlier_masks
                                 self.outlier_masks = self.get_gradient_masks(model, self.args.outlier_percentage)
+
                             elif self.args.GraSP_mask:
                                 del self.outlier_masks
                                 self.outlier_masks = self.get_GraSP_mask(model, self.args.outlier_percentage)
+
                             self.named_parameters_to_optim = {
-                                n: p.view(-1)[self.outlier_masks[n]].detach().clone().requires_grad_(True)
-                                for n, p in model.named_parameters() if n in self.outlier_masks
+                                n : p.view(-1)[self.outlier_masks[n]].detach().clone().requires_grad_(True) for n, p in model.named_parameters() if n in self.outlier_masks
                             }
                             self.optimizer = torch.optim.SGD(list(self.named_parameters_to_optim.values()), lr=self.args.learning_rate)
+
+
                     self.state.global_step += 1
                     self.state.epoch = epoch + (step + 1) / steps_in_epoch
                     self.control = self.callback_handler.on_step_end(args, self.state, self.control)
-                    if self.args.save_strategy == 'steps' and (self.state.global_step > 0 and self.state.global_step % self.args.save_steps == 0):
-                        self.control.should_save = True
+                    # if self.state.global_step > 0 and self.state.global_step % 1000 == 0:
+                    #     self.evaluate_test_set()
+                    if self.args.save_strategy == 'steps' and \
+                        (self.state.global_step > 0 and self.state.global_step % self.args.save_steps == 0):
+                        self.control.should_save = True    
                         self.control.should_evaluate = True
-                    torch.cuda.empty_cache()
+                    torch.cuda.empty_cache()                
                     self._maybe_log_save_evaluate(tr_loss, None, model, trial, epoch, ignore_keys_for_eval)
                 else:
                     self.control = self.callback_handler.on_substep_end(args, self.state, self.control)
@@ -1103,7 +1193,8 @@ class OurTrainer(Trainer):
             if step < 0:
                 logger.warning(
                     "There seems to be not a single sample in your epoch_iterator, stopping training at step"
-                    f" {self.state.global_step}!"
+                    f" {self.state.global_step}! This is expected if you're using an IterableDataset and set"
+                    f" num_steps ({max_steps}) higher than the number of available samples."
                 )
                 self.control.should_training_stop = True
 
@@ -1112,9 +1203,9 @@ class OurTrainer(Trainer):
             if self.args.save_model_addr and self.control.should_save:
                 if not os.path.exists(self.args.save_model_addr):
                     os.makedirs(self.args.save_model_addr)
-                model_params = {n: p for n, p in model.named_parameters()}
-                torch.save(model_params, self.args.save_model_addr + os.sep + f'epoch-{epoch}.pt')
-                del model_params
+                model_params = {n : p for n, p in model.named_parameters()}
+                torch.save(model_params, self.args.save_model_addr + os.sep + f'epoch-{epoch}.pt')       
+                del model_params         
                 torch.cuda.empty_cache()
 
             self._maybe_log_save_evaluate(tr_loss, None, model, trial, epoch, ignore_keys_for_eval)
@@ -1123,10 +1214,13 @@ class OurTrainer(Trainer):
                 break
 
         if args.past_index and hasattr(self, "_past"):
+            # Clean the state at the end of training
             delattr(self, "_past")
 
-        logger.info("\n\nTraining completed. Do not forget to share your model on huggingface.co/models =)\n\n")
+        logger.info("\n\nTraining completed. Do not forget to share your model on huggingface.co/models =)\n\n")      
         self._load_best_model()
+
+        # add remaining tr_loss
         self._total_loss_scalar += tr_loss.item()
         train_loss = self._total_loss_scalar / self.state.global_step
 
@@ -1144,6 +1238,7 @@ class OurTrainer(Trainer):
         run_dir = self._get_output_dir(trial)
         checkpoints_sorted = self._sorted_checkpoints(use_mtime=False, output_dir=run_dir)
 
+        # Delete the last checkpoint when save_total_limit=1 if it's different from the best checkpoint.
         if self.state.best_model_checkpoint is not None and self.args.save_total_limit == 1:
             for checkpoint in checkpoints_sorted:
                 if checkpoint != self.state.best_model_checkpoint:
@@ -1151,33 +1246,61 @@ class OurTrainer(Trainer):
                     shutil.rmtree(checkpoint)
 
         self.control = self.callback_handler.on_train_end(args, self.state, self.control)
+        # if self.args.record_time:
+        #     torch.save(self.profiler.summary(), f'time{os.sep}{self.args.model_name.replace(os.sep, "-")}-{self.args.task_name}-{self.args.tag.replace(os.sep, "-")}-time.pt')
+        #     torch.save(self.record_loss, f'time{os.sep}{self.args.model_name.replace(os.sep, "-")}-{self.args.task_name}-{self.args.tag.replace(os.sep, "-")}-loss.pt')
+
         return TrainOutput(self.state.global_step, train_loss, metrics)
 
+
     ############## MeZO ##############
+
     @torch.no_grad()
     def zo_perturb_parameters(self, random_seed=None, scaling_factor=1):
+        """
+        Perturb the parameters with random vector z.
+        Input: 
+        - random_seed: random seed for MeZO in-place perturbation (if it's None, we will use self.zo_random_seed)
+        - scaling_factor: theta = theta + scaling_factor * z * eps
+        """
+
+        # Set the random seed to ensure that we sample the same z for perturbation/update
         torch.manual_seed(random_seed if random_seed is not None else self.zo_random_seed)
+        
         for name, param in self.named_parameters_to_optim:
             z = torch.normal(mean=0, std=1, size=param.size(), device=param.device, dtype=param.dtype)
             param.add_(z, alpha=(scaling_factor * self.args.zo_eps))
 
+
     @torch.no_grad()
     def squeezellm_zo_perturb_parameters(self, random_seed=None, scaling_factor=1):
         torch.manual_seed(random_seed if random_seed is not None else self.zo_random_seed)
+        
         for name, buffer in self.dequantized_weight_list:
             indices = self.named_buffers[name.replace('dequantized_weight', 'sensitive_indices')]
             z = torch.normal(mean=0, std=1, size=(indices.shape[1],), device=buffer.device, dtype=buffer.dtype)
             buffer[indices[0], indices[1]] += (scaling_factor * self.args.zo_eps) * z
-
+    
     @torch.no_grad()
     def squeezellm_zo_perturb_parameters_memory_limited(self, random_seed=None, scaling_factor=1):
         torch.manual_seed(random_seed if random_seed is not None else self.zo_random_seed)
+        
         for name, buffer in self.sqllm_sparse_weight_dict.items():
             z = torch.randn_like(buffer, device=buffer.device, dtype=buffer.dtype)
             buffer.add_(z, alpha=(scaling_factor * self.args.zo_eps))
+    
 
     def zo_perturb_parameters_rademacher(self, random_seed=None, scaling_factor=1):
+        """
+        Perturb the parameters with random vector z.
+        Input: 
+        - random_seed: random seed for MeZO in-place perturbation (if it's None, we will use self.zo_random_seed)
+        - scaling_factor: theta = theta + scaling_factor * z * eps
+        """
+
+        # Set the random seed to ensure that we sample the same z for perturbation/update
         torch.manual_seed(random_seed if random_seed is not None else self.zo_random_seed)
+        
         for name, param in self.named_parameters_to_optim:
             z = torch.randint(low=0, high=2, size=param.data.size(), device=param.data.device, dtype=param.data.dtype)
             z[z == 0] = -1
@@ -1186,139 +1309,233 @@ class OurTrainer(Trainer):
     @torch.inference_mode()
     def zo_perturb_parameters_with_mask(self, random_seed=None, mask_dict=None, scaling_factor=1):
         torch.manual_seed(random_seed if random_seed is not None else self.zo_random_seed)
+        
         for name, param in self.model.named_parameters():
-            if not name in self.named_parameters_to_optim:
-                continue
+            if not name in self.named_parameters_to_optim: continue
             selected_param = self.named_parameters_to_optim[name]
             z = torch.normal(mean=0, std=1, size=selected_param.size(), device=selected_param.device, dtype=selected_param.dtype)
             param.view(-1)[mask_dict[name]] += (scaling_factor * self.args.zo_eps) * z
 
     def norm_zo_perturb_parameters(self, random_seed=None, scaling_factor=1, normalize_dict=None):
+        """
+        Perturb the parameters with random vector z.
+        Input: 
+        - random_seed: random seed for MeZO in-place perturbation (if it's None, we will use self.zo_random_seed)
+        - scaling_factor: theta = theta + scaling_factor * z * eps
+        """
+
+        # Set the random seed to ensure that we sample the same z for perturbation/update
         torch.manual_seed(random_seed if random_seed is not None else self.zo_random_seed)
+        
         for name, param in self.named_parameters_to_optim:
             z = torch.normal(mean=0, std=1, size=param.data.size(), device=param.data.device, dtype=param.data.dtype)
             param.data = param.data + scaling_factor * z * self.args.zo_eps * normalize_dict[name]
 
+
     def zo_forward(self, model, inputs):
+        """
+        Get (no gradient) loss from the model. Dropout is turned off too.
+        """
         model.eval()
         if self.args.non_diff:
+            # Non-differentiable objective (may require autoregressive generation)
             return self.zo_forward_nondiff(model, inputs)
+
         with torch.inference_mode():
             inputs = self._prepare_inputs(inputs)
             with self.compute_loss_context_manager():
                 loss = self.compute_loss(model, inputs)
             if self.args.n_gpu > 1:
-                loss = loss.mean()
+                # Warning: this is copied from the original Huggingface Trainer. Untested.
+                loss = loss.mean()  # mean() to average on multi-gpu parallel training
         return loss.detach()
 
+
     def zo_forward_nondiff(self, model, inputs):
+        """
+        Get (no gradient) non-diffiable loss from the model.
+        """
         model.eval()
         assert self.args.task_name == "SQuAD", "Non differentiable objective only supports SQuAD for now."
+
         with torch.inference_mode():
             inputs = self._prepare_inputs(inputs)
             args = self.args
             outputs = self.model.generate(
-                inputs["input_ids"],
-                do_sample=args.sampling,
-                temperature=args.temperature,
-                num_beams=args.num_beams,
-                top_p=args.top_p,
-                top_k=args.top_k,
-                max_new_tokens=min(args.max_new_tokens, args.max_length - inputs["input_ids"].size(1)),
-                num_return_sequences=1,
-                eos_token_id=[self.tokenizer.encode(args.eos_token, add_special_tokens=False)[0], self.tokenizer.eos_token_id],
+                inputs["input_ids"], do_sample=args.sampling, temperature=args.temperature, 
+                num_beams=args.num_beams, top_p=args.top_p, top_k=args.top_k, max_new_tokens=min(args.max_new_tokens, args.max_length - inputs["input_ids"].size(1)), 
+                num_return_sequences=1, eos_token_id=[self.tokenizer.encode(args.eos_token, add_special_tokens=False)[0], self.tokenizer.eos_token_id],
             )
             output_text = []
             for i in range(len(outputs)):
                 output_text.append(self.tokenizer.decode(outputs[i][inputs["input_ids"].size(1):], skip_special_tokens=True).strip())
             f1s = [f1(output_text[i], inputs['gold'][i]) for i in range(len(output_text))]
+        
         return -torch.tensor(np.mean(f1s), dtype=torch.float32)
+    
 
     @torch.inference_mode()
     def set_squeezellm_sparse_grad(self, model, inputs):
         self.zo_random_seed = np.random.randint(1000000000)
+        # with self.profiler('perturb'):
         self.squeezellm_zo_perturb_parameters(self.zo_random_seed, scaling_factor=1)
+        # with self.profiler('forward'):
         loss1 = self.zo_forward(model, inputs)
+
+        # with self.profiler('perturb'):
         self.squeezellm_zo_perturb_parameters(self.zo_random_seed, scaling_factor=-2)
+        # with self.profiler('forward'):
         loss2 = self.zo_forward(model, inputs)
+
         self.projected_grad = ((loss1 - loss2) / (2 * self.args.zo_eps)).item()
+
+        # with self.profiler('perturb'):
         self.squeezellm_zo_perturb_parameters(self.zo_random_seed, scaling_factor=1)
+        
         torch.manual_seed(self.zo_random_seed)
+
+        # with self.profiler('set_grad'):
         for name, buffer in self.dequantized_weight_list:
-            sensitive_vals = self.sqllm_sparse_weight_dict[name]
+            sensitive_vals =  self.sqllm_sparse_weight_dict[name]
             z = torch.normal(mean=0, std=1, size=sensitive_vals.size(), device=sensitive_vals.device, dtype=sensitive_vals.dtype)
             sensitive_vals.grad = self.projected_grad * z
+
         return (loss1 + loss2) / 2
 
     @torch.inference_mode()
     def perturb_and_update_squeezellm_sparse_grad_memory_limited(self, model, inputs):
         self.zo_random_seed = np.random.randint(1000000000)
+        # First function evaluation
+        # with self.profiler('perturb'):
         self.squeezellm_zo_perturb_parameters_memory_limited(self.zo_random_seed, scaling_factor=1)
+        # with self.profiler('forward'):
         loss1 = self.zo_forward(model, inputs)
+
+        # Second function evaluation
+        # with self.profiler('perturb'):
         self.squeezellm_zo_perturb_parameters_memory_limited(self.zo_random_seed, scaling_factor=-2)
+        # with self.profiler('forward'):
         loss2 = self.zo_forward(model, inputs)
+
         self.projected_grad = ((loss1 - loss2) / (2 * self.args.zo_eps)).item()
+
+        # with self.profiler('perturb'):
         self.squeezellm_zo_perturb_parameters_memory_limited(self.zo_random_seed, scaling_factor=1)
         torch.manual_seed(self.zo_random_seed)
+
         for name, buffer in self.sqllm_sparse_weight_dict.items():
             z = torch.randn_like(buffer, device=buffer.device, dtype=buffer.dtype)
             buffer.add_(z, alpha=-(self.args.learning_rate * self.projected_grad))
+
         return (loss1 + loss2) / 2
+
 
     @torch.inference_mode()
     def zo_step(self, model, inputs):
+        """
+        Estimate gradient by MeZO. 
+        """
+        # What parameters to optimize 
+        # 
         self.named_parameters_to_optim = []
         for name, param in model.named_parameters():
             if param.requires_grad:
                 self.named_parameters_to_optim.append((name, param))
+
+        # Sample the random seed for sampling z
         self.zo_random_seed = np.random.randint(1000000000)
+
+        # with self.profiler('perturb'):
         self.zo_perturb_parameters(scaling_factor=1)
+        # with self.profiler('forward'):
         loss1 = self.zo_forward(model, inputs)
+
+        # with self.profiler('perturb'):
         self.zo_perturb_parameters(scaling_factor=-2)
+        # with self.profiler('forward'):
         loss2 = self.zo_forward(model, inputs)
+
         self.projected_grad = ((loss1 - loss2) / (2 * self.args.zo_eps)).item()
+
+        # with self.profiler('perturb'):
         self.zo_perturb_parameters(scaling_factor=1)
+        
         return (loss1 + loss2) / 2
 
     def set_zo_grad_as_grad(self):
-        torch.manual_seed(self.zo_random_seed)
+        """
+        Update the parameters with the estimated gradients.
+        """
+        # Reset the random seed for sampling zs
+        torch.manual_seed(self.zo_random_seed)     
         for name, param in self.named_parameters_to_optim:
+            # Resample z
             z = torch.normal(mean=0, std=1, size=param.size(), device=param.device, dtype=param.dtype)
             param.grad = self.projected_grad * z
 
     @torch.no_grad()
     def full_zo_update(self):
-        torch.manual_seed(self.zo_random_seed)
+        """
+        Update the parameters with the estimated gradients.
+        """
+        # Reset the random seed for sampling zs
+        torch.manual_seed(self.zo_random_seed)     
         for name, param in self.named_parameters_to_optim:
+            # Resample z
             z = torch.normal(mean=0, std=1, size=param.size(), device=param.device, dtype=param.dtype)
             param.data.add_(z, alpha=-(self.args.learning_rate * self.projected_grad))
 
     ############## Misc overload functions ##############
 
     def _set_signature_columns_if_needed(self):
+        """
+        We overload this function for non-differentiable objective training to pass "gold" -- the gold text for the task
+        """
         if self._signature_columns is None:
+            # Inspect model forward signature to keep only the arguments it accepts.
             signature = inspect.signature(self.model.forward)
             self._signature_columns = list(signature.parameters.keys())
+            # Labels may be named label or label_ids, the default data collator handles that.
             self._signature_columns += list(set(["label", "label_ids"] + self.label_names))
             self._signature_columns += ["gold"]
 
+    
     def save_model(self, output_dir: Optional[str] = None, _internal_call: bool = False):
+        """
+        We overload this function to fix an FSDP saving bug (before fix, it will likely cause OOM) 
+        """
+
         if output_dir is None:
             output_dir = self.args.output_dir
+
         if is_torch_tpu_available():
             self._save_tpu(output_dir)
         elif is_sagemaker_mp_enabled():
+            # Calling the state_dict needs to be done on the wrapped model and on all processes.
             os.makedirs(output_dir, exist_ok=True)
             state_dict = self.model_wrapped.state_dict()
             if self.args.should_save:
                 self._save(output_dir, state_dict=state_dict)
+            
         elif self.deepspeed:
+            # this takes care of everything as long as we aren't under zero3
             if self.args.should_save:
                 self._save(output_dir)
+
             if is_deepspeed_zero3_enabled():
-                file = os.path.join(output_dir, WEIGHTS_NAME)
-                if os.path.isfile(file):
-                    os.remove(file)
+                # It's too complicated to try to override different places where the weights dump gets
+                # saved, so since under zero3 the file is bogus, simply delete it. The user should
+                # either user deepspeed checkpoint to resume or to recover full weights use
+                # zero_to_fp32.py stored in the checkpoint.
+                if self.args.should_save:
+                    file = os.path.join(output_dir, WEIGHTS_NAME)
+                    if os.path.isfile(file):
+                        # logger.info(f"deepspeed zero3: removing {file}, see zero_to_fp32.py to recover weights")
+                        os.remove(file)
+
+                # now save the real model if stage3_gather_16bit_weights_on_model_save=True
+                # if false it will not be saved.
+                # This must be called on all ranks
                 if not self.deepspeed.save_16bit_model(output_dir, WEIGHTS_NAME):
                     logger.warning(
                         "deepspeed.save_16bit_model didn't save the model, since"
@@ -1326,1269 +1543,10 @@ class OurTrainer(Trainer):
                         " zero_to_fp32.py to recover weights"
                     )
                     self.deepspeed.save_checkpoint(output_dir)
+
         elif self.args.should_save:
             self._save(output_dir)
+
+        # Push to the Hub when `save_model` is called by the user.
         if self.args.push_to_hub and not _internal_call:
             self.push_to_hub(commit_message="Model save")
-
-    def evaluate_test_set(self):
-        predictions = []
-        train_samples = self.train_samples
-        for eval_id, eval_sample in enumerate(tqdm(self.test_samples)):
-            predictions.append(
-                self.one_step_pred(train_samples, eval_sample)
-            )
-        metric_name = getattr(self.task, "metric_name", "accuracy")
-        metrics = {metric_name: calculate_metric(predictions, metric_name)}
-        print(metrics, flush=True)
-        sys.stdout.flush()
-        return metrics
-
-    def one_step_pred(self, train_samples, eval_sample):
-        encoded_candidates, option_lens = encode_prompt(
-            self.task, self.task.get_template(), train_samples, eval_sample, self.tokenizer,
-            max_length=self.args.max_length,
-            generation=self.task.generation,
-            max_new_tokens=self.args.max_new_tokens
-        )
-        if self.args.sfc or self.args.icl_sfc:
-            sfc_encoded_candidates, sfc_option_lens = encode_prompt(
-                self.task, self.task.get_template(), train_samples, eval_sample, self.tokenizer,
-                max_length=self.args.max_length,
-                sfc=self.args.sfc,
-                icl_sfc=self.args.icl_sfc,
-                generation=self.task.generation,
-                max_new_tokens=self.args.max_new_tokens
-            )
-        outputs = []
-        if self.task.generation:
-            output_text = self.test_forward(encoded_candidates[0], generation=True)
-            return Prediction(correct_candidate=eval_sample.correct_candidate, predicted_candidate=output_text)
-        else:
-            for candidate_id, encoded_candidate in enumerate(encoded_candidates):
-                selected_log_probs = self.test_forward(encoded_candidate, option_len=option_lens[candidate_id])
-                if self.args.sfc or self.args.icl_sfc:
-                    sfc_selected_log_probs = self.test_forward(sfc_encoded_candidates[candidate_id], option_len=sfc_option_lens[candidate_id])
-                outputs.append({"log_probs": selected_log_probs, "sfc_log_probs": sfc_selected_log_probs if self.args.sfc or self.args.icl_sfc else None})
-            if self.args.sfc or self.args.icl_sfc:
-                scores = [x['log_probs'].sum().item() - x['sfc_log_probs'].sum().item() for x in outputs]
-            else:
-                scores = [x['log_probs'].mean().item() for x in outputs]
-            if isinstance(eval_sample.correct_candidate, list):
-                correct_candidate_id = [eval_sample.candidates.index(c) for c in eval_sample.correct_candidate]
-            else:
-                correct_candidate_id = eval_sample.candidates.index(eval_sample.correct_candidate)
-            return Prediction(correct_candidate=correct_candidate_id, predicted_candidate=int(np.argmax(scores)))
-
-    def _inner_training_loop(
-        self, batch_size=None, args=None, resume_from_checkpoint=None, trial=None, ignore_keys_for_eval=None
-    ):
-        """
-        重载内部训练循环，支持两种模式：
-          - 当 self.args.trainer == "zo" 时，使用零阶优化(MeZO)的更新方式；
-          - 否则（例如当 trainer=="first"）直接使用标准一阶反向传播进行更新。
-        其它数据预处理、评估、日志输出和checkpoint保存均保持一致。
-        """
-        self._train_batch_size = batch_size
-        train_dataloader = self.get_train_dataloader()
-
-        if has_length(train_dataloader):
-            len_dataloader = len(train_dataloader)
-            num_update_steps_per_epoch = len_dataloader // args.gradient_accumulation_steps
-            num_update_steps_per_epoch = max(num_update_steps_per_epoch, 1)
-            num_examples = self.num_examples(train_dataloader)
-            if args.max_steps > 0:
-                max_steps = args.max_steps
-                num_train_epochs = args.max_steps // num_update_steps_per_epoch + int(
-                    args.max_steps % num_update_steps_per_epoch > 0
-                )
-                num_train_samples = args.max_steps * (args.train_batch_size * args.gradient_accumulation_steps * args.world_size)
-            else:
-                max_steps = math.ceil(args.num_train_epochs * num_update_steps_per_epoch)
-                num_train_epochs = math.ceil(args.num_train_epochs)
-                num_train_samples = self.num_examples(train_dataloader) * args.num_train_epochs
-        elif args.max_steps > 0:
-            max_steps = args.max_steps
-            num_train_epochs = sys.maxsize
-            num_update_steps_per_epoch = max_steps
-            num_train_samples = args.max_steps * (args.train_batch_size * args.gradient_accumulation_steps * args.world_size)
-        else:
-            raise ValueError(
-                "args.max_steps must be set to a positive value if dataloader does not have a length, was"
-                f" {args.max_steps}"
-            )
-
-        if self.args.linear_probing:
-            def _get_token_prediction_layer(model):
-                if model.config.model_type == "opt":
-                    return model.lm_head
-                else:
-                    raise NotImplementedError(model.config.model_type)
-
-            def _extract_features(model, *args, **kwargs):
-                features = {}
-                def __hook(model_, input_, output_):
-                    features["features"] = input_[0].detach()
-                _get_token_prediction_layer(model).register_forward_hook(__hook)
-                model.forward(*args, **kwargs)
-                return features["features"]
-
-            logger.info("Linear probing")
-            logger.info("Starting to get features for training dataset")
-            targets = []
-            features = []
-            with torch.inference_mode():
-                for step, inputs in enumerate(tqdm(train_dataloader)):
-                    for k, v in inputs.items():
-                        if isinstance(v, torch.Tensor):
-                            inputs[k] = v.to(self.model.device)
-                    feature = _extract_features(self.model, **inputs)
-                    target = inputs["labels"]
-                    assert not self.args.train_as_classification and self.args.only_train_option
-                    feature, target = feature[:, :-1], target[:, 1:]
-                    for _i, _len in enumerate(inputs["option_len"]):
-                        features.append(feature[_i, -_len:])
-                        targets.append(target[_i, -_len:])
-            logger.info("Finished getting features for training dataset")
-            features = torch.cat(features, dim=0).cpu().numpy()
-            targets = torch.cat(targets, dim=0).cpu().numpy()
-            if self.model.config.model_type in ["opt", "gpt2"]:
-                use_bias = False
-            else:
-                raise NotImplementedError
-            tol = 0.01 if self.args.lp_early_stopping else 1e-4
-            max_iter = 1000 if self.args.lp_early_stopping else 5000
-            logger.info("Fitting logistic regression...")
-            reg = LogisticRegressionCV(max_iter=max_iter, fit_intercept=use_bias, multi_class="multinomial",
-                                       random_state=0, tol=tol, n_jobs=-1).fit(features, targets)
-            logger.info("Done")
-            logger.info("Assigning weights to model")
-            decoder = _get_token_prediction_layer(self.model)
-            coef_torch = torch.tensor(reg.coef_, device=decoder.weight.device, dtype=decoder.weight.dtype)
-            if use_bias:
-                bias_torch = torch.tensor(reg.intercept_, device=decoder.weight.device, dtype=decoder.weight.dtype)
-            if coef_torch.shape[0] == 1:
-                assert len(reg.classes_) == 2
-                coef_torch = torch.cat([-coef_torch / 2, coef_torch / 2], dim=0)
-                if use_bias:
-                    bias_torch = torch.cat([-bias_torch / 2, bias_torch / 2], dim=0)
-            for _i, token_id in enumerate(reg.classes_):
-                decoder.weight.data[token_id] = coef_torch[_i]
-                if use_bias:
-                    decoder.bias.data[token_id] = bias_torch[_i]
-            return None
-
-        total_train_batch_size = args.train_batch_size * args.gradient_accumulation_steps * args.world_size
-
-        len_dataloader = None
-        if has_length(train_dataloader):
-            len_dataloader = len(train_dataloader)
-            num_update_steps_per_epoch = len_dataloader // args.gradient_accumulation_steps
-            num_update_steps_per_epoch = max(num_update_steps_per_epoch, 1)
-            num_examples = self.num_examples(train_dataloader)
-            if args.max_steps > 0:
-                max_steps = args.max_steps
-                num_train_epochs = args.max_steps // num_update_steps_per_epoch + int(
-                    args.max_steps % num_update_steps_per_epoch > 0
-                )
-                num_train_samples = args.max_steps * total_train_batch_size
-            else:
-                max_steps = math.ceil(args.num_train_epochs * num_update_steps_per_epoch)
-                num_train_epochs = math.ceil(args.num_train_epochs)
-                num_train_samples = self.num_examples(train_dataloader) * args.num_train_epochs
-        elif args.max_steps > 0:
-            max_steps = args.max_steps
-            num_train_epochs = sys.maxsize
-            num_update_steps_per_epoch = max_steps
-            num_train_samples = args.max_steps * total_train_batch_size
-        else:
-            raise ValueError(
-                "args.max_steps must be set to a positive value if dataloader does not have a length, was"
-                f" {args.max_steps}"
-            )
-
-        if self.args.save_grad:
-            self.get_grad_and_load_to_model(self.model, self.args.grad_save_path + os.path.sep + f'start.pt')
-            raise RuntimeError('finished')
-
-        delay_optimizer_creation = False
-        if args.deepspeed:
-            deepspeed_engine, optimizer, lr_scheduler = deepspeed_init(
-                self, num_training_steps=max_steps, resume_from_checkpoint=resume_from_checkpoint
-            )
-            self.model = deepspeed_engine.module
-            self.model_wrapped = deepspeed_engine
-            self.deepspeed = deepspeed_engine
-            self.optimizer = optimizer
-            self.lr_scheduler = lr_scheduler
-        elif not delay_optimizer_creation:
-            self.create_optimizer_and_scheduler(num_training_steps=max_steps)
-
-        self.state = TrainerState()
-        self.state.is_hyper_param_search = trial is not None
-
-        if args.gradient_checkpointing:
-            self.model.gradient_checkpointing_enable()
-
-        model = self._wrap_model(self.model_wrapped)
-
-        has_mask = False
-        if self.args.smaller_weight_mask:
-            print(f'smaller weight mask {self.args.outlier_percentage}', flush=True)
-            sys.stdout.flush()
-            self.outlier_masks = self.get_smaller_weight_masks(model, self.args.outlier_percentage)
-            has_mask = True
-        elif self.args.outlier:
-            print(f'outlier mask {self.args.outlier_percentage}', flush=True)
-            sys.stdout.flush()
-            self.outlier_masks = self.get_outlier_masks(model, self.args.outlier_percentage)
-            has_mask = True
-        elif self.args.random_subset_weights:
-            print(f'random mask {self.args.outlier_percentage}', flush=True)
-            sys.stdout.flush()
-            self.outlier_masks = self.get_random_masks(model, self.args.outlier_percentage)
-            has_mask = True
-        elif self.args.grad_mask:
-            print(f'grad mask {self.args.outlier_percentage}', flush=True)
-            sys.stdout.flush()
-            self.outlier_masks = self.get_gradient_masks(model, self.args.outlier_percentage)
-            has_mask = True
-        elif self.args.C4_grad_mask:
-            print(f'C4 grad mask {self.args.outlier_percentage}', flush=True)
-            sys.stdout.flush()
-            self.outlier_masks = self.get_C4_gradient_masks(model, self.args.C4_grad_addr, self.args.outlier_percentage)
-            has_mask = True
-        elif self.args.GraSP_mask:
-            print(f'GraSP mask {self.args.outlier_percentage}', flush=True)
-            sys.stdout.flush()
-            self.outlier_masks = self.get_GraSP_mask(model, self.args.outlier_percentage)
-            has_mask = True
-
-        if model is not self.model:
-            self.model_wrapped = model
-
-        if delay_optimizer_creation:
-            self.create_optimizer_and_scheduler(num_training_steps=max_steps)
-
-        self._load_optimizer_and_scheduler(resume_from_checkpoint)
-
-        self.named_parameters_to_optim = [(name, param) for name, param in model.named_parameters() if param.requires_grad]
-
-        logger.info("***** Running training *****")
-        logger.info(f"  Num examples = {num_examples}")
-        logger.info(f"  Num Epochs = {num_train_epochs}")
-        logger.info(f"  Instantaneous batch size per device = {args.per_device_train_batch_size}")
-        logger.info(f"  Total train batch size (w. parallel, distributed & accumulation) = {total_train_batch_size}")
-        logger.info(f"  Gradient Accumulation steps = {args.gradient_accumulation_steps}")
-        logger.info(f"  Total optimization steps = {max_steps}")
-        logger.info(f"  Number of trainable parameters = {sum(p.numel() for p in model.parameters() if p.requires_grad)}")
-
-        self.state.epoch = 0
-        start_time = time.time()
-        epochs_trained = 0
-        steps_trained_in_current_epoch = 0
-        steps_trained_progress_bar = None
-
-        if resume_from_checkpoint is not None and os.path.isfile(os.path.join(resume_from_checkpoint, TRAINER_STATE_NAME)):
-            self.state = TrainerState.load_from_json(os.path.join(resume_from_checkpoint, TRAINER_STATE_NAME))
-            epochs_trained = self.state.global_step // num_update_steps_per_epoch
-            if not args.ignore_data_skip:
-                steps_trained_in_current_epoch = self.state.global_step % (num_update_steps_per_epoch)
-                steps_trained_in_current_epoch *= args.gradient_accumulation_steps
-            else:
-                steps_trained_in_current_epoch = 0
-
-            logger.info("  Continuing training from checkpoint, will skip to saved global_step")
-            logger.info(f"  Continuing training from epoch {epochs_trained}")
-            logger.info(f"  Continuing training from global step {self.state.global_step}")
-            if not args.ignore_data_skip:
-                logger.info(
-                    f"  Will skip the first {epochs_trained} epochs then the first {steps_trained_in_current_epoch} batches in the first epoch."
-                )
-                if self.is_local_process_zero() and not args.disable_tqdm:
-                    steps_trained_progress_bar = tqdm(total=steps_trained_in_current_epoch)
-                    steps_trained_progress_bar.set_description("Skipping the first batches")
-
-        self.callback_handler.model = self.model
-        self.callback_handler.optimizer = self.optimizer
-        self.callback_handler.lr_scheduler = self.lr_scheduler
-        self.callback_handler.train_dataloader = train_dataloader
-        if self.hp_name is not None and self._trial is not None:
-            self.state.trial_name = self.hp_name(self._trial)
-        if trial is not None:
-            assignments = trial.assignments if self.hp_search_backend == HPSearchBackend.SIGOPT else trial
-            self.state.trial_params = hp_params(assignments)
-        else:
-            self.state.trial_params = None
-        self.state.max_steps = max_steps
-        self.state.num_train_epochs = num_train_epochs
-        self.state.is_local_process_zero = self.is_local_process_zero()
-        self.state.is_world_process_zero = self.is_world_process_zero()
-
-        tr_loss = torch.tensor(0.0).to(args.device)
-        self._total_loss_scalar = 0.0
-        self._globalstep_last_logged = self.state.global_step
-        model.zero_grad(set_to_none=True)
-
-        self.control = self.callback_handler.on_train_begin(args, self.state, self.control)
-        if args.report_to != []:
-            wandb.run.name = self.args.tag
-
-        if not args.ignore_data_skip:
-            for epoch in range(epochs_trained):
-                _ = list(train_dataloader.sampler)
-
-        from eventProfiler import EventProfiler
-        self.profiler = EventProfiler(torch.device('cuda'), active=False)
-        self.record_loss = []
-
-        if self.args.use_squeezellm:
-            self.named_buffers = {name: buffer for name, buffer in model.named_buffers()}
-            self.sqllm_sparse_weight_dict = dict()
-            if self.args.memory_limit_scenario:
-                self.sqllm_sparse_weight_dict = {name: buffer.requires_grad_(True) for name, buffer in model.named_buffers() if 'sensitive_vals' in name}
-            else:
-                self.dequantized_weight_list = [(name, buffer) for name, buffer in model.named_buffers() if 'dequantized_weight' in name]
-                for name, buffer in self.dequantized_weight_list:
-                    indices = self.named_buffers[name.replace('dequantized_weight', 'sensitive_indices')]
-                    self.sqllm_sparse_weight_dict[name] = buffer[indices[0], indices[1]].clone().detach().requires_grad_(True)
-
-        if has_mask:
-            self.named_parameters_to_optim = {
-                n: p.view(-1)[self.outlier_masks[n]].detach().clone().requires_grad_(True)
-                for n, p in model.named_parameters() if n in self.outlier_masks
-            }
-
-        if args.use_adam:
-            if self.args.use_squeezellm:
-                self.optimizer = torch.optim.Adam(list(self.sqllm_sparse_weight_dict.values()), lr=self.args.learning_rate)
-            elif has_mask:
-                self.optimizer = torch.optim.Adam(list(self.named_parameters_to_optim.values()), lr=self.args.learning_rate)
-            else:
-                self.optimizer = torch.optim.Adam(model.parameters(), lr=self.args.learning_rate)
-        elif args.use_momentum:
-            if self.args.use_squeezellm:
-                self.optimizer = torch.optim.SGD(list(self.sqllm_sparse_weight_dict.values()), lr=self.args.learning_rate, momentum=0.9)
-            elif has_mask:
-                self.optimizer = torch.optim.SGD(list(self.named_parameters_to_optim.values()), lr=self.args.learning_rate, momentum=0.9)
-            else:
-                self.optimizer = torch.optim.SGD(model.parameters(), lr=self.args.learning_rate, momentum=0.9)
-        else:
-            if self.args.use_squeezellm:
-                self.optimizer = torch.optim.SGD(list(self.sqllm_sparse_weight_dict.values()), lr=self.args.learning_rate)
-            elif has_mask:
-                self.optimizer = torch.optim.SGD(list(self.named_parameters_to_optim.values()), lr=self.args.learning_rate)
-            else:
-                self.optimizer = torch.optim.SGD(model.parameters(), lr=self.args.learning_rate)
-
-        print(self.optimizer)
-        for epoch in range(epochs_trained, num_train_epochs):
-            if isinstance(train_dataloader, DataLoader) and isinstance(train_dataloader.sampler, DistributedSampler):
-                train_dataloader.sampler.set_epoch(epoch)
-            elif hasattr(train_dataloader, "dataset") and isinstance(train_dataloader.dataset, IterableDatasetShard):
-                train_dataloader.dataset.set_epoch(epoch)
-
-            if is_torch_tpu_available():
-                parallel_loader = pl.ParallelLoader(train_dataloader, [args.device]).per_device_loader(args.device)
-                epoch_iterator = parallel_loader
-            else:
-                epoch_iterator = train_dataloader
-
-            if args.past_index >= 0:
-                self._past = None
-
-            steps_in_epoch = len(epoch_iterator) if len_dataloader is not None else args.max_steps * args.gradient_accumulation_steps
-            self.control = self.callback_handler.on_epoch_begin(args, self.state, self.control)
-
-            if epoch == epochs_trained and resume_from_checkpoint is not None and steps_trained_in_current_epoch == 0:
-                self._load_rng_state(resume_from_checkpoint)
-
-            step = -1
-            self.deepspeed = False
-
-            for step, inputs in enumerate(epoch_iterator):
-                if steps_trained_in_current_epoch > 0:
-                    steps_trained_in_current_epoch -= 1
-                    if steps_trained_progress_bar is not None:
-                        steps_trained_progress_bar.update(1)
-                    if steps_trained_in_current_epoch == 0:
-                        self._load_rng_state(resume_from_checkpoint)
-                    continue
-                elif steps_trained_progress_bar is not None:
-                    steps_trained_progress_bar.close()
-                    steps_trained_progress_bar = None
-
-                if step % args.gradient_accumulation_steps == 0:
-                    self.control = self.callback_handler.on_step_begin(args, self.state, self.control)
-
-                if args.trainer == 'zo' and args.use_squeezellm:
-                    if self.args.memory_limit_scenario:
-                        tr_loss_step = self.perturb_and_update_squeezellm_sparse_grad_memory_limited(model, inputs)
-                    else:
-                        tr_loss_step = self.set_squeezellm_sparse_grad(model, inputs)
-                elif args.trainer == 'zo' and has_mask:
-                    zo_random_seed = np.random.randint(1000000000)
-                    tr_loss_step = self.set_grad_with_mask(model, inputs, self.outlier_masks, zo_random_seed)
-                    if self.args.record_time:
-                        self.record_loss.append(tr_loss_step)
-                elif args.trainer == 'zo':
-                    tr_loss_step = self.zo_step(model, inputs)
-                    if self.args.record_time:
-                        self.record_loss.append(tr_loss_step)
-                    if self.args.use_full_zo_update:
-                        self.full_zo_update()
-                    else:
-                        self.set_zo_grad_as_grad()
-                else:
-                    # First-order fine-tuning分支：直接使用标准反向传播
-                    tr_loss_step = self.training_step(model, inputs)
-                    with torch.no_grad():
-                        if has_mask:
-                            grad_dict = {n: p.grad for n, p in self.model.named_parameters() if p.requires_grad}
-                            for name, selected_param in self.named_parameters_to_optim.items():
-                                selected_param.grad = grad_dict[name].view(-1)[self.outlier_masks[name]].clone()
-                            for n, p in self.model.named_parameters():
-                                p.grad = None
-
-                if (args.logging_nan_inf_filter and not is_torch_tpu_available() and
-                    (torch.isnan(tr_loss_step) or torch.isinf(tr_loss_step))):
-                    tr_loss += tr_loss / (1 + self.state.global_step - self._globalstep_last_logged)
-                else:
-                    tr_loss += tr_loss_step
-
-                self.current_flos += float(self.floating_point_ops(inputs))
-
-                if (step + 1) % args.gradient_accumulation_steps == 0 or (
-                    steps_in_epoch <= args.gradient_accumulation_steps and (step + 1) == steps_in_epoch
-                ):
-                    if args.trainer == 'zo' and (not args.memory_limit_scenario):
-                        if not args.use_full_zo_update:
-                            self.optimizer.step()
-                            self.optimizer.zero_grad(set_to_none=True)
-                        if self.args.use_squeezellm:
-                            for name, buffer in self.dequantized_weight_list:
-                                sensitive_vals = self.sqllm_sparse_weight_dict[name]
-                                indices = self.named_buffers[name.replace('dequantized_weight', 'sensitive_indices')]
-                                buffer[indices[0], indices[1]] = sensitive_vals
-                    elif args.trainer != 'zo':
-                        with self.profiler('optimizer'):
-                            self.optimizer.step()
-                            self.lr_scheduler.step()
-                            self.optimizer.zero_grad(set_to_none=True)
-                    torch.cuda.empty_cache()
-                    if has_mask:
-                        with torch.no_grad():
-                            for name, param in model.named_parameters():
-                                if name not in self.named_parameters_to_optim:
-                                    continue
-                                param.view(-1)[self.outlier_masks[name]] = self.named_parameters_to_optim[name]
-                        if self.args.dynamic_mask and (self.state.global_step + 1) % self.args.dynamic_mask_step == 0:
-                            assert not self.args.use_momentum and not self.args.use_adam
-                            if self.args.smaller_weight_mask:
-                                del self.outlier_masks
-                                self.outlier_masks = self.get_smaller_weight_masks(model, self.args.outlier_percentage)
-                            elif self.args.outlier:
-                                del self.outlier_masks
-                                self.outlier_masks = self.get_outlier_masks(model, self.args.outlier_percentage)
-                            elif self.args.random_subset_weights:
-                                del self.outlier_masks
-                                self.outlier_masks = self.get_random_masks(model, self.args.outlier_percentage)
-                            elif self.args.grad_mask:
-                                del self.outlier_masks
-                                self.outlier_masks = self.get_gradient_masks(model, self.args.outlier_percentage)
-                            elif self.args.GraSP_mask:
-                                del self.outlier_masks
-                                self.outlier_masks = self.get_GraSP_mask(model, self.args.outlier_percentage)
-                            self.named_parameters_to_optim = {
-                                n: p.view(-1)[self.outlier_masks[n]].detach().clone().requires_grad_(True)
-                                for n, p in model.named_parameters() if n in self.outlier_masks
-                            }
-                            self.optimizer = torch.optim.SGD(list(self.named_parameters_to_optim.values()), lr=self.args.learning_rate)
-                    self.state.global_step += 1
-                    self.state.epoch = epoch + (step + 1) / steps_in_epoch
-                    self.control = self.callback_handler.on_step_end(args, self.state, self.control)
-                    if self.args.save_strategy == 'steps' and (self.state.global_step > 0 and self.state.global_step % self.args.save_steps == 0):
-                        self.control.should_save = True
-                        self.control.should_evaluate = True
-                    torch.cuda.empty_cache()
-                    self._maybe_log_save_evaluate(tr_loss, None, model, trial, epoch, ignore_keys_for_eval)
-                else:
-                    self.control = self.callback_handler.on_substep_end(args, self.state, self.control)
-
-                if self.control.should_epoch_stop or self.control.should_training_stop:
-                    break
-
-            if step < 0:
-                logger.warning(
-                    "There seems to be not a single sample in your epoch_iterator, stopping training at step"
-                    f" {self.state.global_step}!"
-                )
-                self.control.should_training_stop = True
-
-            self.control = self.callback_handler.on_epoch_end(args, self.state, self.control)
-
-            if self.args.save_model_addr and self.control.should_save:
-                if not os.path.exists(self.args.save_model_addr):
-                    os.makedirs(self.args.save_model_addr)
-                model_params = {n: p for n, p in model.named_parameters()}
-                torch.save(model_params, self.args.save_model_addr + os.sep + f'epoch-{epoch}.pt')
-                del model_params
-                torch.cuda.empty_cache()
-
-            self._maybe_log_save_evaluate(tr_loss, None, model, trial, epoch, ignore_keys_for_eval)
-
-            if self.control.should_training_stop:
-                break
-
-        if args.past_index and hasattr(self, "_past"):
-            delattr(self, "_past")
-
-        logger.info("\n\nTraining completed. Do not forget to share your model on huggingface.co/models =)\n\n")
-        self._load_best_model()
-        self._total_loss_scalar += tr_loss.item()
-        train_loss = self._total_loss_scalar / self.state.global_step
-
-        metrics = speed_metrics("train", start_time, num_samples=num_train_samples, num_steps=self.state.max_steps)
-        self.store_flos()
-        metrics["total_flos"] = self.state.total_flos
-        metrics["train_loss"] = train_loss
-
-        self.is_in_train = False
-
-        self._memory_tracker.stop_and_update_metrics(metrics)
-
-        self.log(metrics)
-
-        run_dir = self._get_output_dir(trial)
-        checkpoints_sorted = self._sorted_checkpoints(use_mtime=False, output_dir=run_dir)
-
-        if self.state.best_model_checkpoint is not None and self.args.save_total_limit == 1:
-            for checkpoint in checkpoints_sorted:
-                if checkpoint != self.state.best_model_checkpoint:
-                    logger.info(f"Deleting older checkpoint [{checkpoint}] due to args.save_total_limit")
-                    shutil.rmtree(checkpoint)
-
-        self.control = self.callback_handler.on_train_end(args, self.state, self.control)
-        return TrainOutput(self.state.global_step, train_loss, metrics)
-
-    ############## MeZO ##############
-    @torch.no_grad()
-    def zo_perturb_parameters(self, random_seed=None, scaling_factor=1):
-        torch.manual_seed(random_seed if random_seed is not None else self.zo_random_seed)
-        for name, param in self.named_parameters_to_optim:
-            z = torch.normal(mean=0, std=1, size=param.size(), device=param.device, dtype=param.dtype)
-            param.add_(z, alpha=(scaling_factor * self.args.zo_eps))
-
-    @torch.no_grad()
-    def squeezellm_zo_perturb_parameters(self, random_seed=None, scaling_factor=1):
-        torch.manual_seed(random_seed if random_seed is not None else self.zo_random_seed)
-        for name, buffer in self.dequantized_weight_list:
-            indices = self.named_buffers[name.replace('dequantized_weight', 'sensitive_indices')]
-            z = torch.normal(mean=0, std=1, size=(indices.shape[1],), device=buffer.device, dtype=buffer.dtype)
-            buffer[indices[0], indices[1]] += (scaling_factor * self.args.zo_eps) * z
-
-    @torch.no_grad()
-    def squeezellm_zo_perturb_parameters_memory_limited(self, random_seed=None, scaling_factor=1):
-        torch.manual_seed(random_seed if random_seed is not None else self.zo_random_seed)
-        for name, buffer in self.sqllm_sparse_weight_dict.items():
-            z = torch.randn_like(buffer, device=buffer.device, dtype=buffer.dtype)
-            buffer.add_(z, alpha=(scaling_factor * self.args.zo_eps))
-
-    def zo_perturb_parameters_rademacher(self, random_seed=None, scaling_factor=1):
-        torch.manual_seed(random_seed if random_seed is not None else self.zo_random_seed)
-        for name, param in self.named_parameters_to_optim:
-            z = torch.randint(low=0, high=2, size=param.data.size(), device=param.data.device, dtype=param.data.dtype)
-            z[z == 0] = -1
-            param.data.add_(z, alpha=scaling_factor * self.args.zo_eps)
-
-    @torch.inference_mode()
-    def zo_perturb_parameters_with_mask(self, random_seed=None, mask_dict=None, scaling_factor=1):
-        torch.manual_seed(random_seed if random_seed is not None else self.zo_random_seed)
-        for name, param in self.model.named_parameters():
-            if not name in self.named_parameters_to_optim:
-                continue
-            selected_param = self.named_parameters_to_optim[name]
-            z = torch.normal(mean=0, std=1, size=selected_param.size(), device=selected_param.device, dtype=selected_param.dtype)
-            param.view(-1)[mask_dict[name]] += (scaling_factor * self.args.zo_eps) * z
-
-    def norm_zo_perturb_parameters(self, random_seed=None, scaling_factor=1, normalize_dict=None):
-        torch.manual_seed(random_seed if random_seed is not None else self.zo_random_seed)
-        for name, param in self.named_parameters_to_optim:
-            z = torch.normal(mean=0, std=1, size=param.data.size(), device=param.data.device, dtype=param.data.dtype)
-            param.data = param.data + scaling_factor * z * self.args.zo_eps * normalize_dict[name]
-
-    def zo_forward(self, model, inputs):
-        model.eval()
-        if self.args.non_diff:
-            return self.zo_forward_nondiff(model, inputs)
-        with torch.inference_mode():
-            inputs = self._prepare_inputs(inputs)
-            with self.compute_loss_context_manager():
-                loss = self.compute_loss(model, inputs)
-            if self.args.n_gpu > 1:
-                loss = loss.mean()
-        return loss.detach()
-
-    def zo_forward_nondiff(self, model, inputs):
-        model.eval()
-        assert self.args.task_name == "SQuAD", "Non differentiable objective only supports SQuAD for now."
-        with torch.inference_mode():
-            inputs = self._prepare_inputs(inputs)
-            args = self.args
-            outputs = self.model.generate(
-                inputs["input_ids"],
-                do_sample=args.sampling,
-                temperature=args.temperature,
-                num_beams=args.num_beams,
-                top_p=args.top_p,
-                top_k=args.top_k,
-                max_new_tokens=min(args.max_new_tokens, args.max_length - inputs["input_ids"].size(1)),
-                num_return_sequences=1,
-                eos_token_id=[self.tokenizer.encode(args.eos_token, add_special_tokens=False)[0], self.tokenizer.eos_token_id],
-            )
-            output_text = []
-            for i in range(len(outputs)):
-                output_text.append(self.tokenizer.decode(outputs[i][inputs["input_ids"].size(1):], skip_special_tokens=True).strip())
-            f1s = [f1(output_text[i], inputs['gold'][i]) for i in range(len(output_text))]
-        return -torch.tensor(np.mean(f1s), dtype=torch.float32)
-
-    @torch.inference_mode()
-    def set_squeezellm_sparse_grad(self, model, inputs):
-        self.zo_random_seed = np.random.randint(1000000000)
-        self.squeezellm_zo_perturb_parameters(self.zo_random_seed, scaling_factor=1)
-        loss1 = self.zo_forward(model, inputs)
-        self.squeezellm_zo_perturb_parameters(self.zo_random_seed, scaling_factor=-2)
-        loss2 = self.zo_forward(model, inputs)
-        self.projected_grad = ((loss1 - loss2) / (2 * self.args.zo_eps)).item()
-        self.squeezellm_zo_perturb_parameters(self.zo_random_seed, scaling_factor=1)
-        torch.manual_seed(self.zo_random_seed)
-        for name, buffer in self.dequantized_weight_list:
-            sensitive_vals = self.sqllm_sparse_weight_dict[name]
-            z = torch.normal(mean=0, std=1, size=sensitive_vals.size(), device=sensitive_vals.device, dtype=sensitive_vals.dtype)
-            sensitive_vals.grad = self.projected_grad * z
-        return (loss1 + loss2) / 2
-
-    @torch.inference_mode()
-    def perturb_and_update_squeezellm_sparse_grad_memory_limited(self, model, inputs):
-        self.zo_random_seed = np.random.randint(1000000000)
-        self.squeezellm_zo_perturb_parameters_memory_limited(self.zo_random_seed, scaling_factor=1)
-        loss1 = self.zo_forward(model, inputs)
-        self.squeezellm_zo_perturb_parameters_memory_limited(self.zo_random_seed, scaling_factor=-2)
-        loss2 = self.zo_forward(model, inputs)
-        self.projected_grad = ((loss1 - loss2) / (2 * self.args.zo_eps)).item()
-        self.squeezellm_zo_perturb_parameters_memory_limited(self.zo_random_seed, scaling_factor=1)
-        torch.manual_seed(self.zo_random_seed)
-        for name, buffer in self.sqllm_sparse_weight_dict.items():
-            z = torch.randn_like(buffer, device=buffer.device, dtype=buffer.dtype)
-            buffer.add_(z, alpha=-(self.args.learning_rate * self.projected_grad))
-        return (loss1 + loss2) / 2
-
-    @torch.inference_mode()
-    def zo_step(self, model, inputs):
-        self.named_parameters_to_optim = []
-        for name, param in model.named_parameters():
-            if param.requires_grad:
-                self.named_parameters_to_optim.append((name, param))
-        self.zo_random_seed = np.random.randint(1000000000)
-        self.zo_perturb_parameters(scaling_factor=1)
-        loss1 = self.zo_forward(model, inputs)
-        self.zo_perturb_parameters(scaling_factor=-2)
-        loss2 = self.zo_forward(model, inputs)
-        self.projected_grad = ((loss1 - loss2) / (2 * self.args.zo_eps)).item()
-        self.zo_perturb_parameters(scaling_factor=1)
-        return (loss1 + loss2) / 2
-
-    def set_zo_grad_as_grad(self):
-        torch.manual_seed(self.zo_random_seed)
-        for name, param in self.named_parameters_to_optim:
-            z = torch.normal(mean=0, std=1, size=param.size(), device=param.device, dtype=param.dtype)
-            param.grad = self.projected_grad * z
-
-    @torch.no_grad()
-    def full_zo_update(self):
-        torch.manual_seed(self.zo_random_seed)
-        for name, param in self.named_parameters_to_optim:
-            z = torch.normal(mean=0, std=1, size=param.size(), device=param.device, dtype=param.dtype)
-            param.data.add_(z, alpha=-(self.args.learning_rate * self.projected_grad))
-
-    ############## Misc overload functions ##############
-
-    def _set_signature_columns_if_needed(self):
-        if self._signature_columns is None:
-            signature = inspect.signature(self.model.forward)
-            self._signature_columns = list(signature.parameters.keys())
-            self._signature_columns += list(set(["label", "label_ids"] + self.label_names))
-            self._signature_columns += ["gold"]
-
-    def save_model(self, output_dir: Optional[str] = None, _internal_call: bool = False):
-        if output_dir is None:
-            output_dir = self.args.output_dir
-        if is_torch_tpu_available():
-            self._save_tpu(output_dir)
-        elif is_sagemaker_mp_enabled():
-            os.makedirs(output_dir, exist_ok=True)
-            state_dict = self.model_wrapped.state_dict()
-            if self.args.should_save:
-                self._save(output_dir, state_dict=state_dict)
-        elif self.deepspeed:
-            if self.args.should_save:
-                self._save(output_dir)
-            if is_deepspeed_zero3_enabled():
-                file = os.path.join(output_dir, WEIGHTS_NAME)
-                if os.path.isfile(file):
-                    os.remove(file)
-                if not self.deepspeed.save_16bit_model(output_dir, WEIGHTS_NAME):
-                    logger.warning(
-                        "deepspeed.save_16bit_model didn't save the model, since"
-                        " stage3_gather_16bit_weights_on_model_save=false. Saving the full checkpoint instead, use"
-                        " zero_to_fp32.py to recover weights"
-                    )
-                    self.deepspeed.save_checkpoint(output_dir)
-        elif self.args.should_save:
-            self._save(output_dir)
-        if self.args.push_to_hub and not _internal_call:
-            self.push_to_hub(commit_message="Model save")
-
-    def evaluate_test_set(self):
-        predictions = []
-        train_samples = self.train_samples
-        for eval_id, eval_sample in enumerate(tqdm(self.test_samples)):
-            predictions.append(
-                self.one_step_pred(train_samples, eval_sample)
-            )
-        metric_name = getattr(self.task, "metric_name", "accuracy")
-        metrics = {metric_name: calculate_metric(predictions, metric_name)}
-        print(metrics, flush=True)
-        sys.stdout.flush()
-        return metrics
-
-    def one_step_pred(self, train_samples, eval_sample):
-        encoded_candidates, option_lens = encode_prompt(
-            self.task, self.task.get_template(), train_samples, eval_sample, self.tokenizer,
-            max_length=self.args.max_length,
-            generation=self.task.generation,
-            max_new_tokens=self.args.max_new_tokens
-        )
-        if self.args.sfc or self.args.icl_sfc:
-            sfc_encoded_candidates, sfc_option_lens = encode_prompt(
-                self.task, self.task.get_template(), train_samples, eval_sample, self.tokenizer,
-                max_length=self.args.max_length,
-                sfc=self.args.sfc,
-                icl_sfc=self.args.icl_sfc,
-                generation=self.task.generation,
-                max_new_tokens=self.args.max_new_tokens
-            )
-        outputs = []
-        if self.task.generation:
-            output_text = self.test_forward(encoded_candidates[0], generation=True)
-            return Prediction(correct_candidate=eval_sample.correct_candidate, predicted_candidate=output_text)
-        else:
-            for candidate_id, encoded_candidate in enumerate(encoded_candidates):
-                selected_log_probs = self.test_forward(encoded_candidate, option_len=option_lens[candidate_id])
-                if self.args.sfc or self.args.icl_sfc:
-                    sfc_selected_log_probs = self.test_forward(sfc_encoded_candidates[candidate_id], option_len=sfc_option_lens[candidate_id])
-                outputs.append({"log_probs": selected_log_probs, "sfc_log_probs": sfc_selected_log_probs if self.args.sfc or self.args.icl_sfc else None})
-            if self.args.sfc or self.args.icl_sfc:
-                scores = [x['log_probs'].sum().item() - x['sfc_log_probs'].sum().item() for x in outputs]
-            else:
-                scores = [x['log_probs'].mean().item() for x in outputs]
-            if isinstance(eval_sample.correct_candidate, list):
-                correct_candidate_id = [eval_sample.candidates.index(c) for c in eval_sample.correct_candidate]
-            else:
-                correct_candidate_id = eval_sample.candidates.index(eval_sample.correct_candidate)
-            return Prediction(correct_candidate=correct_candidate_id, predicted_candidate=int(np.argmax(scores)))
-
-    def _inner_training_loop(
-        self, batch_size=None, args=None, resume_from_checkpoint=None, trial=None, ignore_keys_for_eval=None
-    ):
-        """
-        重载内部训练循环，支持两种模式：
-          - 当 self.args.trainer == "zo" 时，使用零阶优化(MeZO)的更新方式；
-          - 否则（例如当 trainer=="first"）直接使用标准一阶反向传播进行更新。
-        其它数据预处理、评估、日志输出和checkpoint保存均保持一致。
-        """
-        self._train_batch_size = batch_size
-        train_dataloader = self.get_train_dataloader()
-
-        if has_length(train_dataloader):
-            len_dataloader = len(train_dataloader)
-            num_update_steps_per_epoch = len_dataloader // args.gradient_accumulation_steps
-            num_update_steps_per_epoch = max(num_update_steps_per_epoch, 1)
-            num_examples = self.num_examples(train_dataloader)
-            if args.max_steps > 0:
-                max_steps = args.max_steps
-                num_train_epochs = args.max_steps // num_update_steps_per_epoch + int(
-                    args.max_steps % num_update_steps_per_epoch > 0
-                )
-                num_train_samples = args.max_steps * (args.train_batch_size * args.gradient_accumulation_steps * args.world_size)
-            else:
-                max_steps = math.ceil(args.num_train_epochs * num_update_steps_per_epoch)
-                num_train_epochs = math.ceil(args.num_train_epochs)
-                num_train_samples = self.num_examples(train_dataloader) * args.num_train_epochs
-        elif args.max_steps > 0:
-            max_steps = args.max_steps
-            num_train_epochs = sys.maxsize
-            num_update_steps_per_epoch = max_steps
-            num_train_samples = args.max_steps * (args.train_batch_size * args.gradient_accumulation_steps * args.world_size)
-        else:
-            raise ValueError(
-                "args.max_steps must be set to a positive value if dataloader does not have a length, was"
-                f" {args.max_steps}"
-            )
-
-        if self.args.linear_probing:
-            def _get_token_prediction_layer(model):
-                if model.config.model_type == "opt":
-                    return model.lm_head
-                else:
-                    raise NotImplementedError(model.config.model_type)
-
-            def _extract_features(model, *args, **kwargs):
-                features = {}
-                def __hook(model_, input_, output_):
-                    features["features"] = input_[0].detach()
-                _get_token_prediction_layer(model).register_forward_hook(__hook)
-                model.forward(*args, **kwargs)
-                return features["features"]
-
-            logger.info("Linear probing")
-            logger.info("Starting to get features for training dataset")
-            targets = []
-            features = []
-            with torch.inference_mode():
-                for step, inputs in enumerate(tqdm(train_dataloader)):
-                    for k, v in inputs.items():
-                        if isinstance(v, torch.Tensor):
-                            inputs[k] = v.to(self.model.device)
-                    feature = _extract_features(self.model, **inputs)
-                    target = inputs["labels"]
-                    assert not self.args.train_as_classification and self.args.only_train_option
-                    feature, target = feature[:, :-1], target[:, 1:]
-                    for _i, _len in enumerate(inputs["option_len"]):
-                        features.append(feature[_i, -_len:])
-                        targets.append(target[_i, -_len:])
-            logger.info("Finished getting features for training dataset")
-            features = torch.cat(features, dim=0).cpu().numpy()
-            targets = torch.cat(targets, dim=0).cpu().numpy()
-            if self.model.config.model_type in ["opt", "gpt2"]:
-                use_bias = False
-            else:
-                raise NotImplementedError
-            tol = 0.01 if self.args.lp_early_stopping else 1e-4
-            max_iter = 1000 if self.args.lp_early_stopping else 5000
-            logger.info("Fitting logistic regression...")
-            reg = LogisticRegressionCV(max_iter=max_iter, fit_intercept=use_bias, multi_class="multinomial",
-                                       random_state=0, tol=tol, n_jobs=-1).fit(features, targets)
-            logger.info("Done")
-            logger.info("Assigning weights to model")
-            decoder = _get_token_prediction_layer(self.model)
-            coef_torch = torch.tensor(reg.coef_, device=decoder.weight.device, dtype=decoder.weight.dtype)
-            if use_bias:
-                bias_torch = torch.tensor(reg.intercept_, device=decoder.weight.device, dtype=decoder.weight.dtype)
-            if coef_torch.shape[0] == 1:
-                assert len(reg.classes_) == 2
-                coef_torch = torch.cat([-coef_torch / 2, coef_torch / 2], dim=0)
-                if use_bias:
-                    bias_torch = torch.cat([-bias_torch / 2, bias_torch / 2], dim=0)
-            for _i, token_id in enumerate(reg.classes_):
-                decoder.weight.data[token_id] = coef_torch[_i]
-                if use_bias:
-                    decoder.bias.data[token_id] = bias_torch[_i]
-            return None
-
-        total_train_batch_size = args.train_batch_size * args.gradient_accumulation_steps * args.world_size
-
-        len_dataloader = None
-        if has_length(train_dataloader):
-            len_dataloader = len(train_dataloader)
-            num_update_steps_per_epoch = len_dataloader // args.gradient_accumulation_steps
-            num_update_steps_per_epoch = max(num_update_steps_per_epoch, 1)
-            num_examples = self.num_examples(train_dataloader)
-            if args.max_steps > 0:
-                max_steps = args.max_steps
-                num_train_epochs = args.max_steps // num_update_steps_per_epoch + int(
-                    args.max_steps % num_update_steps_per_epoch > 0
-                )
-                num_train_samples = args.max_steps * total_train_batch_size
-            else:
-                max_steps = math.ceil(args.num_train_epochs * num_update_steps_per_epoch)
-                num_train_epochs = math.ceil(args.num_train_epochs)
-                num_train_samples = self.num_examples(train_dataloader) * args.num_train_epochs
-        elif args.max_steps > 0:
-            max_steps = args.max_steps
-            num_train_epochs = sys.maxsize
-            num_update_steps_per_epoch = max_steps
-            num_train_samples = args.max_steps * total_train_batch_size
-        else:
-            raise ValueError(
-                "args.max_steps must be set to a positive value if dataloader does not have a length, was"
-                f" {args.max_steps}"
-            )
-
-        if self.args.save_grad:
-            self.get_grad_and_load_to_model(self.model, self.args.grad_save_path + os.path.sep + f'start.pt')
-            raise RuntimeError('finished')
-
-        delay_optimizer_creation = False
-        if args.deepspeed:
-            deepspeed_engine, optimizer, lr_scheduler = deepspeed_init(
-                self, num_training_steps=max_steps, resume_from_checkpoint=resume_from_checkpoint
-            )
-            self.model = deepspeed_engine.module
-            self.model_wrapped = deepspeed_engine
-            self.deepspeed = deepspeed_engine
-            self.optimizer = optimizer
-            self.lr_scheduler = lr_scheduler
-        elif not delay_optimizer_creation:
-            self.create_optimizer_and_scheduler(num_training_steps=max_steps)
-
-        self.state = TrainerState()
-        self.state.is_hyper_param_search = trial is not None
-
-        if args.gradient_checkpointing:
-            self.model.gradient_checkpointing_enable()
-
-        model = self._wrap_model(self.model_wrapped)
-
-        has_mask = False
-        if self.args.smaller_weight_mask:
-            print(f'smaller weight mask {self.args.outlier_percentage}', flush=True)
-            sys.stdout.flush()
-            self.outlier_masks = self.get_smaller_weight_masks(model, self.args.outlier_percentage)
-            has_mask = True
-        elif self.args.outlier:
-            print(f'outlier mask {self.args.outlier_percentage}', flush=True)
-            sys.stdout.flush()
-            self.outlier_masks = self.get_outlier_masks(model, self.args.outlier_percentage)
-            has_mask = True
-        elif self.args.random_subset_weights:
-            print(f'random mask {self.args.outlier_percentage}', flush=True)
-            sys.stdout.flush()
-            self.outlier_masks = self.get_random_masks(model, self.args.outlier_percentage)
-            has_mask = True
-        elif self.args.grad_mask:
-            print(f'grad mask {self.args.outlier_percentage}', flush=True)
-            sys.stdout.flush()
-            self.outlier_masks = self.get_gradient_masks(model, self.args.outlier_percentage)
-            has_mask = True
-        elif self.args.C4_grad_mask:
-            print(f'C4 grad mask {self.args.outlier_percentage}', flush=True)
-            sys.stdout.flush()
-            self.outlier_masks = self.get_C4_gradient_masks(model, self.args.C4_grad_addr, self.args.outlier_percentage)
-            has_mask = True
-        elif self.args.GraSP_mask:
-            print(f'GraSP mask {self.args.outlier_percentage}', flush=True)
-            sys.stdout.flush()
-            self.outlier_masks = self.get_GraSP_mask(model, self.args.outlier_percentage)
-            has_mask = True
-
-        if model is not self.model:
-            self.model_wrapped = model
-
-        if delay_optimizer_creation:
-            self.create_optimizer_and_scheduler(num_training_steps=max_steps)
-
-        self._load_optimizer_and_scheduler(resume_from_checkpoint)
-
-        self.named_parameters_to_optim = [(name, param) for name, param in model.named_parameters() if param.requires_grad]
-
-        logger.info("***** Running training *****")
-        logger.info(f"  Num examples = {num_examples}")
-        logger.info(f"  Num Epochs = {num_train_epochs}")
-        logger.info(f"  Instantaneous batch size per device = {args.per_device_train_batch_size}")
-        logger.info(f"  Total train batch size (w. parallel, distributed & accumulation) = {total_train_batch_size}")
-        logger.info(f"  Gradient Accumulation steps = {args.gradient_accumulation_steps}")
-        logger.info(f"  Total optimization steps = {max_steps}")
-        logger.info(f"  Number of trainable parameters = {sum(p.numel() for p in model.parameters() if p.requires_grad)}")
-
-        self.state.epoch = 0
-        start_time = time.time()
-        epochs_trained = 0
-        steps_trained_in_current_epoch = 0
-        steps_trained_progress_bar = None
-
-        if resume_from_checkpoint is not None and os.path.isfile(os.path.join(resume_from_checkpoint, TRAINER_STATE_NAME)):
-            self.state = TrainerState.load_from_json(os.path.join(resume_from_checkpoint, TRAINER_STATE_NAME))
-            epochs_trained = self.state.global_step // num_update_steps_per_epoch
-            if not args.ignore_data_skip:
-                steps_trained_in_current_epoch = self.state.global_step % (num_update_steps_per_epoch)
-                steps_trained_in_current_epoch *= args.gradient_accumulation_steps
-            else:
-                steps_trained_in_current_epoch = 0
-
-            logger.info("  Continuing training from checkpoint, will skip to saved global_step")
-            logger.info(f"  Continuing training from epoch {epochs_trained}")
-            logger.info(f"  Continuing training from global step {self.state.global_step}")
-            if not args.ignore_data_skip:
-                logger.info(
-                    f"  Will skip the first {epochs_trained} epochs then the first {steps_trained_in_current_epoch} batches in the first epoch."
-                )
-                if self.is_local_process_zero() and not args.disable_tqdm:
-                    steps_trained_progress_bar = tqdm(total=steps_trained_in_current_epoch)
-                    steps_trained_progress_bar.set_description("Skipping the first batches")
-
-        self.callback_handler.model = self.model
-        self.callback_handler.optimizer = self.optimizer
-        self.callback_handler.lr_scheduler = self.lr_scheduler
-        self.callback_handler.train_dataloader = train_dataloader
-        if self.hp_name is not None and self._trial is not None:
-            self.state.trial_name = self.hp_name(self._trial)
-        if trial is not None:
-            assignments = trial.assignments if self.hp_search_backend == HPSearchBackend.SIGOPT else trial
-            self.state.trial_params = hp_params(assignments)
-        else:
-            self.state.trial_params = None
-        self.state.max_steps = max_steps
-        self.state.num_train_epochs = num_train_epochs
-        self.state.is_local_process_zero = self.is_local_process_zero()
-        self.state.is_world_process_zero = self.is_world_process_zero()
-
-        tr_loss = torch.tensor(0.0).to(args.device)
-        self._total_loss_scalar = 0.0
-        self._globalstep_last_logged = self.state.global_step
-        model.zero_grad(set_to_none=True)
-
-        self.control = self.callback_handler.on_train_begin(args, self.state, self.control)
-        if args.report_to != []:
-            wandb.run.name = self.args.tag
-
-        if not args.ignore_data_skip:
-            for epoch in range(epochs_trained):
-                _ = list(train_dataloader.sampler)
-
-        from eventProfiler import EventProfiler
-        self.profiler = EventProfiler(torch.device('cuda'), active=False)
-        self.record_loss = []
-
-        if self.args.use_squeezellm:
-            self.named_buffers = {name: buffer for name, buffer in model.named_buffers()}
-            self.sqllm_sparse_weight_dict = dict()
-            if self.args.memory_limit_scenario:
-                self.sqllm_sparse_weight_dict = {name: buffer.requires_grad_(True) for name, buffer in model.named_buffers() if 'sensitive_vals' in name}
-            else:
-                self.dequantized_weight_list = [(name, buffer) for name, buffer in model.named_buffers() if 'dequantized_weight' in name]
-                for name, buffer in self.dequantized_weight_list:
-                    indices = self.named_buffers[name.replace('dequantized_weight', 'sensitive_indices')]
-                    self.sqllm_sparse_weight_dict[name] = buffer[indices[0], indices[1]].clone().detach().requires_grad_(True)
-
-        if has_mask:
-            self.named_parameters_to_optim = {
-                n: p.view(-1)[self.outlier_masks[n]].detach().clone().requires_grad_(True)
-                for n, p in model.named_parameters() if n in self.outlier_masks
-            }
-
-        if args.use_adam:
-            if self.args.use_squeezellm:
-                self.optimizer = torch.optim.Adam(list(self.sqllm_sparse_weight_dict.values()), lr=self.args.learning_rate)
-            elif has_mask:
-                self.optimizer = torch.optim.Adam(list(self.named_parameters_to_optim.values()), lr=self.args.learning_rate)
-            else:
-                self.optimizer = torch.optim.Adam(model.parameters(), lr=self.args.learning_rate)
-        elif args.use_momentum:
-            if self.args.use_squeezellm:
-                self.optimizer = torch.optim.SGD(list(self.sqllm_sparse_weight_dict.values()), lr=self.args.learning_rate, momentum=0.9)
-            elif has_mask:
-                self.optimizer = torch.optim.SGD(list(self.named_parameters_to_optim.values()), lr=self.args.learning_rate, momentum=0.9)
-            else:
-                self.optimizer = torch.optim.SGD(model.parameters(), lr=self.args.learning_rate, momentum=0.9)
-        else:
-            if self.args.use_squeezellm:
-                self.optimizer = torch.optim.SGD(list(self.sqllm_sparse_weight_dict.values()), lr=self.args.learning_rate)
-            elif has_mask:
-                self.optimizer = torch.optim.SGD(list(self.named_parameters_to_optim.values()), lr=self.args.learning_rate)
-            else:
-                self.optimizer = torch.optim.SGD(model.parameters(), lr=self.args.learning_rate)
-
-        print(self.optimizer)
-        for epoch in range(epochs_trained, num_train_epochs):
-            if isinstance(train_dataloader, DataLoader) and isinstance(train_dataloader.sampler, DistributedSampler):
-                train_dataloader.sampler.set_epoch(epoch)
-            elif hasattr(train_dataloader, "dataset") and isinstance(train_dataloader.dataset, IterableDatasetShard):
-                train_dataloader.dataset.set_epoch(epoch)
-
-            if is_torch_tpu_available():
-                parallel_loader = pl.ParallelLoader(train_dataloader, [args.device]).per_device_loader(args.device)
-                epoch_iterator = parallel_loader
-            else:
-                epoch_iterator = train_dataloader
-
-            if args.past_index >= 0:
-                self._past = None
-
-            steps_in_epoch = len(epoch_iterator) if len_dataloader is not None else args.max_steps * args.gradient_accumulation_steps
-            self.control = self.callback_handler.on_epoch_begin(args, self.state, self.control)
-
-            if epoch == epochs_trained and resume_from_checkpoint is not None and steps_trained_in_current_epoch == 0:
-                self._load_rng_state(resume_from_checkpoint)
-
-            step = -1
-            self.deepspeed = False
-
-            for step, inputs in enumerate(epoch_iterator):
-                if steps_trained_in_current_epoch > 0:
-                    steps_trained_in_current_epoch -= 1
-                    if steps_trained_progress_bar is not None:
-                        steps_trained_progress_bar.update(1)
-                    if steps_trained_in_current_epoch == 0:
-                        self._load_rng_state(resume_from_checkpoint)
-                    continue
-                elif steps_trained_progress_bar is not None:
-                    steps_trained_progress_bar.close()
-                    steps_trained_progress_bar = None
-
-                if step % args.gradient_accumulation_steps == 0:
-                    self.control = self.callback_handler.on_step_begin(args, self.state, self.control)
-
-                if args.trainer == 'zo' and args.use_squeezellm:
-                    if self.args.memory_limit_scenario:
-                        tr_loss_step = self.perturb_and_update_squeezellm_sparse_grad_memory_limited(model, inputs)
-                    else:
-                        tr_loss_step = self.set_squeezellm_sparse_grad(model, inputs)
-                elif args.trainer == 'zo' and has_mask:
-                    zo_random_seed = np.random.randint(1000000000)
-                    tr_loss_step = self.set_grad_with_mask(model, inputs, self.outlier_masks, zo_random_seed)
-                    if self.args.record_time:
-                        self.record_loss.append(tr_loss_step)
-                elif args.trainer == 'zo':
-                    tr_loss_step = self.zo_step(model, inputs)
-                    if self.args.record_time:
-                        self.record_loss.append(tr_loss_step)
-                    if self.args.use_full_zo_update:
-                        self.full_zo_update()
-                    else:
-                        self.set_zo_grad_as_grad()
-                else:
-                    # First-order fine-tuning：使用标准训练步
-                    tr_loss_step = self.training_step(model, inputs)
-                    with torch.no_grad():
-                        if has_mask:
-                            grad_dict = {n: p.grad for n, p in self.model.named_parameters() if p.requires_grad}
-                            for name, selected_param in self.named_parameters_to_optim.items():
-                                selected_param.grad = grad_dict[name].view(-1)[self.outlier_masks[name]].clone()
-                            for n, p in self.model.named_parameters():
-                                p.grad = None
-
-                if (args.logging_nan_inf_filter and not is_torch_tpu_available() and
-                    (torch.isnan(tr_loss_step) or torch.isinf(tr_loss_step))):
-                    tr_loss += tr_loss / (1 + self.state.global_step - self._globalstep_last_logged)
-                else:
-                    tr_loss += tr_loss_step
-
-                self.current_flos += float(self.floating_point_ops(inputs))
-
-                if (step + 1) % args.gradient_accumulation_steps == 0 or (
-                    steps_in_epoch <= args.gradient_accumulation_steps and (step + 1) == steps_in_epoch
-                ):
-                    if args.trainer == 'zo' and (not args.memory_limit_scenario):
-                        if not args.use_full_zo_update:
-                            self.optimizer.step()
-                            self.optimizer.zero_grad(set_to_none=True)
-                        if self.args.use_squeezellm:
-                            for name, buffer in self.dequantized_weight_list:
-                                sensitive_vals = self.sqllm_sparse_weight_dict[name]
-                                indices = self.named_buffers[name.replace('dequantized_weight', 'sensitive_indices')]
-                                buffer[indices[0], indices[1]] = sensitive_vals
-                    elif args.trainer != 'zo':
-                        with self.profiler('optimizer'):
-                            self.optimizer.step()
-                            self.lr_scheduler.step()
-                            self.optimizer.zero_grad(set_to_none=True)
-                    torch.cuda.empty_cache()
-                    if has_mask:
-                        with torch.no_grad():
-                            for name, param in model.named_parameters():
-                                if name not in self.named_parameters_to_optim:
-                                    continue
-                                param.view(-1)[self.outlier_masks[name]] = self.named_parameters_to_optim[name]
-                        if self.args.dynamic_mask and (self.state.global_step + 1) % self.args.dynamic_mask_step == 0:
-                            assert not self.args.use_momentum and not self.args.use_adam
-                            if self.args.smaller_weight_mask:
-                                del self.outlier_masks
-                                self.outlier_masks = self.get_smaller_weight_masks(model, self.args.outlier_percentage)
-                            elif self.args.outlier:
-                                del self.outlier_masks
-                                self.outlier_masks = self.get_outlier_masks(model, self.args.outlier_percentage)
-                            elif self.args.random_subset_weights:
-                                del self.outlier_masks
-                                self.outlier_masks = self.get_random_masks(model, self.args.outlier_percentage)
-                            elif self.args.grad_mask:
-                                del self.outlier_masks
-                                self.outlier_masks = self.get_gradient_masks(model, self.args.outlier_percentage)
-                            elif self.args.GraSP_mask:
-                                del self.outlier_masks
-                                self.outlier_masks = self.get_GraSP_mask(model, self.args.outlier_percentage)
-                            self.named_parameters_to_optim = {
-                                n: p.view(-1)[self.outlier_masks[n]].detach().clone().requires_grad_(True)
-                                for n, p in model.named_parameters() if n in self.outlier_masks
-                            }
-                            self.optimizer = torch.optim.SGD(list(self.named_parameters_to_optim.values()), lr=self.args.learning_rate)
-                    self.state.global_step += 1
-                    self.state.epoch = epoch + (step + 1) / steps_in_epoch
-                    self.control = self.callback_handler.on_step_end(args, self.state, self.control)
-                    if self.args.save_strategy == 'steps' and (self.state.global_step > 0 and self.state.global_step % self.args.save_steps == 0):
-                        self.control.should_save = True
-                        self.control.should_evaluate = True
-                    torch.cuda.empty_cache()
-                    self._maybe_log_save_evaluate(tr_loss, None, model, trial, epoch, ignore_keys_for_eval)
-                else:
-                    self.control = self.callback_handler.on_substep_end(args, self.state, self.control)
-
-                if self.control.should_epoch_stop or self.control.should_training_stop:
-                    break
-
-            if step < 0:
-                logger.warning(
-                    "There seems to be not a single sample in your epoch_iterator, stopping training at step"
-                    f" {self.state.global_step}!"
-                )
-                self.control.should_training_stop = True
-
-            self.control = self.callback_handler.on_epoch_end(args, self.state, self.control)
-
-            if self.args.save_model_addr and self.control.should_save:
-                if not os.path.exists(self.args.save_model_addr):
-                    os.makedirs(self.args.save_model_addr)
-                model_params = {n: p for n, p in model.named_parameters()}
-                torch.save(model_params, self.args.save_model_addr + os.sep + f'epoch-{epoch}.pt')
-                del model_params
-                torch.cuda.empty_cache()
-
-            self._maybe_log_save_evaluate(tr_loss, None, model, trial, epoch, ignore_keys_for_eval)
-
-            if self.control.should_training_stop:
-                break
-
-        if args.past_index and hasattr(self, "_past"):
-            delattr(self, "_past")
-
-        logger.info("\n\nTraining completed. Do not forget to share your model on huggingface.co/models =)\n\n")
-        self._load_best_model()
-
-        self._total_loss_scalar += tr_loss.item()
-        train_loss = self._total_loss_scalar / self.state.global_step
-
-        metrics = speed_metrics("train", start_time, num_samples=num_train_samples, num_steps=self.state.max_steps)
-        self.store_flos()
-        metrics["total_flos"] = self.state.total_flos
-        metrics["train_loss"] = train_loss
-
-        self.is_in_train = False
-
-        self._memory_tracker.stop_and_update_metrics(metrics)
-
-        self.log(metrics)
-
-        run_dir = self._get_output_dir(trial)
-        checkpoints_sorted = self._sorted_checkpoints(use_mtime=False, output_dir=run_dir)
-
-        if self.state.best_model_checkpoint is not None and self.args.save_total_limit == 1:
-            for checkpoint in checkpoints_sorted:
-                if checkpoint != self.state.best_model_checkpoint:
-                    logger.info(f"Deleting older checkpoint [{checkpoint}] due to args.save_total_limit")
-                    shutil.rmtree(checkpoint)
-
-        self.control = self.callback_handler.on_train_end(args, self.state, self.control)
-        return TrainOutput(self.state.global_step, train_loss, metrics)
-
-    ############## End of _inner_training_loop ##############
-# End of OurTrainer class
