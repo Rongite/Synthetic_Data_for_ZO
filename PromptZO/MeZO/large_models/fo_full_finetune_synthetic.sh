@@ -58,10 +58,61 @@ echo "SEED: $SEED"
 echo "MODE: $MODE"
 echo "Extra args: $EXTRA_ARGS $TASK_ARGS"
 
+# # siai
+# python run.py \
+#     --model_name $MODEL \
+#     --task_name $TASK \
+#     --output_dir /home/jlong1/Downloads/models/synthetic_data/fo_full/synthetic/$TASK_NAME-${MODEL_NAME}-$TAG \
+#     --tag $TAG \
+#     --train_set_seed $SEED --num_train $TRAIN --num_dev $DEV --num_eval $EVAL \
+#     --logging_steps 10 \
+#     --max_steps $STEPS \
+#     --trainer regular \
+#     --fp16 \
+#     --learning_rate $LR \
+#     --per_device_train_batch_size $BS \
+#     --load_best_model_at_end \
+#     --evaluation_strategy steps \
+#     --save_strategy steps \
+#     --save_total_limit 1 \
+#     --train_as_classification \
+#     --eval_steps 500 \
+#     --save_steps 500 \
+#     --record_time \
+#     $EXTRA_ARGS \
+#     $TASK_ARGS \
+#     "$@"
+
+# # gh200
+# python run.py \
+#     --model_name $MODEL \
+#     --task_name $TASK \
+#     --output_dir /home/ubuntu/LLM-inference/jikai-project/models/synthetic_data/fo_full/synthetic/$TASK_NAME-${MODEL_NAME}-$TAG \
+#     --tag $TAG \
+#     --train_set_seed $SEED --num_train $TRAIN --num_dev $DEV --num_eval $EVAL \
+#     --logging_steps 10 \
+#     --max_steps $STEPS \
+#     --trainer regular \
+#     --fp16 \
+#     --learning_rate $LR \
+#     --per_device_train_batch_size $BS \
+#     --load_best_model_at_end \
+#     --evaluation_strategy steps \
+#     --save_strategy steps \
+#     --save_total_limit 1 \
+#     --train_as_classification \
+#     --eval_steps 500 \
+#     --save_steps 500 \
+#     --record_time \
+#     $EXTRA_ARGS \
+#     $TASK_ARGS \
+#     "$@"
+
+# polaris
 python run.py \
     --model_name $MODEL \
     --task_name $TASK \
-    --output_dir /home/jlong1/Downloads/models/synthetic_data/fo_full/synthetic/$TASK_NAME-${MODEL_NAME}-$TAG \
+    --output_dir /grand/sbi-fair/jikaiLoong/models/synthetic_data/fo_full/synthetic/$TASK_NAME-${MODEL_NAME}-$TAG \
     --tag $TAG \
     --train_set_seed $SEED --num_train $TRAIN --num_dev $DEV --num_eval $EVAL \
     --logging_steps 10 \
