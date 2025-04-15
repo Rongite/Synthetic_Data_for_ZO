@@ -1,49 +1,0 @@
-2025-04-09 04:08:13,969 - INFO - Note: NumExpr detected 32 cores but "NUMEXPR_MAX_THREADS" not set, so enforcing safe limit of 8.
-2025-04-09 04:08:13,969 - INFO - NumExpr defaulting to 8 threads.
-wandb: Currently logged in as: rongite2022 (loongjk). Use `wandb login --relogin` to force relogin
-wandb: wandb version 0.19.9 is available!  To upgrade, please run:
-wandb:  $ pip install wandb --upgrade
-wandb: Tracking run with wandb version 0.16.5
-wandb: Run data is saved locally in /home/jlong1/Downloads/Synthetic_Data_for_ZO/PromptZO/MeZO/large_models/wandb/run-20250409_040815-1at36oq3
-wandb: Run `wandb offline` to turn off syncing.
-wandb: Syncing run fluent-breeze-70
-wandb: ⭐️ View project at https://wandb.ai/loongjk/Synthetic_Data_for_ZO-PromptZO_MeZO_large_models
-wandb: 🚀 View run at https://wandb.ai/loongjk/Synthetic_Data_for_ZO-PromptZO_MeZO_large_models/runs/1at36oq3/workspace
-2025-04-09 04:08:18,280 - INFO - We will use 90% of the memory on device 0 for storing the model, and 10% for the buffer to avoid OOM. You can set `max_memory` in to a higher value to use more memory (at your own risk).
-max_steps is given, it will override any value given in num_train_epochs
-2025-04-09 04:08:19,805 - INFO - ***** Running training *****
-2025-04-09 04:08:19,805 - INFO -   Num examples = 150
-2025-04-09 04:08:19,805 - INFO -   Num Epochs = 2000
-2025-04-09 04:08:19,805 - INFO -   Instantaneous batch size per device = 16
-2025-04-09 04:08:19,805 - INFO -   Total train batch size (w. parallel, distributed & accumulation) = 16
-2025-04-09 04:08:19,805 - INFO -   Gradient Accumulation steps = 1
-2025-04-09 04:08:19,805 - INFO -   Total optimization steps = 20000
-2025-04-09 04:08:19,806 - INFO -   Number of trainable parameters = 1235814400
-  0%|          | 0/20000 [00:00<?, ?it/s]You're using a PreTrainedTokenizerFast tokenizer. Please note that with a fast tokenizer, using the `__call__` method is faster than using a method to encode the text followed by a call to the `pad` method to get a padded encoding.
-  0%|          | 1/20000 [00:00<5:11:05,  1.07it/s]  0%|          | 2/20000 [00:01<5:04:43,  1.09it/s]  0%|          | 3/20000 [00:02<4:49:32,  1.15it/s]  0%|          | 4/20000 [00:04<5:56:17,  1.07s/it]  0%|          | 5/20000 [00:05<6:51:07,  1.23s/it]  0%|          | 6/20000 [00:06<6:42:02,  1.21s/it]  0%|          | 7/20000 [00:07<6:30:44,  1.17s/it]  0%|          | 8/20000 [00:08<6:26:38,  1.16s/it]Traceback (most recent call last):
-  File "/home/jlong1/Downloads/Synthetic_Data_for_ZO/PromptZO/MeZO/large_models/run.py", line 669, in <module>
-    main()
-  File "/home/jlong1/Downloads/Synthetic_Data_for_ZO/PromptZO/MeZO/large_models/run.py", line 631, in main
-    framework.train(train_samples, dev_samples if dev_samples is not None else eval_samples, eval_samples)
-  File "/home/jlong1/Downloads/Synthetic_Data_for_ZO/PromptZO/MeZO/large_models/run.py", line 566, in train
-    self.trainer.train(resume_from_checkpoint=last_checkpoint)
-  File "/home/jlong1/miniconda3/envs/mezo/lib/python3.10/site-packages/transformers/trainer.py", line 1938, in train
-    return inner_training_loop(
-  File "/home/jlong1/Downloads/Synthetic_Data_for_ZO/PromptZO/MeZO/large_models/trainer.py", line 1089, in _inner_training_loop
-    tr_loss_step = self.training_step(model, inputs)
-  File "/home/jlong1/Downloads/Synthetic_Data_for_ZO/PromptZO/MeZO/large_models/trainer.py", line 529, in training_step
-    loss = self.compute_loss(model, inputs)
-  File "/home/jlong1/Downloads/Synthetic_Data_for_ZO/PromptZO/MeZO/large_models/trainer.py", line 593, in compute_loss
-    outputs = model(**inputs)
-  File "/home/jlong1/miniconda3/envs/mezo/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1518, in _wrapped_call_impl
-    return self._call_impl(*args, **kwargs)
-  File "/home/jlong1/miniconda3/envs/mezo/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1527, in _call_impl
-    return forward_call(*args, **kwargs)
-  File "/home/jlong1/Downloads/Synthetic_Data_for_ZO/PromptZO/MeZO/large_models/utils.py", line 64, in forward_wrap_with_option_len
-    log_probs = F.log_softmax(shift_logits, dim=-1)
-  File "/home/jlong1/miniconda3/envs/mezo/lib/python3.10/site-packages/torch/nn/functional.py", line 1945, in log_softmax
-    ret = input.log_softmax(dim)
-torch.cuda.OutOfMemoryError: CUDA out of memory. Tried to allocate 6.40 GiB. GPU 0 has a total capacty of 47.41 GiB of which 6.13 GiB is free. Including non-PyTorch memory, this process has 40.70 GiB memory in use. Of the allocated memory 40.11 GiB is allocated by PyTorch, and 280.01 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting max_split_size_mb to avoid fragmentation.  See documentation for Memory Management and PYTORCH_CUDA_ALLOC_CONF
-wandb: - 0.006 MB of 0.006 MB uploadedwandb: \ 0.006 MB of 0.025 MB uploadedwandb: 🚀 View run fluent-breeze-70 at: https://wandb.ai/loongjk/Synthetic_Data_for_ZO-PromptZO_MeZO_large_models/runs/1at36oq3/workspace
-wandb: Synced 6 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
-wandb: Find logs at: ./wandb/run-20250409_040815-1at36oq3/logs
