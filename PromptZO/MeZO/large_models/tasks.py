@@ -317,17 +317,70 @@ class CopaDataset(Dataset):
 
 
 class BoolQDataset(Dataset):
-    def __init__(self, subtask=None, **kwargs) -> None:
-        self.load_dataset(subtask, **kwargs)
-        if 'llama' in kwargs['args'].model_name.lower():
+    def __init__(self, subtask=None, path=None, **kwargs) -> None:
+        self.args = kwargs.get("args", {})
+        self.samples = {"train": [], "valid": []}
+        self.load_dataset(path)
+
+        model_name = getattr(self.args, "model_name", "").lower()
+        if 'llama' in model_name:
             self.template = BoolQTemplate
         else:
             self.template = BoolQTemplateV3
 
+    def load_dataset(self, path=None):
+        def load_jsonl(file_path):
+            """Load JSONL file into a list of dicts"""
+            samples = []
+            with open(file_path, 'r', encoding='utf-8') as f:
+                for i, line in enumerate(f, 1):
+                    try:
+                        sample = json.loads(line.strip())
+                        samples.append(sample)
+                    except json.JSONDecodeError as e:
+                        print(f"[Line {i}] JSON decode error: {e}")
+            return samples
+
+        if path and os.path.exists(path):
+            print(f"Loading BoolQ dataset from local path: {path}")
+            train_data = load_jsonl(os.path.join(path, "boolq_train.jsonl"))
+            valid_data = load_jsonl(os.path.join(path, "boolq_validation.jsonl"))
+        else:
+            print("Loading BoolQ dataset from Hugging Face...")
+            dataset = load_dataset("boolq")
+            train_data = dataset["train"]
+            valid_data = dataset["validation"]
+
+        self.samples = {
+            "train": [s for s in (self.build_sample(ex) for ex in train_data) if s is not None],
+            "valid": [s for s in (self.build_sample(ex) for ex in valid_data) if s is not None],
+        }
+
+    def build_sample(self, example):
+        try:
+            return Sample(
+                data=example,
+                candidates=["Yes", "No"],
+                correct_candidate="Yes" if example["answer"] else "No",
+            )
+        except KeyError as e:
+            print(f"Missing key in example: {e}")
+            return None
+
+    def get_template(self):
+        return self.template()
+
+
+class MultiRCDataset(Dataset):
+    
+    def __init__(self, subtask=None, **kwargs) -> None:
+        self.load_dataset(subtask, **kwargs)
+    
     def load_dataset(self, path, **kwargs):
-        d = load_dataset("boolq")
+        d = load_dataset("super_glue", "multirc")
         train_set = d["train"]
         valid_set = d["validation"]
+
         train_samples = [self.build_sample(example) for example in train_set]
         valid_samples = [self.build_sample(example) for example in valid_set]
         self.samples = {"train": train_samples, "valid": valid_samples}
@@ -336,14 +389,14 @@ class BoolQDataset(Dataset):
         sample = \
             Sample(
                 data=example,
-                candidates=["Yes", "No"],
-                correct_candidate="Yes" if example["answer"] else "No",
+                candidates=[0, 1],
+                correct_candidate=example['label']
             )
         
         return sample
     
-    def get_template(self):
-        return self.template()
+    def get_template(self, template_version=0):
+        return {0: MultiRCTemplate}[template_version]()
 
 
 class MultiRCDataset(Dataset):
@@ -654,39 +707,67 @@ class ReCoRDDataset(Dataset):
         return {0: ReCoRDTemplateGPT3}[template_version]()
 
 
+import os
+import json
+from datasets import load_dataset
+
 class RTEDataset(Dataset):
-    
-    def __init__(self, subtask=None, **kwargs) -> None:
-        self.load_dataset(subtask, **kwargs)
-        if 'llama' in kwargs['args'].model_name.lower():
+    def __init__(self, subtask=None, path=None, **kwargs) -> None:
+        self.args = kwargs.get("args", {})
+        self.samples = {"train": [], "valid": []}
+        self.load_dataset(path)
+
+        model_name = getattr(self.args, "model_name", "").lower()
+        if 'llama' in model_name:
             self.template = RTE_Llama2Template
-        elif 'mistral' in kwargs['args'].model_name.lower():
+        elif 'mistral' in model_name:
             self.template = RTETemplate
         else:
             self.template = RTETemplate
-    
-    def load_dataset(self, path, **kwargs):
-        d = load_dataset("super_glue", "rte")
-        train_set = d["train"]
-        valid_set = d["validation"]
 
-        train_samples = [self.build_sample(example) for example in train_set]
-        valid_samples = [self.build_sample(example) for example in valid_set]
-        self.samples = {"train": train_samples, "valid": valid_samples}
-    
+    def load_dataset(self, path=None):
+        def load_jsonl(file_path):
+            samples = []
+            with open(file_path, "r", encoding="utf-8") as f:
+                for line_num, line in enumerate(f, 1):
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        sample = json.loads(line)
+                        samples.append(sample)
+                    except json.JSONDecodeError as e:
+                        print(f"[JSON decode error] Line {line_num}: {e}")
+            return samples
+
+        if path and os.path.exists(path):
+            print(f"Loading RTE dataset from local JSONL: {path}")
+            train_path = os.path.join(path, "rte_train.jsonl")
+            valid_path = os.path.join(path, "rte_validation.jsonl")
+
+            train_data = load_jsonl(train_path)
+            valid_data = load_jsonl(valid_path)
+        else:
+            print("Loading RTE dataset from Hugging Face...")
+            dataset = load_dataset("super_glue", "rte")
+            train_data = dataset["train"]
+            valid_data = dataset["validation"]
+
+        self.samples["train"] = [self.build_sample(example) for example in train_data if self._valid_sample(example)]
+        self.samples["valid"] = [self.build_sample(example) for example in valid_data if self._valid_sample(example)]
+
+    def _valid_sample(self, example):
+        return "label" in example and example["label"] in [0, 1]
+
     def build_sample(self, example):
-        sample = \
-            Sample(
-                data=example,
-                candidates=[0, 1],
-                correct_candidate=example['label']
-            )
-        
-        return sample
-    
+        return Sample(
+            data=example,
+            candidates=[0, 1],
+            correct_candidate=example["label"]
+        )
+
     def get_template(self, template_version=0):
         return {0: self.template}[template_version]()
-        # return {0: RTE_Llama2Template}[template_version]()
 
  
 class SQuADDataset(Dataset):

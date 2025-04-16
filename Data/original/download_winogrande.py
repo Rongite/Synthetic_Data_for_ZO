@@ -6,7 +6,7 @@ import os
 dataset = load_dataset("winogrande", "winogrande_m")
 
 # Define the output directory
-output_dir = "/home/jlong1/Downloads/Data/zo/0_original_data/WinoGrande_m"
+output_dir = "/home/jlong1/Downloads/Data/zo/0_original_data/WinoGrande"
 os.makedirs(output_dir, exist_ok=True)
 
 # Function to save data in JSONL format
