@@ -11,8 +11,6 @@ OUT_1=/grand/sbi-fair/jikaiLoong/Synthetic_Data_for_ZO/Data/rejection_sampling/3
 ERR_1=/grand/sbi-fair/jikaiLoong/Synthetic_Data_for_ZO/Data/rejection_sampling/3_first_order_lora/result/ArcC_Cloze/llama_3.2_1b/2e-4_lora_rk8.err
 CUDA_VISIBLE_DEVICES=1 MODEL=meta-llama/Llama-3.2-1B MODE=ft TASK=/grand/sbi-fair/jikaiLoong/Synthetic_Data_for_ZO/Data/rejection_sampling/0_data/ArcC_Cloze LR=2e-4 BS=16 RANK=8 STEPS=20000 SEED=0 bash fo_lora_finetune_synthetic.sh 1>>$OUT_1 2>>$ERR_1 &
 
-wait
-
 OUT_2=/grand/sbi-fair/jikaiLoong/Synthetic_Data_for_ZO/Data/rejection_sampling/3_first_order_lora/result/ArcC_Cloze/llama_3.2_1b/1e-4_lora_rk16.out
 ERR_2=/grand/sbi-fair/jikaiLoong/Synthetic_Data_for_ZO/Data/rejection_sampling/3_first_order_lora/result/ArcC_Cloze/llama_3.2_1b/1e-4_lora_rk16.err
 CUDA_VISIBLE_DEVICES=2 MODEL=meta-llama/Llama-3.2-1B MODE=ft TASK=/grand/sbi-fair/jikaiLoong/Synthetic_Data_for_ZO/Data/rejection_sampling/0_data/ArcC_Cloze LR=1e-4 BS=8 RANK=16 STEPS=40000 SEED=0 bash fo_lora_finetune_synthetic.sh 1>>$OUT_2 2>>$ERR_2 &
