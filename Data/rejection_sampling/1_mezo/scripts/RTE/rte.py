@@ -199,7 +199,7 @@ for i in tqdm(range(len(eval_list))):
     if response.choices[0].message.content == 'not the same': # change
         print(eval_list[i]["rephrased"])
         eval_list[i]['eval_result'] = response.choices[0].message.content # change
-        output_data["premise"] = eval_list[i]["rephrased"]
+        output_data["premise"] = eval_list[i]["original"]
         output_data["hypothesis"] = eval_list[i]["hypothesis"]
         output_data["idx"] = eval_list[i]["idx"]
         output_data["label"] = eval_list[i]["label"]

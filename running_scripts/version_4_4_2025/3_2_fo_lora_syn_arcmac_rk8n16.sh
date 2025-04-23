@@ -45,3 +45,4 @@ wait
 
 # wait
 
+# CUDA_VISIBLE_DEVICES=0 MODEL=mistralai/Mistral-7B-v0.3 MODE=ft TASK=/home/jlong1/Downloads/Synthetic_Data_for_ZO/Data/rejection_sampling/0_data/ArcC_MC LR=1e-4 BS=16 RANK=8 STEPS=20000 SEED=0 bash fo_full_finetune_synthetic.sh
