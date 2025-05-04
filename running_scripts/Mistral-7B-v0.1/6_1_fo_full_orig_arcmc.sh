@@ -1,6 +1,6 @@
 #!/bin/bash -l
 
-# polaris 12h
+# polaris 25h
 
 cd /grand/sbi-fair/jikaiLoong/Synthetic_Data_for_ZO/PromptZO/MeZO/large_models
 

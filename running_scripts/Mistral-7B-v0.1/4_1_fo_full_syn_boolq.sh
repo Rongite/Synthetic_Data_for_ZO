@@ -1,7 +1,7 @@
 #!/bin/bash -l
 
 
-# polaris 30h
+# polaris 50h
 cd /grand/sbi-fair/jikaiLoong/Synthetic_Data_for_ZO/PromptZO/MeZO/large_models
 
 OUT_0=/grand/sbi-fair/jikaiLoong/Synthetic_Data_for_ZO/results/Mistral-7B-v0.1/BOOLQ/fo_full/rejection_sampling/1e-6_synthetic.out
