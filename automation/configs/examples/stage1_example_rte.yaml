@@ -1,0 +1,79 @@
+experiment:
+  batch_id: batch_20241230_rte
+  purpose: rte_synthetic_data
+  description: RTE数据集合成数据生成实验 - recognizing textual entailment
+task_name: RTE
+training_method: mezo
+version: v1
+dataset:
+  task_name: rte
+  dataset_name: RTE
+  input_path: Data/original/RTE/rte_train.jsonl
+  original_dir: Data/original/RTE
+  files:
+    train: rte_train.jsonl
+    validation: rte_validation.jsonl
+    test: rte_test.jsonl
+  fields:
+  - premise
+  - hypothesis
+  - label
+generation:
+  api_key: sk-eWSYPo0CvhRYgcJs55B0C3F00aC74f6e95F47c1f4772292c
+  base_url: https://api2.aigcbest.top/v1
+  timeout: 120
+  model: gpt-4o
+  temperature: 0.9
+  field_to_rephrase: premise
+  rephrase_prompt: "You are tasked with rephrasing the given premise while preserving\
+    \ its original meaning and ensuring consistency with its associated hypothesis.\
+    \ Your goal is to create rephrased data optimized for MeZO training.\n\n{{REPHRASE_FEWSHOT}}\n\
+    \n### Key Requirements for Premise Rephrasing:\n\n1. **Task-Specific Context (RTE\
+    \ Dataset)**:\n  - The **RTE dataset** focuses on **recognizing textual entailment**.\n\
+    \  - The goal is to determine whether the **hypothesis** is **entailed (0)** or\
+    \ **not entailed (1)** by the **premise**.\n  - The rephrased **premise** must\
+    \ **not alter the entailment relationship** with the **hypothesis**.\n\n2. **Label\
+    \ Definitions**:\n  - **0 (Entailment)**: The **premise** logically implies or\
+    \ supports the **hypothesis**.\n  - **1 (Not Entailment)**: The **premise** does\
+    \ not logically imply the **hypothesis** (could be contradiction or neutral).\n\
+    \n3. **Consistency with the Original Label**:\n  - If the label is **0 (Entailment)**,\
+    \ the rephrased **premise** must still entail the **hypothesis**.\n  - If the\
+    \ label is **1 (Not Entailment)**, the rephrased **premise** must still not entail\
+    \ the **hypothesis**.\n\n4. **Optimized for MeZO Training**:\n  - Enhance gradient\
+    \ sensitivity through clear semantic boundaries.\n  - Use varied wording and sentence\
+    \ structures.\n  - Reduce redundancy and maintain conciseness.\n\n5. **High-Quality\
+    \ Data Generation**:\n  - Produce natural, fluent, and coherent text.\n  - Use\
+    \ paraphrasing through synonyms, restructuring, or reordering.\n\n### Your Task:\n\
+    Rephrase the following premise while ensuring it remains logically consistent\
+    \ with the given hypothesis and label.\n\n**Original premise**: \"{premise}\"\n\
+    **Hypothesis**: \"{hypothesis}\"\n**Label**: \"{label}\" (0 = entailment, 1 =\
+    \ not entailment)\n\n**Directly output only one rephrased premise** without any\
+    \ other characters or explanatory statements:\n"
+validation:
+  api_key: sk-eWSYPo0CvhRYgcJs55B0C3F00aC74f6e95F47c1f4772292c
+  base_url: https://api2.aigcbest.top/v1
+  timeout: 120
+  model: gpt-4o
+  temperature: 0.0
+  validation_prompt: 'Task: Verify if the rephrased premise maintains the same entailment
+    relationship with the hypothesis.
+
+
+    {{VALIDATION_FEWSHOT}}
+
+
+    Original premise: "{original_premise}"
+
+    Rephrased premise: "{rephrased_premise}"
+
+    Hypothesis: "{original_hypothesis}"
+
+    Label: "{original_label}" (0 = entailment, 1 = not entailment)
+
+
+    Do they maintain the same entailment relationship?
+
+    Output [same/not the same]:
+
+    '
+  few_shot_examples: []

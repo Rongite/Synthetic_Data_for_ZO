@@ -1,0 +1,22 @@
+{
+  "created_at": "2025-12-30 18:43:11",
+  "is_shared": true,
+  "batch_id": "batch_20241229_temperature",
+  "experiment_purpose": "prompt_engineering",
+  "experiment_id": "copa_mezo_v1",
+  "experiment_description": "Copa任务的prompt优化实验",
+  "task_name": "Copa",
+  "dataset_name": "Copa",
+  "training_method": "mezo",
+  "parameter_fingerprint": "b90eb4799593",
+  "generation": {
+    "model": "gpt-4o",
+    "temperature": 0.9,
+    "top_p": 1.0,
+    "max_tokens": 256
+  },
+  "validation": {
+    "model": "gpt-4o",
+    "temperature": 0.0
+  }
+}

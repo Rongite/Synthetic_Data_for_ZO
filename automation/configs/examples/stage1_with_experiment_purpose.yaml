@@ -1,0 +1,53 @@
+experiment:
+  batch_id: batch_20241229_temperature
+  purpose: temperature_study
+  description: 研究temperature参数对合成数据质量的影响
+  experiment_id: copa_mezo_temp07
+  overwrite_strategy: prompt
+task_name: Copa
+training_method: mezo
+version: v1
+dataset:
+  task_name: copa
+  input_path: Data/original/Copa/copa_train.jsonl
+  fields:
+  - premise
+  - choice1
+  - choice2
+  - question
+  - label
+generation:
+  api_key: sk-eWSYPo0CvhRYgcJs55B0C3F00aC74f6e95F47c1f4772292c
+  base_url: https://api2.aigcbest.top/v1
+  timeout: 120
+  model: gpt-4o
+  temperature: 0.7
+  field_to_rephrase: premise
+  max_tokens: 256
+  top_p: 1.0
+  frequency_penalty: 0.0
+  presence_penalty: 0.0
+  rephrase_prompt: 'You are tasked with rephrasing the given premise...
+
+    （prompt内容）
+
+    '
+validation:
+  api_key: sk-eWSYPo0CvhRYgcJs55B0C3F00aC74f6e95F47c1f4772292c
+  base_url: https://api2.aigcbest.top/v1
+  timeout: 120
+  model: gpt-4o
+  temperature: 0.0
+  validation_prompt: 'Task: Verify if the rephrased premise...
+
+    （validation prompt内容）
+
+    '
+  few_shot_examples:
+  - original_premise: My body cast a shadow over the grass.
+    rephrased_premise: A shadow from my body fell across the grass.
+    choice1: The sun was rising.
+    choice2: The grass was cut.
+    question: cause
+    label: 0
+    evaluation: same

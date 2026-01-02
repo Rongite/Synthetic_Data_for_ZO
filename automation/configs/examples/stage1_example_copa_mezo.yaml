@@ -1,0 +1,97 @@
+experiment:
+  purpose: general
+  description: Copa任务的MeZO训练数据生成
+task_name: Copa
+training_method: mezo
+version: v1
+dataset:
+  task_name: copa
+  dataset_name: Copa
+  input_path: Data/original/Copa/copa_train.jsonl
+  original_dir: Data/original/Copa
+  files:
+    train: copa_train.jsonl
+    validation: copa_validation.jsonl
+    test: copa_test.jsonl
+  fields:
+  - premise
+  - choice1
+  - choice2
+  - question
+  - label
+generation:
+  api_key: sk-eWSYPo0CvhRYgcJs55B0C3F00aC74f6e95F47c1f4772292c
+  base_url: https://api2.aigcbest.top/v1
+  timeout: 120
+  model: gpt-4o
+  temperature: 0.9
+  field_to_rephrase: premise
+  rephrase_prompt: "You are tasked with rephrasing the given premise while preserving\
+    \ its original meaning. Your goal is to create rephrased data optimized for enhancing\
+    \ gradient estimation in training with a memory-efficient zeroth-order optimizer\
+    \ (MeZO).\n\n### Key Requirements for Premise Rephrasing:\n1. **Task-Specific\
+    \ Context**:\n   - The **Copa dataset** focuses on **causal reasoning**, where\
+    \ the goal is to determine the **cause or effect** of a given premise.\n   - The\
+    \ rephrased **premise** must **not alter the logical relationship** with the correct\
+    \ choice.\n\n2. **Consistency with Correct Answer**:\n   - Ensure that the rephrased\
+    \ premise maintains the same correct answer as the original.\n   - The correct\
+    \ answer is: Choice {label + 1}: \"{choice1 if label == 0 else choice2}\"\n\n\
+    3. **Optimized for MeZO Training**:\n   - **Enhance Gradient Sensitivity**: Create\
+    \ clear semantic boundaries to increase gradient sensitivity.\n   - **Focus on\
+    \ Memory Efficiency**: Reduce redundancy, keep sentences concise.\n   - **Robustness\
+    \ to Data Sparsity**: Ensure essential information is preserved.\n   - **Non-Differentiable\
+    \ Optimization Readiness**: Create clear impacts on performance metrics.\n\n4.\
+    \ **Maintain Neutral Stance**:\n   - Do not explicitly indicate which choice is\
+    \ correct.\n   - The rephrased premise should require reasoning to determine the\
+    \ answer.\n\n5. **High-Quality Data Generation**:\n   - Produce natural, fluent,\
+    \ and coherent text.\n   - Use paraphrasing, synonyms, or restructuring to diversify\
+    \ data.\n\n### Your Task:\nRephrase the following premise while ensuring it remains\
+    \ consistent with the correct answer.\n\n**Original premise**: \"{premise}\"\n\
+    **Choice 1**: \"{choice1}\"\n**Choice 2**: \"{choice2}\"\n**Question**: \"{question}\"\
+    \n**Correct answer**: \"{choice1 if label == 0 else choice2}\"\n\n**Directly output\
+    \ only one rephrased premise** without any other characters or explanatory statements:\n"
+validation:
+  api_key: sk-eWSYPo0CvhRYgcJs55B0C3F00aC74f6e95F47c1f4772292c
+  base_url: https://api2.aigcbest.top/v1
+  timeout: 120
+  model: gpt-4o
+  temperature: 0.0
+  validation_prompt: 'Task: Verify if the rephrased premise maintains consistency
+    with the correct answer choice.
+
+
+    Original premise: "{original_premise}"
+
+    Rephrased premise: "{rephrased_premise}"
+
+    Choice 1: "{original_choice1}"
+
+    Choice 2: "{original_choice2}"
+
+    Question: "{original_question}"
+
+    Correct answer: "{original_choice1 if original_label == 0 else original_choice2}"
+
+    '
+  few_shot_examples:
+  - original_premise: My body cast a shadow over the grass.
+    rephrased_premise: A shadow from my body fell across the grass.
+    choice1: The sun was rising.
+    choice2: The grass was cut.
+    question: cause
+    label: 0
+    evaluation: same
+  - original_premise: The woman tolerated her friend's difficult behavior.
+    rephrased_premise: The woman accepted her friend's challenging conduct.
+    choice1: The woman knew her friend was going through a hard time.
+    choice2: The woman felt that her friend took advantage of her kindness.
+    question: cause
+    label: 0
+    evaluation: same
+  - original_premise: The women met for coffee.
+    rephrased_premise: The two women decided to gather at a café.
+    choice1: The cafe reopened in a new location.
+    choice2: They wanted to catch up with each other.
+    question: cause
+    label: 1
+    evaluation: same

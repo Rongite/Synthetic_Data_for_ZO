@@ -1,0 +1,147 @@
+# 完整的Copa合成数据生成配置示例
+# 包含实验管理 + MeZO数据集结构
+
+# ========== 实验管理（Batch方案3++） ==========
+experiment:
+  # Batch ID - 用于组织多个实验到同一批次（可选）
+  # 格式: batch_{date}_{purpose}
+  # 如果不指定，系统会自动生成: batch_{YYYYMMDD}_{purpose}
+  batch_id: "batch_20241229_temperature"  # 可选，不填则自动生成
+
+  purpose: "prompt_engineering"  # 实验目的（用于自动生成batch_id）
+  description: "Copa任务的prompt优化实验"
+  experiment_id: "copa_mezo_v1"  # 实验标识（已废弃，保留兼容性）
+  overwrite_strategy: "prompt"  # 相同参数时提示是否覆盖（已废弃，Batch方案自动去重）
+
+# ========== 基本信息 ==========
+task_name: "Copa"
+training_method: "mezo"
+version: "v1"
+
+# ========== 数据集配置 ==========
+dataset:
+  task_name: "copa"  # 小写，用于文件命名
+  dataset_name: "Copa"  # 🔧 大写，用于目录命名（MeZO期望的）
+  input_path: "Data/original/Copa/copa_train.jsonl"
+
+  # 🔧 原始数据集目录（用于复制validation/test）
+  original_dir: "Data/original/Copa"
+
+  # 🔧 数据集文件列表
+  files:
+    train: "copa_train.jsonl"
+    validation: "copa_validation.jsonl"
+    test: "copa_test.jsonl"
+
+  fields:
+    - "premise"
+    - "choice1"
+    - "choice2"
+    - "question"
+    - "label"
+
+# ========== 生成配置 ==========
+generation:
+  # ⭐ Rewriter API配置
+  api_key: "sk-eWSYPo0CvhRYgcJs55B0C3F00aC74f6e95F47c1f4772292c"
+  base_url: "https://api2.aigcbest.top/v1"
+  timeout: 120
+
+  model: "gpt-4o"
+  temperature: 0.9
+  field_to_rephrase: "premise"  # ⭐ 指定要改写的字段
+
+  # ⭐ Rephrase Prompt - 支持Placeholder和字段引用
+  # - {{REPHRASE_FEWSHOT}}: 系统会自动插入few-shot examples（来自断点1审核通过的样本）
+  # - {field_name}: 使用Python .format()语法引用字段值
+  rephrase_prompt: |
+    You are tasked with rephrasing the given premise while preserving its original meaning. Your goal is to create rephrased data optimized for enhancing gradient estimation in training with a memory-efficient zeroth-order optimizer (MeZO).
+
+    {{REPHRASE_FEWSHOT}}
+
+    ### Key Requirements for Premise Rephrasing:
+    1. **Task-Specific Context**:
+       - The **Copa dataset** focuses on **causal reasoning**, where the goal is to determine the **cause or effect** of a given premise.
+       - The rephrased **premise** must **not alter the logical relationship** with the correct choice.
+
+    2. **Consistency with Correct Answer**:
+       - Ensure that the rephrased premise maintains the same correct answer as the original.
+       - The correct answer is: Choice {label + 1}: "{choice1 if label == 0 else choice2}"
+
+    3. **Optimized for MeZO Training**:
+       - **Enhance Gradient Sensitivity**: Create clear semantic boundaries to increase gradient sensitivity.
+       - **Focus on Memory Efficiency**: Reduce redundancy, keep sentences concise.
+       - **Robustness to Data Sparsity**: Ensure essential information is preserved.
+       - **Non-Differentiable Optimization Readiness**: Create clear impacts on performance metrics.
+
+    4. **Maintain Neutral Stance**:
+       - Do not explicitly indicate which choice is correct.
+       - The rephrased premise should require reasoning to determine the answer.
+
+    5. **High-Quality Data Generation**:
+       - Produce natural, fluent, and coherent text.
+       - Use paraphrasing, synonyms, or restructuring to diversify data.
+
+    ### Your Task:
+    Rephrase the following premise while ensuring it remains consistent with the correct answer.
+
+    **Original premise**: "{premise}"
+    **Choice 1**: "{choice1}"
+    **Choice 2**: "{choice2}"
+    **Question**: "{question}"
+    **Correct answer**: "{choice1 if label == 0 else choice2}"
+
+    **Directly output only one rephrased premise** without any other characters or explanatory statements:
+
+# ========== 验证配置 ==========
+validation:
+  # ⭐ Judge API配置
+  api_key: "sk-eWSYPo0CvhRYgcJs55B0C3F00aC74f6e95F47c1f4772292c"
+  base_url: "https://api2.aigcbest.top/v1"
+  timeout: 120
+
+  model: "gpt-4o"
+  temperature: 0.0
+
+  # ⭐ Validation Prompt - 支持Placeholder和字段引用
+  # - {{VALIDATION_FEWSHOT}}: 系统会自动插入few-shot examples（来自断点2A审核通过的21-40样本）
+  # - {original_field}, {rephrased_field}: 使用Python .format()语法引用字段值
+  validation_prompt: |
+    Task: Verify if the rephrased premise maintains consistency with the correct answer choice.
+
+    {{VALIDATION_FEWSHOT}}
+
+    Original premise: "{original_premise}"
+    Rephrased premise: "{rephrased_premise}"
+    Choice 1: "{original_choice1}"
+    Choice 2: "{original_choice2}"
+    Question: "{original_question}"
+    Correct answer: "{original_choice1 if original_label == 0 else original_choice2}"
+
+    Output [same/not the same]:
+
+  # ⭐ Few-shot examples - 初始可留空，系统会在断点2A后自动生成
+  few_shot_examples:
+    - original_premise: "My body cast a shadow over the grass."
+      rephrased_premise: "A shadow from my body fell across the grass."
+      choice1: "The sun was rising."
+      choice2: "The grass was cut."
+      question: "cause"
+      label: 0
+      evaluation: "same"
+
+    - original_premise: "The woman tolerated her friend's difficult behavior."
+      rephrased_premise: "The woman accepted her friend's challenging conduct."
+      choice1: "The woman knew her friend was going through a hard time."
+      choice2: "The woman felt that her friend took advantage of her kindness."
+      question: "cause"
+      label: 0
+      evaluation: "same"
+
+    - original_premise: "The women met for coffee."
+      rephrased_premise: "The two women decided to gather at a café."
+      choice1: "The cafe reopened in a new location."
+      choice2: "They wanted to catch up with each other."
+      question: "cause"
+      label: 1
+      evaluation: "same"

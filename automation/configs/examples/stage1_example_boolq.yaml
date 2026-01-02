@@ -1,0 +1,74 @@
+experiment:
+  batch_id: batch_20241230_boolq
+  purpose: boolq_synthetic_data
+  description: BOOLQ数据集合成数据生成实验
+task_name: BOOLQ
+training_method: mezo
+version: v1
+dataset:
+  task_name: boolq
+  dataset_name: BOOLQ
+  input_path: Data/original/BOOLQ/boolq_train.jsonl
+  original_dir: Data/original/BOOLQ
+  files:
+    train: boolq_train.jsonl
+    validation: boolq_validation.jsonl
+  fields:
+  - question
+  - answer
+  - passage
+generation:
+  api_key: sk-eWSYPo0CvhRYgcJs55B0C3F00aC74f6e95F47c1f4772292c
+  base_url: https://api2.aigcbest.top/v1
+  timeout: 120
+  model: gpt-4o
+  temperature: 0.9
+  field_to_rephrase: passage
+  rephrase_prompt: "You are tasked with rephrasing the given passage while preserving\
+    \ its original meaning and ensuring consistency with its associated question and\
+    \ boolean answer. Your goal is to create rephrased data optimized for MeZO training.\n\
+    \n{{REPHRASE_FEWSHOT}}\n\n### Key Requirements for Passage Rephrasing:\n\n1. **Task-Specific\
+    \ Context (BoolQ Dataset)**:\n  - The **BoolQ dataset** consists of yes/no questions\
+    \ and short passages.\n  - The task is to determine whether the **passage** supports\
+    \ a **\"true\"** or **\"false\"** answer to the **question**.\n  - The rephrased\
+    \ **passage** must **not change the answerability or truth value** of the original\
+    \ passage.\n\n2. **Consistency with the Original Answer**:\n  - Ensure that the\
+    \ rephrased **passage** leads to the **same boolean answer** as the original.\n\
+    \  - Do not insert or omit information that would alter the logical basis of the\
+    \ answer.\n\n3. **Optimized for MeZO Training**:\n  - Enhance gradient sensitivity\
+    \ through varied vocabulary and structure.\n  - Keep the passage concise to reduce\
+    \ noise.\n  - Maintain informativeness even if truncated.\n\n4. **High-Quality\
+    \ Data Generation**:\n  - Produce natural, fluent, and coherent text.\n  - Use\
+    \ paraphrasing, clause reordering, or syntax transformation.\n\n### Your Task:\n\
+    Rephrase the following passage while ensuring it leads to the same answer for\
+    \ the given question.\n\n**Question**: \"{question}\"\n**Answer**: \"{answer}\"\
+    \n**Original passage**: \"{passage}\"\n\n**Directly output only one rephrased\
+    \ passage** without any other characters or explanatory statements:\n"
+validation:
+  api_key: sk-eWSYPo0CvhRYgcJs55B0C3F00aC74f6e95F47c1f4772292c
+  base_url: https://api2.aigcbest.top/v1
+  timeout: 120
+  model: gpt-4o
+  temperature: 0.0
+  validation_prompt: 'Task: Verify if the rephrased passage maintains consistency
+    with the question and answer.
+
+
+    {{VALIDATION_FEWSHOT}}
+
+
+    Question: "{original_question}"
+
+    Answer: "{original_answer}"
+
+    Original passage: "{original_passage}"
+
+    Rephrased passage: "{rephrased_passage}"
+
+
+    Do they convey the same meaning for answering the question?
+
+    Output [same/not the same]:
+
+    '
+  few_shot_examples: []

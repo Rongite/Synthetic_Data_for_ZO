@@ -1,0 +1,232 @@
+#!/usr/bin/env python3
+"""
+比较不同实验的参数配置
+
+用法:
+    # 比较两个batch中的所有实验
+    python compare_experiments.py \
+        --batch1 batch_20241229_temperature \
+        --batch2 batch_20241230_topp
+
+    # 比较同一batch中不同数据集
+    python compare_experiments.py \
+        --batch1 batch_20241229_temperature \
+        --dataset1 Copa \
+        --batch2 batch_20241229_temperature \
+        --dataset2 CB
+
+    # 比较_shared/中的两个具体实验
+    python compare_experiments.py \
+        --shared Copa/temp07_topp10_gpt4o \
+        --shared Copa/temp09_topp10_gpt4o
+"""
+
+import argparse
+import json
+import sys
+from pathlib import Path
+
+# 添加父目录到路径
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from experiment_manager_batch import BatchExperimentManager
+
+PROJECT_ROOT = "/home/ubuntu/LLM-inference/jikai-project/Synthetic_Data_for_ZO"
+
+
+def compare_params(exp1, exp2):
+    """比较两个实验的参数"""
+    differences = []
+    similarities = []
+
+    # 获取元数据
+    meta1 = exp1.get('metadata', {})
+    meta2 = exp2.get('metadata', {})
+
+    # 比较生成配置
+    gen1 = meta1.get('generation', {})
+    gen2 = meta2.get('generation', {})
+
+    gen_fields = ['model', 'temperature', 'top_p', 'max_tokens']
+    for field in gen_fields:
+        val1 = gen1.get(field, 'N/A')
+        val2 = gen2.get(field, 'N/A')
+
+        if val1 != val2:
+            differences.append({
+                'field': f'generation.{field}',
+                'exp1': val1,
+                'exp2': val2
+            })
+        else:
+            similarities.append({
+                'field': f'generation.{field}',
+                'value': val1
+            })
+
+    # 比较验证配置
+    val1 = meta1.get('validation', {})
+    val2 = meta2.get('validation', {})
+
+    val_fields = ['model', 'temperature']
+    for field in val_fields:
+        v1 = val1.get(field, 'N/A')
+        v2 = val2.get(field, 'N/A')
+
+        if v1 != v2:
+            differences.append({
+                'field': f'validation.{field}',
+                'exp1': v1,
+                'exp2': v2
+            })
+        else:
+            similarities.append({
+                'field': f'validation.{field}',
+                'value': v1
+            })
+
+    return differences, similarities
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description='比较不同实验的参数配置',
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument(
+        '--batch1',
+        help='第一个batch ID'
+    )
+    parser.add_argument(
+        '--dataset1',
+        help='第一个batch中的数据集名称'
+    )
+    parser.add_argument(
+        '--batch2',
+        help='第二个batch ID'
+    )
+    parser.add_argument(
+        '--dataset2',
+        help='第二个batch中的数据集名称'
+    )
+    parser.add_argument(
+        '--shared',
+        nargs=2,
+        metavar=('EXP1', 'EXP2'),
+        help='直接比较_shared/中的两个实验路径 (例如: Copa/temp07_topp10_gpt4o)'
+    )
+
+    args = parser.parse_args()
+
+    base_output_dir = Path(PROJECT_ROOT) / "Data_v2" / "synthetic"
+    manager = BatchExperimentManager(base_output_dir)
+
+    # 获取实验列表
+    if args.shared:
+        # 直接从_shared/读取
+        shared_exps = manager.list_shared_experiments()
+
+        exp1_path = args.shared[0]
+        exp2_path = args.shared[1]
+
+        exp1 = next((e for e in shared_exps if e['physical_path'] == f"_shared/{exp1_path}"), None)
+        exp2 = next((e for e in shared_exps if e['physical_path'] == f"_shared/{exp2_path}"), None)
+
+        if not exp1:
+            print(f"❌ 实验1不存在: {exp1_path}")
+            return 1
+        if not exp2:
+            print(f"❌ 实验2不存在: {exp2_path}")
+            return 1
+
+        exp1_name = exp1_path
+        exp2_name = exp2_path
+
+    elif args.batch1 and args.batch2:
+        # 从batch中读取
+        exps1 = manager.list_experiments_in_batch(args.batch1, args.dataset1)
+        exps2 = manager.list_experiments_in_batch(args.batch2, args.dataset2)
+
+        if not exps1:
+            print(f"❌ Batch1中未找到实验: {args.batch1}")
+            return 1
+        if not exps2:
+            print(f"❌ Batch2中未找到实验: {args.batch2}")
+            return 1
+
+        print("\n选择要比较的实验:")
+        print(f"\nBatch1: {args.batch1}")
+        for i, e in enumerate(exps1):
+            print(f"  {i+1}. {e['dataset']}/{e['exp_name']}")
+
+        print(f"\nBatch2: {args.batch2}")
+        for i, e in enumerate(exps2):
+            print(f"  {i+1}. {e['dataset']}/{e['exp_name']}")
+
+        # 简化：如果只有一个实验，自动选择
+        if len(exps1) == 1 and len(exps2) == 1:
+            exp1 = exps1[0]
+            exp2 = exps2[0]
+        else:
+            print("\n功能待实现：请使用--shared直接指定实验")
+            return 1
+
+        exp1_name = f"{args.batch1}/{exp1['dataset']}/{exp1['exp_name']}"
+        exp2_name = f"{args.batch2}/{exp2['dataset']}/{exp2['exp_name']}"
+
+        # 读取物理路径的元数据
+        exp1_metadata_path = base_output_dir / exp1['physical_path'].replace('_shared/', '') / 'experiment_metadata.json'
+        exp2_metadata_path = base_output_dir / exp2['physical_path'].replace('_shared/', '') / 'experiment_metadata.json'
+
+        if exp1_metadata_path.exists():
+            with open(exp1_metadata_path, 'r') as f:
+                exp1['metadata'] = json.load(f)
+
+        if exp2_metadata_path.exists():
+            with open(exp2_metadata_path, 'r') as f:
+                exp2['metadata'] = json.load(f)
+
+    else:
+        parser.print_help()
+        return 1
+
+    # 比较参数
+    differences, similarities = compare_params(exp1, exp2)
+
+    print("\n" + "=" * 80)
+    print("实验参数比较")
+    print("=" * 80)
+    print(f"\n实验1: {exp1_name}")
+    print(f"实验2: {exp2_name}")
+
+    # 显示相同参数
+    if similarities:
+        print("\n✅ 相同参数:")
+        for item in similarities:
+            print(f"  {item['field']}: {item['value']}")
+
+    # 显示不同参数
+    if differences:
+        print("\n⚠️  不同参数:")
+        for item in differences:
+            print(f"  {item['field']}:")
+            print(f"    实验1: {item['exp1']}")
+            print(f"    实验2: {item['exp2']}")
+    else:
+        print("\n✅ 所有参数完全相同")
+        print(f"参数指纹: {exp1.get('fingerprint', 'N/A')}")
+
+    # 判断是否应该共享物理数据
+    if exp1.get('fingerprint') == exp2.get('fingerprint'):
+        print("\n💾 提示: 这两个实验的参数指纹相同，应该共享物理数据")
+    else:
+        print(f"\n🔧 提示: 参数不同，需要单独生成数据")
+        print(f"  实验1指纹: {exp1.get('fingerprint', 'N/A')}")
+        print(f"  实验2指纹: {exp2.get('fingerprint', 'N/A')}")
+
+    print()
+    return 0
+
+
+if __name__ == '__main__':
+    exit(main())

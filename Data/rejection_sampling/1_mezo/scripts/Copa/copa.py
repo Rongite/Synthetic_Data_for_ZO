@@ -224,19 +224,19 @@ total_answer = 0
 
 for i in tqdm(range(len(eval_list))):
     output_data = {}
-    # if 20 <= i < 40:
-    #     eval_list[i]['eval_result'] = "same"
-    #     output_data["premise"] = eval_list[i]["rephrased"]
-    #     output_data["choice1"] = eval_list[i]["choice1"]
-    #     output_data["choice2"] = eval_list[i]["choice2"]
-    #     output_data["question"] = eval_list[i]["question"]
-    #     output_data["idx"] = eval_list[i]["idx"]
-    #     output_data["label"] = eval_list[i]["label"]
-    #     correct_answer += 1
-    #     total_answer += 1
-    #     out_file.write(json.dumps(output_data) + "\n")
-    #     out_file.flush()
-    #     continue
+    if 20 <= i < 40:
+        eval_list[i]['eval_result'] = "same"
+        output_data["premise"] = eval_list[i]["rephrased"]
+        output_data["choice1"] = eval_list[i]["choice1"]
+        output_data["choice2"] = eval_list[i]["choice2"]
+        output_data["question"] = eval_list[i]["question"]
+        output_data["idx"] = eval_list[i]["idx"]
+        output_data["label"] = eval_list[i]["label"]
+        correct_answer += 1
+        total_answer += 1
+        out_file.write(json.dumps(output_data) + "\n")
+        out_file.flush()
+        continue
 
     the_correct_choice = correct_choice(eval_list[i]["choice1"], eval_list[i]["choice2"], eval_list[i]["label"])
     prompt = generate_prompt(eval_list[i]["original"], eval_list[i]["choice1"], eval_list[i]["choice2"], eval_list[i]["question"], \

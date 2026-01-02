@@ -1,0 +1,213 @@
+#!/usr/bin/env python3
+"""
+训练结果管理工具
+列出并组织Results_v2目录下的所有训练结果
+"""
+
+import os
+import yaml
+from pathlib import Path
+from typing import Dict, List
+from datetime import datetime
+from collections import defaultdict
+
+PROJECT_ROOT = "/home/ubuntu/LLM-inference/jikai-project/Synthetic_Data_for_ZO"
+
+
+class ResultsManager:
+    def __init__(self):
+        self.project_root = Path(PROJECT_ROOT)
+        self.results_base = self.project_root / "Results_v2"
+
+    def scan_results(self) -> Dict[str, List[Dict]]:
+        """
+        扫描Results_v2目录，返回按实验目的分组的结果
+
+        Returns:
+            {
+                experiment_purpose: [
+                    {
+                        'model': str,
+                        'experiment_name': str,
+                        'timestamp': str,
+                        'path': Path,
+                        'config': Dict
+                    },
+                    ...
+                ],
+                ...
+            }
+        """
+        if not self.results_base.exists():
+            return {}
+
+        results_by_purpose = defaultdict(list)
+
+        # 遍历实验目的目录
+        for purpose_dir in self.results_base.iterdir():
+            if not purpose_dir.is_dir():
+                continue
+
+            purpose = purpose_dir.name
+
+            # 遍历模型目录
+            for model_dir in purpose_dir.iterdir():
+                if not model_dir.is_dir():
+                    continue
+
+                model = model_dir.name
+
+                # 遍历实验目录 ({Task}_{Method}_{DataType}_{LR})
+                for exp_dir in model_dir.iterdir():
+                    if not exp_dir.is_dir():
+                        continue
+
+                    exp_name = exp_dir.name
+
+                    # 遍历时间戳目录
+                    for timestamp_dir in exp_dir.iterdir():
+                        if not timestamp_dir.is_dir():
+                            continue
+
+                        timestamp = timestamp_dir.name
+
+                        # 读取配置文件
+                        config_path = timestamp_dir / "experiment_config.yaml"
+                        config = None
+                        if config_path.exists():
+                            try:
+                                with open(config_path, 'r', encoding='utf-8') as f:
+                                    config = yaml.safe_load(f)
+                            except Exception as e:
+                                print(f"⚠️  无法读取配置: {config_path}: {e}")
+
+                        results_by_purpose[purpose].append({
+                            'model': model,
+                            'experiment_name': exp_name,
+                            'timestamp': timestamp,
+                            'path': timestamp_dir,
+                            'config': config
+                        })
+
+        # 对每个purpose下的结果按时间戳排序
+        for purpose in results_by_purpose:
+            results_by_purpose[purpose].sort(key=lambda x: x['timestamp'], reverse=True)
+
+        return dict(results_by_purpose)
+
+    def print_results_summary(self):
+        """打印结果摘要"""
+        results = self.scan_results()
+
+        if not results:
+            print("📂 Results_v2 目录为空")
+            return
+
+        print("\n" + "="*80)
+        print("训练结果摘要 - Results_v2")
+        print("="*80)
+
+        total_experiments = 0
+        for purpose, experiments in sorted(results.items()):
+            total_experiments += len(experiments)
+
+            print(f"\n📁 实验目的: {purpose}")
+            print(f"   实验数量: {len(experiments)}")
+
+            # 按模型分组统计
+            by_model = defaultdict(int)
+            for exp in experiments:
+                by_model[exp['model']] += 1
+
+            for model, count in sorted(by_model.items()):
+                print(f"   └─ {model}: {count} 个实验")
+
+        print(f"\n{'='*80}")
+        print(f"总计: {len(results)} 个实验目的, {total_experiments} 个训练实验")
+        print("="*80)
+
+    def print_results_detail(self, purpose: str = None):
+        """
+        打印详细结果列表
+
+        Args:
+            purpose: 指定实验目的，如果为None则显示所有
+        """
+        results = self.scan_results()
+
+        if not results:
+            print("📂 Results_v2 目录为空")
+            return
+
+        # 过滤指定的purpose
+        if purpose:
+            if purpose not in results:
+                print(f"❌ 未找到实验目的: {purpose}")
+                print(f"可用的实验目的: {', '.join(sorted(results.keys()))}")
+                return
+            results = {purpose: results[purpose]}
+
+        print("\n" + "="*80)
+        print("训练结果详情")
+        print("="*80)
+
+        for purpose_name, experiments in sorted(results.items()):
+            print(f"\n📁 实验目的: {purpose_name}")
+            print("-" * 80)
+
+            for i, exp in enumerate(experiments, 1):
+                print(f"\n  [{i}] {exp['experiment_name']}")
+                print(f"      模型: {exp['model']}")
+                print(f"      时间: {exp['timestamp']}")
+                print(f"      路径: {exp['path'].relative_to(self.project_root)}")
+
+                if exp['config']:
+                    config = exp['config']
+                    print(f"      任务: {config.get('task', 'N/A')}")
+                    print(f"      方法: {config.get('method', 'N/A')}")
+
+                    # 显示超参数
+                    hp = config.get('hyperparameters', {})
+                    if hp:
+                        print(f"      超参数:")
+                        print(f"        - LR: {hp.get('learning_rate', 'N/A')}")
+                        print(f"        - BS: {hp.get('batch_size', 'N/A')}")
+                        print(f"        - Steps: {hp.get('steps', 'N/A')}")
+                        print(f"        - Seed: {hp.get('seed', 'N/A')}")
+
+                    # 显示数据信息
+                    data_config = config.get('data', {})
+                    if 'path' in data_config:
+                        print(f"      数据: {data_config['path']}")
+                    elif 'type' in data_config:
+                        print(f"      数据: {data_config['type']}")
+
+        print("\n" + "="*80)
+
+
+def main():
+    import argparse
+
+    parser = argparse.ArgumentParser(description="训练结果管理工具")
+    parser.add_argument(
+        "--purpose",
+        help="指定实验目的（查看详情时使用）"
+    )
+    parser.add_argument(
+        "--detail",
+        action="store_true",
+        help="显示详细信息"
+    )
+
+    args = parser.parse_args()
+
+    manager = ResultsManager()
+
+    if args.detail:
+        manager.print_results_detail(purpose=args.purpose)
+    else:
+        manager.print_results_summary()
+
+
+if __name__ == "__main__":
+    main()

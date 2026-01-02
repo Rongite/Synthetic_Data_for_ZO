@@ -1,0 +1,118 @@
+#!/usr/bin/env python3
+"""
+列出_shared/中的所有物理实验数据
+
+用法:
+    python list_shared_experiments.py
+    python list_shared_experiments.py --dataset Copa
+    python list_shared_experiments.py --verbose
+"""
+
+import argparse
+import json
+import sys
+from pathlib import Path
+
+# 添加父目录到路径
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from experiment_manager_batch import BatchExperimentManager
+
+PROJECT_ROOT = "/home/ubuntu/LLM-inference/jikai-project/Synthetic_Data_for_ZO"
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description='列出_shared/中的所有物理实验数据',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+示例:
+  # 列出所有物理实验
+  python list_shared_experiments.py
+
+  # 只列出Copa数据集的实验
+  python list_shared_experiments.py --dataset Copa
+
+  # 显示详细信息（包括元数据、参数指纹等）
+  python list_shared_experiments.py --verbose
+        """
+    )
+    parser.add_argument(
+        '--dataset',
+        help='只显示指定数据集的实验'
+    )
+    parser.add_argument(
+        '-v', '--verbose',
+        action='store_true',
+        help='显示详细信息（包括元数据、参数配置等）'
+    )
+    args = parser.parse_args()
+
+    base_output_dir = Path(PROJECT_ROOT) / "Data_v2" / "synthetic"
+    manager = BatchExperimentManager(base_output_dir)
+
+    experiments = manager.list_shared_experiments(args.dataset)
+
+    if not experiments:
+        print(f"\n在 _shared/ 中未找到实验")
+        if args.dataset:
+            print(f"(数据集: {args.dataset})")
+        return 0
+
+    print("\n" + "=" * 80)
+    print("_shared/ 中的物理实验数据")
+    if args.dataset:
+        print(f"数据集: {args.dataset}")
+    print(f"实验数: {len(experiments)}")
+    print("=" * 80)
+
+    # 按数据集分组
+    by_dataset = {}
+    for exp in experiments:
+        dataset = exp['dataset']
+        if dataset not in by_dataset:
+            by_dataset[dataset] = []
+        by_dataset[dataset].append(exp)
+
+    for dataset, exps in by_dataset.items():
+        print(f"\n📊 {dataset} ({len(exps)} 个实验)")
+        print("-" * 80)
+
+        for exp in exps:
+            print(f"\n  📦 {exp['exp_name']}")
+            print(f"     物理路径: {exp['physical_path']}")
+            print(f"     参数指纹: {exp.get('fingerprint', 'N/A')[:12]}...")
+            print(f"     创建时间: {exp.get('created_at', 'N/A')}")
+            print(f"     原始Batch: {exp.get('batch_id', 'N/A')}")
+
+            if args.verbose and 'metadata' in exp:
+                metadata = exp['metadata']
+
+                # 显示生成配置
+                if 'generation' in metadata:
+                    gen = metadata['generation']
+                    print(f"\n     生成配置:")
+                    print(f"       模型: {gen.get('model', 'N/A')}")
+                    print(f"       Temperature: {gen.get('temperature', 'N/A')}")
+                    print(f"       Top_p: {gen.get('top_p', 'N/A')}")
+                    print(f"       Max tokens: {gen.get('max_tokens', 'N/A')}")
+
+                # 显示验证配置
+                if 'validation' in metadata:
+                    val = metadata['validation']
+                    print(f"\n     验证配置:")
+                    print(f"       模型: {val.get('model', 'N/A')}")
+                    print(f"       Temperature: {val.get('temperature', 'N/A')}")
+
+                # 显示实验信息
+                if 'experiment_purpose' in metadata:
+                    print(f"\n     实验目的: {metadata.get('experiment_purpose', 'N/A')}")
+                if 'experiment_description' in metadata:
+                    print(f"     实验描述: {metadata.get('experiment_description', 'N/A')}")
+
+    print()
+    return 0
+
+
+if __name__ == '__main__':
+    exit(main())

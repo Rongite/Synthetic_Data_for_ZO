@@ -1,0 +1,105 @@
+# 完整的阶段2训练配置示例 - 超参数调优实验
+# 使用阶段1生成的合成数据进行MeZO训练
+
+# ========== 实验管理 ==========
+experiment:
+  # 🔴 重要：阶段1和阶段2的实验目的是独立的！
+  #
+  # 【阶段1 - 数据生成的实验目的】：
+  #   Data_v2/synthetic/prompt_engineering/copa_mezo_v1/
+  #   ↑ purpose = "prompt_engineering"（测试不同prompt对数据质量的影响）
+  #
+  # 【阶段2 - 训练的实验目的】：
+  #   purpose = "hyperparameter_tuning"（测试不同学习率对训练效果的影响）
+  #   ↑ 这个值决定Results保存位置
+  #
+  # 【结果保存位置】：
+  #   Results_v2/hyperparameter_tuning/  ← 按"训练目的"分类，不是数据生成目的！
+  #
+  # 【为什么要分开】：
+  #   - 同一个数据集可能用于多种不同的训练实验
+  #   - 例如：用prompt_engineering数据测试model_comparison
+  #   - 如果不分开，所有结果都会混在prompt_engineering目录下
+  #
+  purpose: "hyperparameter_tuning"  # 训练实验目的（决定Results分类）
+  description: "使用copa_mezo_v1合成数据测试不同学习率的效果"
+
+# ========== 模型配置 ==========
+model: "meta-llama/Llama-3.2-1B"
+
+# ========== 任务 ==========
+task: "Copa"  # Copa, CB, RTE, BOOLQ, ArcC_Cloze, ArcC_MC
+
+# ========== 训练方法 ==========
+method: "zo"  # zo (MeZO), fo_full (Full Fine-tune), fo_lora (LoRA)
+
+# ========== 数据配置 ==========
+data:
+  # 直接指定数据路径
+  # 路径格式：Data_v2/synthetic/{数据生成目的}/{实验ID}/{Dataset}
+  path: "Data_v2/synthetic/prompt_engineering/copa_mezo_v1/Copa"
+
+  # 📌 说明：
+  # - 数据来自"prompt_engineering"实验（阶段1的实验目的）
+  # - 但训练目的是"hyperparameter_tuning"（阶段2的实验目的）
+  # - 这两者是独立的！
+
+# ========== 超参数配置 ==========
+hyperparameters:
+  # 学习率网格搜索
+  learning_rate:
+    - 1e-6   # 较大学习率
+    - 5e-7   # 推荐值
+    - 2e-7   # 较小学习率
+    - 1e-7   # 最小学习率
+
+  batch_size: 16  # Batch size
+
+  steps: 20000  # 训练步数
+
+  seed: 0  # 随机种子（可以设置多个seed进行重复实验）
+
+  # MeZO 特定参数
+  zo_eps: 1e-3  # MeZO 的 epsilon 参数
+
+# ========== CUDA设备配置 ==========
+cuda_devices: "0"  # 使用GPU 0，可以是 "0,1" 使用多GPU
+
+# ========== 运行选项 ==========
+wait_for_completion: false  # 后台运行，不等待完成
+continue_on_error: true  # 出错时继续执行剩余实验
+
+# ========== 预期结果目录 ==========
+# Results_v2/hyperparameter_tuning/meta-llama/Llama-3.2-1B/
+# ├── Copa_zo_copa_mezo_v1_1_6/
+# │   └── 20251226_HHMMSS/
+# │       ├── experiment_config.yaml
+# │       ├── 1e-06_train.out
+# │       └── 1e-06_train.err
+# ├── Copa_zo_copa_mezo_v1_5_7/
+# │   └── 20251226_HHMMSS/
+# ├── Copa_zo_copa_mezo_v1_2_7/
+# │   └── 20251226_HHMMSS/
+# └── Copa_zo_copa_mezo_v1_1_7/
+#     └── 20251226_HHMMSS/
+
+# ========== 更多实验目的示例 ==========
+# 训练实验目的（阶段2）推荐类别：
+#   - baseline_comparison: 与baseline对比
+#   - model_comparison: 对比不同模型
+#   - hyperparameter_tuning: 超参数调优
+#   - ablation_study: 消融实验
+#   - prompt_effectiveness: 测试prompt效果
+#   - data_quality_impact: 测试数据质量影响
+#   - scaling_study: 扩展性研究
+
+# ========== 使用方法 ==========
+# 1. 执行训练：
+#    python automation/stage2_training/trainer.py automation/configs/examples/stage2_full_example_hyperparameter_tuning.yaml
+#
+# 2. 预览命令（不实际执行）：
+#    python automation/stage2_training/trainer.py automation/configs/examples/stage2_full_example_hyperparameter_tuning.yaml --dry-run
+#
+# 3. 查看结果：
+#    python automation/stage2_training/list_results.py
+#    python automation/stage2_training/list_results.py --detail --purpose hyperparameter_tuning

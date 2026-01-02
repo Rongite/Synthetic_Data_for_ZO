@@ -1,0 +1,73 @@
+#!/usr/bin/env python3
+"""
+列出所有batch
+
+用法:
+    python list_batches.py
+    python list_batches.py --verbose
+"""
+
+import argparse
+import sys
+from pathlib import Path
+
+# 添加父目录到路径
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from experiment_manager_batch import BatchExperimentManager
+
+PROJECT_ROOT = "/home/ubuntu/LLM-inference/jikai-project/Synthetic_Data_for_ZO"
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description='列出所有batch实验批次'
+    )
+    parser.add_argument(
+        '-v', '--verbose',
+        action='store_true',
+        help='显示详细信息（包括每个batch中的实验数量）'
+    )
+    args = parser.parse_args()
+
+    base_output_dir = Path(PROJECT_ROOT) / "Data_v2" / "synthetic"
+    manager = BatchExperimentManager(base_output_dir)
+
+    batches = manager.list_batches()
+
+    if not batches:
+        print("未找到任何batch")
+        return 0
+
+    print("\n" + "=" * 80)
+    print(f"找到 {len(batches)} 个batch")
+    print("=" * 80)
+
+    for batch_id in batches:
+        print(f"\n📦 {batch_id}")
+
+        if args.verbose:
+            # 获取该batch中的实验
+            experiments = manager.list_experiments_in_batch(batch_id)
+            if experiments:
+                datasets = {}
+                for exp in experiments:
+                    dataset = exp['dataset']
+                    if dataset not in datasets:
+                        datasets[dataset] = []
+                    datasets[dataset].append(exp['exp_name'])
+
+                print(f"   实验数: {len(experiments)}")
+                for dataset, exp_names in datasets.items():
+                    print(f"   {dataset}: {len(exp_names)} 个实验")
+                    for name in exp_names:
+                        print(f"      - {name}")
+            else:
+                print("   (空batch)")
+
+    print()
+    return 0
+
+
+if __name__ == '__main__':
+    exit(main())

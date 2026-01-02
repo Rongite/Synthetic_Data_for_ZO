@@ -1,0 +1,123 @@
+dataset:
+  dataset_name: Copa
+  fields:
+  - premise
+  - choice1
+  - choice2
+  - question
+  - label
+  files:
+    test: copa_test.jsonl
+    train: copa_train.jsonl
+    validation: copa_validation.jsonl
+  input_path: Data/original/Copa/copa_train.jsonl
+  original_dir: Data/original/Copa
+  task_name: copa
+experiment:
+  batch_id: batch_20241230_temperature_study
+  description: 比较temperature=0.5/0.7/0.9对Copa合成数据质量的影响
+  purpose: temperature_comparison
+generation:
+  field_to_rephrase: premise
+  model: gpt-4o
+  rephrase_prompt: "You are tasked with rephrasing the given premise while preserving\
+    \ its original meaning. Your goal is to create rephrased data optimized for enhancing\
+    \ gradient estimation in training with a memory-efficient zeroth-order optimizer\
+    \ (MeZO).\n\n### Few-shot Examples:\nOriginal premise: \"My body cast a shadow\
+    \ over the grass.\"\nChoice 1: \"The sun was rising.\"\nChoice 2: \"The grass\
+    \ was cut.\"\nQuestion type: \"cause\"\nCorrect answer: Choice 1\nRephrased premise:\
+    \ \"A shadow appeared on the grass beside me.\"\n\nOriginal premise: \"The woman\
+    \ tolerated her friend's difficult behavior.\"\nChoice 1: \"The woman knew her\
+    \ friend was going through a hard time.\"\nChoice 2: \"The woman felt that her\
+    \ friend took advantage of her kindness.\"\nQuestion type: \"cause\"\nCorrect\
+    \ answer: Choice 1\nRephrased premise: \"The woman was patient with her friend's\
+    \ challenging attitude.\"\n\nOriginal premise: \"The women met for coffee.\"\n\
+    Choice 1: \"The cafe reopened in a new location.\"\nChoice 2: \"They wanted to\
+    \ catch up with each other.\"\nQuestion type: \"cause\"\nCorrect answer: Choice\
+    \ 2\nRephrased premise: \"The women gathered at a cafe.\"\n\nOriginal premise:\
+    \ \"The runner wore shorts.\"\nChoice 1: \"The forecast predicted high temperatures.\"\
+    \nChoice 2: \"She planned to run along the beach.\"\nQuestion type: \"cause\"\n\
+    Correct answer: Choice 1\nRephrased premise: \"Shorts were the runner's attire.\"\
+    \n\nOriginal premise: \"The guests of the party hid behind the couch.\"\nChoice\
+    \ 1: \"It was a surprise party.\"\nChoice 2: \"It was a birthday party.\"\nQuestion\
+    \ type: \"cause\"\nCorrect answer: Choice 1\nRephrased premise: \"During the gathering,\
+    \ the attendees positioned themselves out of sight behind the sofa.\"\n\nOriginal\
+    \ premise: \"The politician lost the election.\"\nChoice 1: \"He ran negative\
+    \ campaign ads.\"\nChoice 2: \"No one voted for him.\"\nQuestion type: \"cause\"\
+    \nCorrect answer: Choice 2\nRephrased premise: \"The election was unsuccessful\
+    \ for the politician.\"\n\nOriginal premise: \"The stain came out of the shirt.\"\
+    \nChoice 1: \"I patched the shirt.\"\nChoice 2: \"I bleached the shirt.\"\nQuestion\
+    \ type: \"cause\"\nCorrect answer: Choice 2\nRephrased premise: \"The shirt was\
+    \ no longer marked by the stain.\"\n\nOriginal premise: \"The man got a discount\
+    \ on his groceries.\"\nChoice 1: \"He greeted the cashier.\"\nChoice 2: \"He used\
+    \ a coupon.\"\nQuestion type: \"cause\"\nCorrect answer: Choice 2\nRephrased premise:\
+    \ \"The man managed to pay less for his grocery bill.\"\n\nOriginal premise: \"\
+    The physician misdiagnosed the patient.\"\nChoice 1: \"The patient filed a malpractice\
+    \ lawsuit against the physician.\"\nChoice 2: \"The patient disclosed confidential\
+    \ information to the physician.\"\nQuestion type: \"effect\"\nCorrect answer:\
+    \ Choice 1\nRephrased premise: \"The doctor made an error in the patient's diagnosis.\"\
+    \n\nOriginal premise: \"The customer filed a complaint with the store manager.\"\
+    \nChoice 1: \"The sales associate undercharged the customer.\"\nChoice 2: \"The\
+    \ sales associate acted rude to the customer.\"\nQuestion type: \"cause\"\nCorrect\
+    \ answer: Choice 2\nRephrased premise: \"The customer approached the store manager\
+    \ with a grievance.\"\n\nOriginal premise: \"The woman repaired her faucet.\"\n\
+    Choice 1: \"The faucet was leaky.\"\nChoice 2: \"The faucet was turned off.\"\n\
+    Question type: \"cause\"\nCorrect answer: Choice 1\nRephrased premise: \"A woman\
+    \ attended to fixing her faucet.\"\n\nOriginal premise: \"The elderly woman suffered\
+    \ a stroke.\"\nChoice 1: \"The woman's daughter came over to clean her house.\"\
+    \nChoice 2: \"The woman's daughter moved in to take care of her.\"\nQuestion type:\
+    \ \"effect\"\nCorrect answer: Choice 2\nRephrased premise: \"An elderly woman\
+    \ experienced a medical event affecting her brain.\"\n\nOriginal premise: \"The\
+    \ pond froze over for the winter.\"\nChoice 1: \"People skated on the pond.\"\n\
+    Choice 2: \"People brought boats to the pond.\"\nQuestion type: \"effect\"\nCorrect\
+    \ answer: Choice 1\nRephrased premise: \"Throughout the winter, the surface of\
+    \ the pond turned solid with ice.\"\n\nOriginal premise: \"The offender violated\
+    \ parole.\"\nChoice 1: \"She was sent back to jail.\"\nChoice 2: \"She stole money\
+    \ from a church.\"\nQuestion type: \"effect\"\nCorrect answer: Choice 1\nRephrased\
+    \ premise: \"Breaking the conditions set by parole occurred.\"\n\nOriginal premise:\
+    \ \"I poured water on my sleeping friend.\"\nChoice 1: \"My friend awoke.\"\n\
+    Choice 2: \"My friend snored.\"\nQuestion type: \"effect\"\nCorrect answer: Choice\
+    \ 1\nRephrased premise: \"A stream of water landed on my slumbering friend.\"\n\
+    \nOriginal premise: \"The girl gasped.\"\nChoice 1: \"Her friend stuck an ice\
+    \ cube down her back.\"\nChoice 2: \"Her friend gave her a pat on the back.\"\n\
+    Question type: \"cause\"\nCorrect answer: Choice 1\nRephrased premise: \"A sudden\
+    \ gasp escaped from the girl.\"\n\nOriginal premise: \"The shirt shrunk.\"\nChoice\
+    \ 1: \"I poured bleach on it.\"\nChoice 2: \"I put it in the dryer.\"\nQuestion\
+    \ type: \"cause\"\nCorrect answer: Choice 2\nRephrased premise: \"The shirt became\
+    \ smaller.\"\n\nOriginal premise: \"It got dark outside.\"\nChoice 1: \"Snowflakes\
+    \ began to fall from the sky.\"\nChoice 2: \"The moon became visible in the sky.\"\
+    \nQuestion type: \"effect\"\nCorrect answer: Choice 2\nRephrased premise: \"As\
+    \ night approached, the sky lost its light.\"\n\nOriginal premise: \"I hung up\
+    \ the phone.\"\nChoice 1: \"The caller said goodbye to me.\"\nChoice 2: \"The\
+    \ caller identified himself to me.\"\nQuestion type: \"cause\"\nCorrect answer:\
+    \ Choice 1\nRephrased premise: \"I ended the call.\"\n\nOriginal premise: \"The\
+    \ woman's ring slipped off in the shower.\"\nChoice 1: \"The woman polished the\
+    \ ring.\"\nChoice 2: \"The ring went down the drain.\"\nQuestion type: \"effect\"\
+    \nCorrect answer: Choice 2\nRephrased premise: \"During her shower, the woman's\
+    \ ring unexpectedly came loose.\"\n\n### Key Requirements for Premise Rephrasing:\n\
+    1. **Task-Specific Context**:\n   - The **Copa dataset** focuses on **causal reasoning**,\
+    \ where the goal is to determine the **cause or effect** of a given premise.\n\
+    \   - The rephrased **premise** must **not alter the logical relationship** with\
+    \ the correct choice.\n\n2. **Consistency with Correct Answer**:\n   - Ensure\
+    \ that the rephrased premise maintains the same correct answer as the original.\n\
+    \   - The correct answer is: Choice {label + 1}: \"{choice1 if label == 0 else\
+    \ choice2}\"\n\n3. **Optimized for MeZO Training**:\n   - **Enhance Gradient Sensitivity**:\
+    \ Create clear semantic boundaries to increase gradient sensitivity.\n   - **Focus\
+    \ on Memory Efficiency**: Reduce redundancy, keep sentences concise.\n   - **Robustness\
+    \ to Data Sparsity**: Ensure essential information is preserved.\n   - **Non-Differentiable\
+    \ Optimization Readiness**: Create clear impacts on performance metrics.\n\n4.\
+    \ **Maintain Neutral Stance**:\n   - Do not explicitly indicate which choice is\
+    \ correct.\n   - The rephrased premise should require reasoning to determine the\
+    \ answer.\n\n5. **High-Quality Data Generation**:\n   - Produce natural, fluent,\
+    \ and coherent text.\n   - Use paraphrasing, synonyms, or restructuring to diversify\
+    \ data.\n\n### Your Task:\nRephrase the following premise while ensuring it remains\
+    \ consistent with the correct answer.\n\n**Original premise**: \"{premise}\"\n\
+    **Choice 1**: \"{choice1}\"\n**Choice 2**: \"{choice2}\"\n**Question**: \"{question}\"\
+    \n**Correct answer**: \"{choice1 if label == 0 else choice2}\"\n\n**Directly output\
+    \ only one rephrased premise** without any other characters or explanatory statements:\n"
+  strategy: direct_all
+  temperature: 0.7
+  top_p: 1.0
+task_name: Copa
+training_method: mezo
+version: v1

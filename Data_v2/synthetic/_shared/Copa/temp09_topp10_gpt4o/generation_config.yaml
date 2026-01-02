@@ -1,0 +1,100 @@
+dataset:
+  dataset_name: Copa
+  fields:
+  - premise
+  - choice1
+  - choice2
+  - question
+  - label
+  files:
+    test: copa_test.jsonl
+    train: copa_train.jsonl
+    validation: copa_validation.jsonl
+  input_path: Data/original/Copa/copa_train.jsonl
+  original_dir: Data/original/Copa
+  task_name: copa
+experiment:
+  batch_id: batch_20241229_temperature
+  description: Copa任务的prompt优化实验
+  experiment_id: copa_mezo_v1
+  overwrite_strategy: prompt
+  purpose: prompt_engineering
+generation:
+  field_to_rephrase: premise
+  model: gpt-4o
+  rephrase_prompt: "You are tasked with rephrasing the given premise while preserving\
+    \ its original meaning. Your goal is to create rephrased data optimized for enhancing\
+    \ gradient estimation in training with a memory-efficient zeroth-order optimizer\
+    \ (MeZO).\n\n{{REPHRASE_FEWSHOT}}\n\n### Key Requirements for Premise Rephrasing:\n\
+    1. **Task-Specific Context**:\n   - The **Copa dataset** focuses on **causal reasoning**,\
+    \ where the goal is to determine the **cause or effect** of a given premise.\n\
+    \   - The rephrased **premise** must **not alter the logical relationship** with\
+    \ the correct choice.\n\n2. **Consistency with Correct Answer**:\n   - Ensure\
+    \ that the rephrased premise maintains the same correct answer as the original.\n\
+    \   - The correct answer is: Choice {label + 1}: \"{choice1 if label == 0 else\
+    \ choice2}\"\n\n3. **Optimized for MeZO Training**:\n   - **Enhance Gradient Sensitivity**:\
+    \ Create clear semantic boundaries to increase gradient sensitivity.\n   - **Focus\
+    \ on Memory Efficiency**: Reduce redundancy, keep sentences concise.\n   - **Robustness\
+    \ to Data Sparsity**: Ensure essential information is preserved.\n   - **Non-Differentiable\
+    \ Optimization Readiness**: Create clear impacts on performance metrics.\n\n4.\
+    \ **Maintain Neutral Stance**:\n   - Do not explicitly indicate which choice is\
+    \ correct.\n   - The rephrased premise should require reasoning to determine the\
+    \ answer.\n\n5. **High-Quality Data Generation**:\n   - Produce natural, fluent,\
+    \ and coherent text.\n   - Use paraphrasing, synonyms, or restructuring to diversify\
+    \ data.\n\n### Your Task:\nRephrase the following premise while ensuring it remains\
+    \ consistent with the correct answer.\n\n**Original premise**: \"{premise}\"\n\
+    **Choice 1**: \"{choice1}\"\n**Choice 2**: \"{choice2}\"\n**Question**: \"{question}\"\
+    \n**Correct answer**: \"{choice1 if label == 0 else choice2}\"\n\n**Directly output\
+    \ only one rephrased premise** without any other characters or explanatory statements:\n"
+  temperature: 0.9
+task_name: Copa
+training_method: mezo
+validation:
+  few_shot_examples:
+  - choice1: The sun was rising.
+    choice2: The grass was cut.
+    evaluation: same
+    label: 0
+    original_premise: My body cast a shadow over the grass.
+    question: cause
+    rephrased_premise: A shadow from my body fell across the grass.
+  - choice1: The woman knew her friend was going through a hard time.
+    choice2: The woman felt that her friend took advantage of her kindness.
+    evaluation: same
+    label: 0
+    original_premise: The woman tolerated her friend's difficult behavior.
+    question: cause
+    rephrased_premise: The woman accepted her friend's challenging conduct.
+  - choice1: The cafe reopened in a new location.
+    choice2: They wanted to catch up with each other.
+    evaluation: same
+    label: 1
+    original_premise: The women met for coffee.
+    question: cause
+    rephrased_premise: The two women decided to gather at a café.
+  model: gpt-4o
+  temperature: 0.0
+  validation_prompt: 'Task: Verify if the rephrased premise maintains consistency
+    with the correct answer choice.
+
+
+    {{VALIDATION_FEWSHOT}}
+
+
+    Original premise: "{original_premise}"
+
+    Rephrased premise: "{rephrased_premise}"
+
+    Choice 1: "{original_choice1}"
+
+    Choice 2: "{original_choice2}"
+
+    Question: "{original_question}"
+
+    Correct answer: "{original_choice1 if original_label == 0 else original_choice2}"
+
+
+    Output [same/not the same]:
+
+    '
+version: v1
