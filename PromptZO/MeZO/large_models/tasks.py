@@ -107,7 +107,7 @@ class Dataset:
         return train_samples
     
     def sample_train_sets(self, num_train=32, num_dev=None, num_eval=None, num_train_sets=None, seed=None):
-        # print("num_train有多大: ", num_train)
+        # print("How large is num_train: ", num_train)
         if seed is not None:
             # one train/demo set using the designated seed
             seeds = [seed]
@@ -128,8 +128,8 @@ class Dataset:
                 train_samples.append(self.sample_subset(data_split="valid", seed=set_seed, num=num_train, exclude=i))
             else:
                 if num_dev is not None:
-                    # print("num_train有多大: ", num_train)
-                    train_samples.append(self.sample_subset(data_split="train", seed=set_seed, num=num_train+num_dev)) # dev set is included at the end of train set
+                    # print("How large is num_train: ", num_train)
+                    train_samples.append(self.sample_subset(data_split="train", seed=set_seed, num=num_train+num_dev))  # dev set is included at the end of train set
                     if num_train + num_dev > len(self.samples["train"]):
                         logger.warning("num_train + num_dev > available training examples")
                 else:
@@ -141,10 +141,10 @@ class Dataset:
 
     def sample_subset(self, data_split="train", seed=0, num=100, exclude=None):
         with temp_seed(seed):
-            samples = self.samples[data_split] 
+            samples = self.samples[data_split]
             lens = len(samples)
-            # print("samples的个数有多少: ", lens)
-            # print("num_train+num_dev的个数有多少: ", num)
+            # print("How many samples: ", lens)
+            # print("How many num_train+num_dev: ", num)
             index = np.random.permutation(lens).tolist()[:num if exclude is None else num+1]
             if exclude is not None and exclude in index:
                 index.remove(exclude)
@@ -874,18 +874,18 @@ class WinoGrandeDataset(Dataset):
             raise NotImplementedError(f"Template version {template_version} not implemented for WinoGrande")
 
 
-class ArcC_ClozeDataset(Dataset): # 输出答案文本
+class ArcC_ClozeDataset(Dataset):  # Output answer text
     def __init__(self, path=None, **kwargs) -> None:
         super().__init__()
         self.samples = {"train": [], "valid": []}
         self.load_dataset(path, **kwargs)
 
     def load_dataset(self, path, **kwargs):
-        if path and os.path.isdir(path):  # 从本地 JSONL 读取
+        if path and os.path.isdir(path):  # Load from local JSONL
             print(f"Loading ARC-Challenge from local path: {path}")
             self.samples["train"] = self.load_jsonl(os.path.join(path, "ARC-Challenge_train.jsonl"))
             self.samples["valid"] = self.load_jsonl(os.path.join(path, "ARC-Challenge_validation.jsonl"))
-        else:  # 从 Hugging Face 数据集加载
+        else:  # Load from Hugging Face dataset
             print("Loading ARC-Challenge from Hugging Face...")
             train_set = load_dataset('allenai/ai2_arc', 'ARC-Challenge', split='train')
             valid_set = load_dataset('allenai/ai2_arc', 'ARC-Challenge', split='validation')
@@ -902,11 +902,11 @@ class ArcC_ClozeDataset(Dataset): # 输出答案文本
         return samples
 
     def build_sample(self, example):
-        """ 确保返回 Sample 对象，而不是 dict """
+        """Ensure returning Sample object instead of dict"""
         return Sample(
             id=example['id'],
             data=example,
-            candidates=example['choices']['text'],  # 候选项文本
+            candidates=example['choices']['text'],  # Candidate texts
             correct_candidate=example['choices']['text'][example['choices']['label'].index(example['answerKey'])],
         )
 
@@ -914,18 +914,18 @@ class ArcC_ClozeDataset(Dataset): # 输出答案文本
         return Arc_ClozeTemplate() if template_version == 0 else NotImplementedError()
 
 
-class ArcC_MCDataset(Dataset): # 输出答案编号
+class ArcC_MCDataset(Dataset):  # Output answer label
     def __init__(self, path=None, **kwargs) -> None:
         super().__init__()
         self.samples = {"train": [], "valid": []}
         self.load_dataset(path, **kwargs)
 
     def load_dataset(self, path, **kwargs):
-        if path and os.path.isdir(path):  # 读取本地 JSONL 数据
+        if path and os.path.isdir(path):  # Load from local JSONL data
             print(f"Loading ARC-Challenge from local path: {path}")
             self.samples["train"] = self.load_jsonl(os.path.join(path, "ARC-Challenge_train.jsonl"))
             self.samples["valid"] = self.load_jsonl(os.path.join(path, "ARC-Challenge_validation.jsonl"))
-        else:  # 从 Hugging Face 加载数据
+        else:  # Load from Hugging Face
             print("Loading ARC-Challenge from Hugging Face...")
             train_set = load_dataset('allenai/ai2_arc', 'ARC-Challenge', split='train')
             valid_set = load_dataset('allenai/ai2_arc', 'ARC-Challenge', split='validation')
@@ -942,9 +942,9 @@ class ArcC_MCDataset(Dataset): # 输出答案编号
         return samples
 
     def build_sample(self, example):
-        """ 确保返回 Sample 对象，而不是 dict """
+        """Ensure returning Sample object instead of dict"""
         mcf_string = "\n".join([
-            f"({l}) {example['choices']['text'][i]}" 
+            f"({l}) {example['choices']['text'][i]}"
             for i, l in enumerate(example['choices']['label'])
         ])
         question_string = f"Question: {example['question']}\n{mcf_string}"
@@ -952,7 +952,7 @@ class ArcC_MCDataset(Dataset): # 输出答案编号
         return Sample(
             id=example['id'],
             data=example,
-            question_string=question_string,  # 关键：多项选择题格式化后的问题字符串
+            question_string=question_string,  # Key: formatted question string for multiple choice
             candidates=example['choices']['label'],  # ["A", "B", "C", "D"]
             correct_candidate=example['answerKey']
         )
