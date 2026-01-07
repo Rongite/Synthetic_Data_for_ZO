@@ -1,7 +1,7 @@
 experiment:
   batch_id: batch_20241229_temperature
   purpose: temperature_study
-  description: 研究temperature参数对合成数据质量的影响
+  description: researchtemperatureParameterforSynthetic dataQuality Impact
   experiment_id: copa_mezo_temp07
   overwrite_strategy: prompt
 task_name: Copa
@@ -29,7 +29,7 @@ generation:
   presence_penalty: 0.0
   rephrase_prompt: 'You are tasked with rephrasing the given premise...
 
-    （prompt内容）
+    （promptContent）
 
     '
 validation:
@@ -40,7 +40,7 @@ validation:
   temperature: 0.0
   validation_prompt: 'Task: Verify if the rephrased premise...
 
-    （validation prompt内容）
+    （validation promptContent）
 
     '
   few_shot_examples:

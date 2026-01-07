@@ -21,7 +21,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent / 'utils'))
 
 # Import experiment manager (Batch solution)
 from experiment_manager_batch import (
-    BatchExperimentManager,
+    BatchExperiment managementr,
     compute_parameter_fingerprint,
     save_experiment_metadata
 )
@@ -54,10 +54,10 @@ class SyntheticDataGenerator:
         self.auto_resolve_conflicts = auto_resolve_conflicts
 
         # Initialize experiment manager (Batch solution)
-        self.experiment_manager = BatchExperimentManager(self.output_base)
+        self.experiment_manager = BatchExperiment managementr(self.output_base)
 
     def load_config(self, config_path: str) -> Dict:
-        """Load configuration file"""
+        """Loaded configuration file"""
         with open(config_path, 'r', encoding='utf-8') as f:
             return yaml.safe_load(f)
 
@@ -172,7 +172,7 @@ client = OpenAI(
         gen_cfg = cfg['generation']
         dataset_cfg = cfg['dataset']
 
-        # 确定数据量限制
+        # Determine data quantity limit
         if strategy == "all":
             limit_code = ""
             output_suffix = ""
@@ -189,18 +189,18 @@ client = OpenAI(
 """
             output_suffix = "_rest"
         else:
-            raise ValueError(f"未知策略: {strategy}")
+            raise ValueError(f"UnknownStrategy: {strategy}")
 
-        # 生成脚本
+        # generatescript
         script = f'''#!/usr/bin/env python3
 """
-自动生成的合成数据生成脚本
+Automatically generated synthetic data generation script
 
-任务: {cfg['task_name']}
-训练方法: {cfg.get('training_method', 'general')}
-生成模型: {gen_cfg['model']}
-策略: {strategy}
-生成时间: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+task: {cfg['task_name']}
+Training method: {cfg.get('training_method', 'general')}
+Generation model: {gen_cfg['model']}
+Strategy: {strategy}
+Generation time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 """
 
 from tqdm import tqdm
@@ -214,61 +214,61 @@ from openai import OpenAI
 # FEWSHOT_EXAMPLES = [...]
 
 def generate_prompt({', '.join(dataset_cfg['fields'])}):
-    """生成改写提示词"""
+    """Generate rephrase prompt"""
 
-    # ⭐ 构建few-shot文本（如果存在FEWSHOT_EXAMPLES）
+    # ⭐ Build few-shot text (if FEWSHOT_EXAMPLES exists)
     fewshot_text = ""
     if 'FEWSHOT_EXAMPLES' in globals() and len(FEWSHOT_EXAMPLES) > 0:
         for i, ex in enumerate(FEWSHOT_EXAMPLES, 1):
             fewshot_text += f"Example {{i}}:\\n"
             fewshot_text += f"Original {gen_cfg['field_to_rephrase']}: {{ex['original']}}\\n"
             fewshot_text += f"Rephrased {gen_cfg['field_to_rephrase']}: {{ex['rephrased']}}\\n"
-            # 添加其他字段作为上下文
+            # add other fields as context
             for key in ex:
                 if key not in ['original', 'rephrased']:
                     fewshot_text += f"{{key}}: {{ex[key]}}\\n"
             fewshot_text += "\\n"
 
-    # ⭐ 原始prompt模板
+    # ⭐ Original prompt template
     prompt_template = """\\
 {gen_cfg['rephrase_prompt']}
 """
 
-    # ⭐ 替换{{{{REPHRASE_FEWSHOT}}}}占位符
+    # ⭐ Replace{{{{REPHRASE_FEWSHOT}}}}placeholder
     prompt = prompt_template.replace("{{{{REPHRASE_FEWSHOT}}}}", fewshot_text)
 
-    # ⭐ 替换字段值（使用.format()）
+    # ⭐ Replace field values (using .format())
     return prompt.format({', '.join([f'{f}={f}' for f in dataset_cfg['fields']])})
 
-# 加载原始数据
+# Loaded original data
 data = []
 input_file = "{self.project_root / dataset_cfg['input_path']}"
 with open(input_file, 'r', encoding='utf-8') as f:
     for line in f:
         data.append(json.loads(line.strip()))
 
-print(f"加载了 {{len(data)}} 条原始数据")
+print(f"Loaded {{len(data)}} original data samples")
 
-# 准备输出
-# 🆕 创建数据集子目录
+# Prepare output
+# 🆕 create dataset subdirectory
 dataset_dir = os.path.join("{output_dir}", "{dataset_cfg.get('dataset_name', cfg.get('task_name', 'Dataset'))}")
 os.makedirs(dataset_dir, exist_ok=True)
 
 output_file = os.path.join(dataset_dir, "{dataset_cfg['task_name']}_train{output_suffix}.jsonl")
 out_file = open(output_file, "w", encoding='utf-8')
 
-print(f"输出文件: {{output_file}}")
+print(f"output file: {{output_file}}")
 
-# 处理数据
+# process data
 progress = 0
 for i in tqdm(range(len(data))):
     progress += 1{limit_code}
 
-    # 构造提示词
+    # Construct prompt
     prompt_args = {{{', '.join([f'"{f}": data[i]["{f}"]' for f in dataset_cfg['fields']])}}}
     prompt = generate_prompt(**prompt_args)
 
-    # 调用 API
+    # Call API
     try:
         response = client.chat.completions.create(
             model="{gen_cfg['model']}",
@@ -278,47 +278,47 @@ for i in tqdm(range(len(data))):
             temperature={gen_cfg['temperature']}
         )
 
-        # 提取结果
+        # Extract result
         rephrased_text = response.choices[0].message.content.strip()
 
-        # 构造输出
+        # Construct output
         result = data[i].copy()
         result["{gen_cfg['field_to_rephrase']}"] = rephrased_text
 
-        # 写入文件
+        # write to file
         out_file.write(json.dumps(result, ensure_ascii=False) + "\\n")
         out_file.flush()
 
     except Exception as e:
-        print(f"\\n处理第 {{i}} 条数据时出错: {{e}}")
-        # 出错时使用原始数据
+        print(f"\\nError processing sample {{i}} : {{e}}")
+        # Use original data on error
         out_file.write(json.dumps(data[i], ensure_ascii=False) + "\\n")
         out_file.flush()
 
 out_file.close()
-print(f"\\n完成! 输出: {{output_file}}")
+print(f"\\nComplete! output: {{output_file}}")
 '''
         return script
 
     def generate_validation_script(self, output_dir: Path) -> str:
-        """生成验证脚本"""
+        """generatevalidatescript"""
         cfg = self.config
         val_cfg = cfg['validation']
         dataset_cfg = cfg['dataset']
         gen_cfg = cfg['generation']
 
-        # 从配置读取field_to_rephrase
+        #  from configurereadfield_to_rephrase
         field_to_rephrase = gen_cfg['field_to_rephrase']
 
         script = f'''#!/usr/bin/env python3
 """
-自动生成的合成数据验证脚本（拒绝采样）
+Automaticgeneratesynthetic datavalidatescript（rejection sampling）
 
-任务: {cfg['task_name']}
-训练方法: {cfg.get('training_method', 'general')}
-验证模型: {val_cfg['model']}
+task: {cfg['task_name']}
+Training method: {cfg.get('training_method', 'general')}
+validatemodel: {val_cfg['model']}
 Field to rephrase: {field_to_rephrase}
-生成时间: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+Generation time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 """
 
 from tqdm import tqdm
@@ -328,8 +328,8 @@ from openai import OpenAI
 
 {self._get_api_config_code("validation")}
 
-# ⭐ 尝试从validation_checkpoints加载自动生成的few-shot
-# （由annotate_samples.py生成）
+# ⭐ Try to load automatically generated few-shot from validation_checkpoints
+# （Generated by annotate_samples.py）
 VALIDATION_FEWSHOT_EXAMPLES = []
 try:
     import sys
@@ -339,29 +339,29 @@ try:
         with open(checkpoint_file, 'r', encoding='utf-8') as f:
             fewshot_data = json.load(f)
             VALIDATION_FEWSHOT_EXAMPLES = fewshot_data.get('examples', [])
-        print(f"✓ 加载了 {{len(VALIDATION_FEWSHOT_EXAMPLES)}} 个自动生成的validation few-shot examples")
+        print(f"✓ Loaded {{len(VALIDATION_FEWSHOT_EXAMPLES)}} Automaticgeneratevalidation few-shot examples")
 except Exception as e:
-    print(f"⚠️  未找到自动生成的few-shot，将使用配置文件中的few-shot: {{e}}")
+    print(f"⚠️  Automatically generated few-shot not found, will use few-shot from configuration file: {{e}}")
 
 def generate_validation_prompt({', '.join(['original_' + f for f in dataset_cfg['fields']] + ['rephrased_' + field_to_rephrase])}):
-    """生成验证提示词"""
+    """generatevalidatePrompt"""
 
-    # ⭐ 构建few-shot文本
+    # ⭐ Build few-shot text
     fewshot_text = ""
 
-    # 优先使用自动生成的few-shot（来自样本21-40）
+    # Prefer to use automatically generated few-shot (from samples 21-40)
     if len(VALIDATION_FEWSHOT_EXAMPLES) > 0:
         for i, ex in enumerate(VALIDATION_FEWSHOT_EXAMPLES, 1):
             fewshot_text += f"Example {{i}}:\\n"
             fewshot_text += f"Original {field_to_rephrase}: {{ex.get('original_{field_to_rephrase}', 'N/A')}}\\n"
             fewshot_text += f"Rephrased {field_to_rephrase}: {{ex.get('rephrased_{field_to_rephrase}', 'N/A')}}\\n"
-            # 添加其他字段
+            # add other fields
             for key in ex:
                 if not key.startswith('original_') and not key.startswith('rephrased_') and key != 'evaluation':
                     fewshot_text += f"{{key}}: {{ex[key]}}\\n"
             fewshot_text += f"Evaluation: {{ex.get('evaluation', 'same')}}\\n\\n"
     else:
-        # 备用：使用配置文件中手动提供的few-shot
+        # Fallback: use manually provided few-shot from configuration file
         manual_examples = {val_cfg.get('few_shot_examples', [])}
         for i, ex in enumerate(manual_examples, 1):
             if isinstance(ex, dict):
@@ -370,32 +370,32 @@ def generate_validation_prompt({', '.join(['original_' + f for f in dataset_cfg[
                     fewshot_text += f"{{k}}: {{v}}\\n"
                 fewshot_text += "\\n"
 
-    # ⭐ 原始prompt模板
+    # ⭐ Original prompt template
     prompt_template = """\\
 {val_cfg['validation_prompt']}
 """
 
-    # ⭐ 替换{{{{VALIDATION_FEWSHOT}}}}占位符
+    # ⭐ Replace{{{{VALIDATION_FEWSHOT}}}}placeholder
     prompt = prompt_template.replace("{{{{VALIDATION_FEWSHOT}}}}", fewshot_text)
 
-    # ⭐ 构建字段字典用于format
+    # ⭐ buildFielddictionary use  at format
     format_dict = {{}}
     for field in {dataset_cfg['fields']}:
         format_dict[f'original_{{field}}'] = locals().get(f'original_{{field}}', '')
     format_dict['rephrased_{field_to_rephrase}'] = locals().get('rephrased_{field_to_rephrase}', '')
 
-    # ⭐ 替换字段值
+    # ⭐ ReplaceFieldvalue
     return prompt.format(**format_dict)
 """
 
-# 加载原始数据
+# Loaded original data
 original_data = []
 with open("{self.project_root / dataset_cfg['input_path']}", 'r', encoding='utf-8') as f:
     for line in f:
         original_data.append(json.loads(line.strip()))
 
-# 加载合成数据
-# 🆕 从数据集子目录读取
+# Loadsynthetic data
+# 🆕  read from dataset subdirectory
 dataset_dir = os.path.join("{output_dir}", "{dataset_cfg.get('dataset_name', cfg.get('task_name', 'Dataset'))}")
 synthetic_data = []
 synthetic_file = os.path.join(dataset_dir, "{dataset_cfg['task_name']}_train.jsonl")
@@ -403,35 +403,35 @@ with open(synthetic_file, 'r', encoding='utf-8') as f:
     for line in f:
         synthetic_data.append(json.loads(line.strip()))
 
-print(f"原始数据: {{len(original_data)}} 条")
-print(f"合成数据: {{len(synthetic_data)}} 条")
+print(f"original data: {{len(original_data)}}  samples")
+print(f"synthetic data: {{len(synthetic_data)}}  samples")
 
 if len(original_data) != len(synthetic_data):
-    print("⚠ 警告: 数据量不匹配!")
+    print("⚠ warning: data count mismatch!")
 
-# 准备输出（临时文件）
+# Prepare output（temporaryfile）
 temp_output_file = os.path.join(dataset_dir, "{dataset_cfg['task_name']}_train_validated.jsonl")
 out_file = open(temp_output_file, "w", encoding='utf-8')
 
 correct_count = 0
 total_count = 0
 
-# 验证每条数据
+# Validate each data sample
 for i in tqdm(range(min(len(original_data), len(synthetic_data)))):
     original = original_data[i]
     synthetic = synthetic_data[i]
 
-    # 🔴 排除样本21-40（索引20-39）
-    # 这些样本用作judger的few-shot examples，不应被judger验证（避免数据泄露）
+    # 🔴 Excludesample21-40（Index20-39）
+    # These samples are used as judger few-shot examples, should not be validated by judger (avoid data leakage)
     if 20 <= i < 40:
-        # 直接使用合成数据，不经过judger验证
+        # Directly use synthetic data without judger validation
         out_file.write(json.dumps(synthetic, ensure_ascii=False) + "\\n")
         correct_count += 1
         total_count += 1
         out_file.flush()
         continue
 
-    # 构造验证提示词
+    # ConstructionvalidatePrompt
     prompt_args = {{}}
     for field in {dataset_cfg['fields']}:
         prompt_args[f'original_{{field}}'] = original[field]
@@ -451,12 +451,12 @@ for i in tqdm(range(min(len(original_data), len(synthetic_data)))):
 
         result = response.choices[0].message.content.strip().lower()
 
-        # 判断是否通过验证
+        # Determine if validation passes
         if 'not the same' in result or 'not same' in result:
-            # 验证失败，使用原始数据
+            # validatefail，useoriginal data
             out_file.write(json.dumps(original, ensure_ascii=False) + "\\n")
         else:
-            # 验证成功，使用合成数据
+            # validatesuccess，usesynthetic data
             out_file.write(json.dumps(synthetic, ensure_ascii=False) + "\\n")
             correct_count += 1
 
@@ -464,8 +464,8 @@ for i in tqdm(range(min(len(original_data), len(synthetic_data)))):
         out_file.flush()
 
     except Exception as e:
-        print(f"\\n验证第 {{i}} 条数据时出错: {{e}}")
-        # 出错时使用原始数据
+        print(f"\\nvalidateline {{i}} : {{e}}")
+        # Use original data on error
         out_file.write(json.dumps(original, ensure_ascii=False) + "\\n")
         total_count += 1
         out_file.flush()
@@ -473,107 +473,107 @@ for i in tqdm(range(min(len(original_data), len(synthetic_data)))):
 out_file.close()
 
 accuracy = correct_count / total_count if total_count > 0 else 0
-print(f"\\n验证完成!")
-print(f"通过率: {{correct_count}}/{{total_count}} = {{accuracy:.2%}}")
-print(f"临时输出文件: {{temp_output_file}}")
+print(f"\\nvalidateComplete!")
+print(f"Pass rate: {{correct_count}}/{{total_count}} = {{accuracy:.2%}}")
+print(f"temporaryoutput file: {{temp_output_file}}")
 
-# 🆕 最终化数据集：重命名validated文件 + 复制validation/test
-print("\\n最终化数据集...")
+# 🆕 finalationdataset：Renamevalidatedfile + Copyvalidation/test
+print("\\nfinalationdataset...")
 import shutil
 
-# 1. 将validated文件重命名为正式的train文件
+# 1.  Rename validated file as official train file
 final_train_file = os.path.join(dataset_dir, "{dataset_cfg['task_name']}_train.jsonl")
 if os.path.exists(final_train_file):
-    os.remove(final_train_file)  # 删除原始的未验证文件
+    os.remove(final_train_file)  # Delete original unvalidated file
 shutil.move(temp_output_file, final_train_file)
-print(f"✓ 训练集: {{final_train_file}}")
+print(f"✓ training set: {{final_train_file}}")
 
-# 2. 复制validation和test文件from原始数据集
+# 2. Copyvalidation and testfilefromoriginal dataset
 original_dir = "{self.project_root / dataset_cfg.get('original_dir', dataset_cfg['input_path'].rsplit('/', 1)[0])}"
 files_config = {dataset_cfg.get('files', {})}
 
-# 复制validation文件
+# Copyvalidationfile
 if 'validation' in files_config:
     val_file = files_config['validation']
     src_val = os.path.join(original_dir, val_file)
     dst_val = os.path.join(dataset_dir, val_file)
     if os.path.exists(src_val):
         shutil.copy2(src_val, dst_val)
-        print(f"✓ 验证集: {{dst_val}}")
+        print(f"✓ validation set: {{dst_val}}")
     else:
-        print(f"⚠  警告: 验证集文件不存在: {{src_val}}")
+        print(f"⚠  warning: validation setfiledoes not exist: {{src_val}}")
 
-# 复制test文件（如果有）
+# Copytestfile（Ifhas）
 if 'test' in files_config:
     test_file = files_config['test']
     src_test = os.path.join(original_dir, test_file)
     dst_test = os.path.join(dataset_dir, test_file)
     if os.path.exists(src_test):
         shutil.copy2(src_test, dst_test)
-        print(f"✓ 测试集: {{dst_test}}")
+        print(f"✓ Testset: {{dst_test}}")
 
-print(f"\\n✅ 数据集已完成！可用于MeZO训练：")
+print(f"\\n✅ Dataset is complete! Can be used for MeZO training:")
 print(f"   python PromptZO/MeZO/large_models/run.py --task {{dataset_dir}}")
 '''
         return script
 
     def create_config_copy(self, output_dir: Path):
-        """保存配置文件副本到输出目录"""
+        """Saveconfiguration fileReplica to outputdirectory"""
         config_copy_path = output_dir / "generation_config.yaml"
         with open(config_copy_path, 'w', encoding='utf-8') as f:
             yaml.dump(self.config, f, allow_unicode=True, default_flow_style=False)
-        print(f"✓ 配置副本: {config_copy_path}")
+        print(f"✓ configureReplica: {config_copy_path}")
 
     def generate_all(self):
-        """生成所有脚本"""
+        """generatethathasscript"""
         print("\n" + "="*80)
-        print(f"合成数据生成脚本自动生成器")
+        print(f"Automatically generated synthetic data generation script")
         print("="*80)
 
-        # 获取实验信息
+        # Get experiment information
         experiment_cfg = self.config.get('experiment', {})
         experiment_purpose = experiment_cfg.get('purpose', 'general')
         experiment_desc = experiment_cfg.get('description', '')
 
-        # ⭐ 获取生成策略
+        # ⭐ Get generation strategy
         gen_strategy = self.config['generation'].get('strategy', 'two_stage')
 
-        print(f"生成策略: {gen_strategy}")
-        print(f"实验目的: {experiment_purpose}")
+        print(f"generateStrategy: {gen_strategy}")
+        print(f"Experimentpurpose: {experiment_purpose}")
         if experiment_desc:
-            print(f"实验描述: {experiment_desc}")
-        print(f"任务: {self.config['task_name']}")
-        print(f"训练方法: {self.config.get('training_method', 'general')}")
-        print(f"生成模型: {self.config['generation']['model']}")
+            print(f"Experiment description: {experiment_desc}")
+        print(f"task: {self.config['task_name']}")
+        print(f"Training method: {self.config.get('training_method', 'general')}")
+        print(f"Generation model: {self.config['generation']['model']}")
 
-        # ⭐ validation模型信息（仅在two_stage模式下显示）
+        # ⭐ validationmodelinformation（only in two_stageMode down Show）
         if gen_strategy == 'two_stage' and 'validation' in self.config:
-            print(f"验证模型: {self.config['validation']['model']}")
+            print(f"validatemodel: {self.config['validation']['model']}")
 
         print("="*80)
 
-        # 使用实验管理器准备输出目录（包含冲突检测）
+        # useExperiment managementtoolPrepare outputdirectory（containconflictDetect）
         output_dir, fingerprint = self.get_output_dir_name()
         output_dir.mkdir(parents=True, exist_ok=True)
-        print(f"\n输出目录: {output_dir.relative_to(self.project_root)}")
-        print(f"参数指纹: {fingerprint}")
+        print(f"\noutputdirectory: {output_dir.relative_to(self.project_root)}")
+        print(f"parameterfingerprint: {fingerprint}")
 
-        # 🆕 创建数据集子目录（用于存放数据文件）
+        # 🆕 create dataset subdirectory（ use  at Storedatafile）
         dataset_cfg = self.config['dataset']
         dataset_name = dataset_cfg.get('dataset_name', self.config.get('task_name', 'Dataset'))
         dataset_dir = output_dir / dataset_name
         dataset_dir.mkdir(exist_ok=True)
-        print(f"数据集目录: {dataset_dir.relative_to(self.project_root)}")
+        print(f"datasetdirectory: {dataset_dir.relative_to(self.project_root)}")
 
-        # 创建 scripts 子目录
+        # create scripts Subdirectory
         scripts_dir = output_dir / "scripts"
         scripts_dir.mkdir(exist_ok=True)
 
-        # ⭐ 根据生成策略生成不同的脚本
-        print("\n生成改写脚本...")
+        # ⭐ according togenerateStrategygenerateDifferentscript
+        print("\ngenerateRephrasescript...")
 
         if gen_strategy == 'direct_all':
-            # 🔥 direct_all 模式：只生成 rephrase_all.py
+            # 🔥 direct_all Mode：onlygenerate rephrase_all.py
             script_path = scripts_dir / "rephrase_all.py"
             script_content = self.generate_rephrase_script(output_dir, "all")
 
@@ -582,10 +582,10 @@ print(f"   python PromptZO/MeZO/large_models/run.py --task {{dataset_dir}}")
 
             os.chmod(script_path, 0o755)
             print(f"  ✓ {script_path.name}")
-            print(f"  (direct_all 模式：跳过 top20 和 rest 脚本)")
+            print(f"  (direct_all Mode：skip top20  and  rest script)")
 
-        else:  # two_stage 模式（默认）
-            # 生成 all, top20, rest 三个脚本
+        else:  # two_stage Mode（Default）
+            # generate all, top20, rest threescript
             for strategy in ["all", "top20", "rest"]:
                 script_path = scripts_dir / f"rephrase_{strategy}.py"
                 script_content = self.generate_rephrase_script(output_dir, strategy)
@@ -596,9 +596,9 @@ print(f"   python PromptZO/MeZO/large_models/run.py --task {{dataset_dir}}")
                 os.chmod(script_path, 0o755)
                 print(f"  ✓ {script_path.name}")
 
-        # ⭐ 生成验证脚本（仅在 two_stage 模式且配置了 validation 时）
+        # ⭐ generatevalidatescript（only in  two_stage Modeandconfigure validation time）
         if gen_strategy == 'two_stage' and 'validation' in self.config:
-            print("\n生成验证脚本...")
+            print("\ngeneratevalidatescript...")
             val_script_path = scripts_dir / "validate.py"
             val_script_content = self.generate_validation_script(output_dir)
 
@@ -608,18 +608,18 @@ print(f"   python PromptZO/MeZO/large_models/run.py --task {{dataset_dir}}")
             os.chmod(val_script_path, 0o755)
             print(f"  ✓ {val_script_path.name}")
         elif gen_strategy == 'direct_all':
-            print("\n跳过验证脚本生成（direct_all 模式）")
+            print("\nskipvalidatescriptgenerate（direct_all Mode）")
 
-        # 保存配置副本
-        print("\n保存配置...")
+        # SaveconfigureReplica
+        print("\nSaveconfigure...")
         self.create_config_copy(output_dir)
 
-        # 保存实验元数据
+        # SaveExperimentmetadata
         metadata_path = save_experiment_metadata(output_dir, self.config, fingerprint)
         if metadata_path:
-            print(f"✓ 实验元数据: {metadata_path.relative_to(self.project_root)}")
+            print(f"✓ Experimentmetadata: {metadata_path.relative_to(self.project_root)}")
 
-        # 生成 README
+        # generate README
         readme_content = self.generate_readme(output_dir, fingerprint)
         readme_path = output_dir / "README.md"
         with open(readme_path, 'w', encoding='utf-8') as f:
@@ -627,108 +627,108 @@ print(f"   python PromptZO/MeZO/large_models/run.py --task {{dataset_dir}}")
         print(f"✓ README: {readme_path.relative_to(self.project_root)}")
 
         print("\\n" + "="*80)
-        print("生成完成！")
+        print("generatecomplete！")
         print("="*80)
-        print(f"\\n脚本位置: {scripts_dir}")
+        print(f"\\nscriptlocation: {scripts_dir}")
 
-        # ⭐ 根据策略显示不同的使用说明
+        # ⭐ according toStrategyShowDifferentuseDescription
         if gen_strategy == 'direct_all':
-            print(f"\\n使用方法 (direct_all 模式):")
-            print(f"  1. 设置环境变量: export OPENAI_API_KEY=your-key")
-            print(f"  2. 直接运行生成: python {scripts_dir}/rephrase_all.py")
-            print(f"  3. 生成完成后，数据保存在: {dataset_dir}")
+            print(f"\\nusemethod (direct_all Mode):")
+            print(f"  1. Settingsenvironment variable: export OPENAI_API_KEY=your-key")
+            print(f"  2. directlyRungenerate: python {scripts_dir}/rephrase_all.py")
+            print(f"  3. generatecomplete back ，dataSave in : {dataset_dir}")
         else:
-            print(f"\\n使用方法 (two_stage 模式):")
-            print(f"  1. 设置环境变量: export OPENAI_API_KEY=your-key")
-            print(f"  2. 运行生成: python {scripts_dir}/rephrase_all.py")
-            print(f"  3. 运行验证: python {scripts_dir}/validate.py")
+            print(f"\\nusemethod (two_stage Mode):")
+            print(f"  1. Settingsenvironment variable: export OPENAI_API_KEY=your-key")
+            print(f"  2. Rungenerate: python {scripts_dir}/rephrase_all.py")
+            print(f"  3. Runvalidate: python {scripts_dir}/validate.py")
 
     def generate_readme(self, output_dir: Path, fingerprint: str) -> str:
-        """生成 README 文档"""
+        """generate README Document"""
         cfg = self.config
         experiment_cfg = cfg.get('experiment', {})
         gen_strategy = cfg['generation'].get('strategy', 'two_stage')
 
-        # ⭐ 构建validation模型信息（如果有）
+        # ⭐ buildvalidationmodelinformation（Ifhas）
         val_model_info = ""
         if 'validation' in cfg:
-            val_model_info = f"\n- **验证模型**: {cfg['validation']['model']}"
+            val_model_info = f"\n- **validatemodel**: {cfg['validation']['model']}"
 
-        return f"""# {cfg['task_name']} 合成数据生成
+        return f"""# {cfg['task_name']} synthetic datagenerate
 
-**生成时间**: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+**Generation time**: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 
-## 实验信息
+## Experimentinformation
 
-- **实验目的**: {experiment_cfg.get('purpose', 'general')}
-- **实验ID**: {experiment_cfg.get('experiment_id', 'N/A')}
-- **实验描述**: {experiment_cfg.get('description', 'N/A')}
-- **参数指纹**: {fingerprint}
+- **Experimentpurpose**: {experiment_cfg.get('purpose', 'general')}
+- **ExperimentID**: {experiment_cfg.get('experiment_id', 'N/A')}
+- **Experiment description**: {experiment_cfg.get('description', 'N/A')}
+- **parameterfingerprint**: {fingerprint}
 
-## 配置信息
+## configureinformation
 
-- **生成策略**: {gen_strategy}
-- **任务**: {cfg['task_name']}
-- **训练方法**: {cfg.get('training_method', 'general')}
-- **数据集**: {cfg['dataset']['task_name']}
-- **生成模型**: {cfg['generation']['model']}
+- **generateStrategy**: {gen_strategy}
+- **task**: {cfg['task_name']}
+- **Training method**: {cfg.get('training_method', 'general')}
+- **dataset**: {cfg['dataset']['task_name']}
+- **Generation model**: {cfg['generation']['model']}
 - **Temperature**: {cfg['generation']['temperature']}{val_model_info}
-- **版本**: {cfg.get('version', 'v1')}
+- **Version**: {cfg.get('version', 'v1')}
 
-## 目录结构
+## directorystructure
 
 ```
 {output_dir.name}/
-├── {cfg['dataset'].get('dataset_name', cfg['task_name'])}/     # 🆕 数据集目录（MeZO可直接使用）
-│   ├── {cfg['dataset']['task_name']}_train.jsonl              # 合成+验证后的训练集
-│   ├── {cfg['dataset']['task_name']}_validation.jsonl         # 验证集（复制自原始）
-│   └── {cfg['dataset']['task_name']}_test.jsonl               # 测试集（复制自原始）
+├── {cfg['dataset'].get('dataset_name', cfg['task_name'])}/     # 🆕 datasetdirectory（MeZO can directlyuse）
+│   ├── {cfg['dataset']['task_name']}_train.jsonl              # synthetic+validate back training set
+│   ├── {cfg['dataset']['task_name']}_validation.jsonl         # validation set（Copyselforiginal）
+│   └── {cfg['dataset']['task_name']}_test.jsonl               # Testset（Copyselforiginal）
 ├── scripts/
-│   ├── rephrase_all.py      # 改写全部数据
-│   ├── rephrase_top20.py    # 改写前20个困难样本
-│   ├── rephrase_rest.py     # 改写剩余样本
-│   └── validate.py          # 验证脚本（拒绝采样+数据集最终化）
-├── generation_config.yaml   # 配置文件副本
-├── experiment_metadata.json # 实验元数据
-└── README.md               # 本文件
+│   ├── rephrase_all.py      # RephraseAlldata
+│   ├── rephrase_top20.py    # Rephrase front 20difficultsample
+│   ├── rephrase_rest.py     # Rephraseremainingsample
+│   └── validate.py          # validatescript（rejection sampling+datasetfinalation）
+├── generation_config.yaml   # configuration fileReplica
+├── experiment_metadata.json # Experimentmetadata
+└── README.md               # versionfile
 ```
 
-## 使用方法
+## usemethod
 
-### 1. 设置环境变量
+### 1. Settingsenvironment variable
 
 ```bash
 export OPENAI_API_KEY="your-api-key"
-export OPENAI_API_BASE="https://api.openai.com/v1"  # 可选
+export OPENAI_API_BASE="https://api.openai.com/v1"  #  can select
 ```
 
-### 2. 生成合成数据
+### 2. generatesynthetic data
 
 ```bash
-{"# direct_all 模式：直接生成全部数据" if gen_strategy == 'direct_all' else "# 方式1: 改写全部数据"}
+{"# direct_all Mode：directlygenerateAlldata" if gen_strategy == 'direct_all' else "# method1: RephraseAlldata"}
 python scripts/rephrase_all.py
 {"" if gen_strategy == 'direct_all' else '''
-# 方式2: 分别改写困难样本和剩余样本
+# method2: classifycategoryRephrasedifficultsample and remainingsample
 python scripts/rephrase_top20.py
 python scripts/rephrase_rest.py'''}
 ```
 {"" if gen_strategy == 'direct_all' else '''
-### 3. 验证数据质量并最终化数据集
+### 3. validatedataqualityandfinalationdataset
 
 ```bash
 python scripts/validate.py
 ```
 
-此脚本会：
-1. 使用rejection sampling验证合成数据质量
-2. 将验证通过的数据重命名为正式训练集
-3. 从原始数据集复制validation和test文件
-4. 生成完整的MeZO可用数据集
+thisscript will ：
+1. userejection samplingvalidatesynthetic dataquality
+2.  will validatepassdataRename as officialtraining set
+3.  from original datasetCopyvalidation and testfile
+4. generateCompleteMeZO can  use dataset
 '''}
-### {"3" if gen_strategy == 'direct_all' else "4"}. 使用数据集训练模型
+### {"3" if gen_strategy == 'direct_all' else "4"}. usedatasettrainingmodel
 
 ```bash
-# 使用MeZO训练
+# useMeZOtraining
 python PromptZO/MeZO/large_models/run.py \\
     --task {cfg['dataset'].get('dataset_name', cfg['task_name'])} \\
     --model meta-llama/Llama-3.2-1B \\
@@ -736,43 +736,43 @@ python PromptZO/MeZO/large_models/run.py \\
     --per_device_train_batch_size 4
 ```
 
-## 最终数据集结构
+## finaldatasetstructure
 
 ```
 {cfg['dataset'].get('dataset_name', cfg['task_name'])}/
-├── {cfg['dataset']['task_name']}_train.jsonl       # {"合成数据" if gen_strategy == 'direct_all' else "合成+验证后的训练集"}
-├── {cfg['dataset']['task_name']}_validation.jsonl  # 验证集（来自原始数据）
-└── {cfg['dataset']['task_name']}_test.jsonl        # 测试集（来自原始数据）
+├── {cfg['dataset']['task_name']}_train.jsonl       # {"synthetic data" if gen_strategy == 'direct_all' else "synthetic+validate back training set"}
+├── {cfg['dataset']['task_name']}_validation.jsonl  # validation set（fromoriginal data）
+└── {cfg['dataset']['task_name']}_test.jsonl        # Testset（fromoriginal data）
 ```
 
-此目录可以直接传递给MeZO训练脚本使用。
+thisdirectorycandirectlypass to MeZOtrainingscriptuse。
 
-## Prompt 信息
+## Prompt information
 
-### 改写 Prompt
+### Rephrase Prompt
 
 ```
 {cfg['generation']['rephrase_prompt'][:200]}...
 ```
 {"" if gen_strategy == 'direct_all' else f'''
-### 验证 Prompt
+### validate Prompt
 
 ```
 {cfg.get('validation', {}).get('validation_prompt', 'N/A')[:200]}...
 ```
 '''}
-详见 `generation_config.yaml`
+See details `generation_config.yaml`
 """
 
 def main():
     import argparse
 
-    parser = argparse.ArgumentParser(description="合成数据生成脚本自动生成器")
-    parser.add_argument("config", help="配置文件路径 (YAML)")
+    parser = argparse.ArgumentParser(description="Automatically generated synthetic data generation script")
+    parser.add_argument("config", help="configuration filepath (YAML)")
     parser.add_argument(
         "--auto-resolve",
         action="store_true",
-        help="自动解决目录冲突（不提示用户）"
+        help="AutomaticSolvedirectoryconflict（nottipUser）"
     )
     args = parser.parse_args()
 

@@ -232,7 +232,7 @@ def convert_choices_format(choices):
 
 eval_list = []
 count = 0
-with open('/home/jlong1/Downloads/Synthetic_Data_for_ZO/Data/original/ArcC_Cloze/ARC-Challenge_train.jsonl', 'r', encoding="utf-8") as f1: # modify
+with open('/home/ubuntu/LLM-inference/jikai-project/Synthetic_Data_for_ZO/Data/original/ArcC_Cloze/ARC-Challenge_train.jsonl', 'r', encoding="utf-8") as f1: # modify
     for line in f1:
         data = json.loads(line)
         temp = {}
@@ -244,13 +244,13 @@ with open('/home/jlong1/Downloads/Synthetic_Data_for_ZO/Data/original/ArcC_Cloze
         eval_list.append(temp)
 
 
-with open('/home/jlong1/Downloads/Synthetic_Data_for_ZO/Data/synthetic/mezo/ArcC/ARC-Challenge_train.jsonl', 'r', encoding="utf-8") as f2: # modify
+with open('/home/ubuntu/LLM-inference/jikai-project/Synthetic_Data_for_ZO/Data/synthetic/mezo/ArcC/ARC-Challenge_train.jsonl', 'r', encoding="utf-8") as f2: # modify
     for line in f2:
         data = json.loads(line)
         eval_list[count]["Rephrased question"] = data["question"]
         count += 1
 
-output_file = os.path.expanduser("/home/jlong1/Downloads/Synthetic_Data_for_ZO/Data/rejection_sampling/mezo/ArcC_Cloze/ARC-Challenge_train.jsonl") # output file
+output_file = os.path.expanduser("/home/ubuntu/LLM-inference/jikai-project/Synthetic_Data_for_ZO/Data/rejection_sampling/0_data/ArcC_Cloze/ARC-Challenge_train.jsonl") # output file
 os.makedirs(os.path.dirname(output_file), exist_ok=True)
 out_file = open(output_file, "w")
 
@@ -259,8 +259,17 @@ total_answer = 0
 
 for i in tqdm(range(len(eval_list))):
     output_data = {}
-    if i < 990:
+    if i >= 619: 
+        print(eval_list[i]["Rephrased question"])
+        eval_list[i]['eval_result'] = response.choices[0].message.content # change
+        output_data["id"] = eval_list[i]["id"]
+        output_data["question"] = eval_list[i]["Original question"]
+        output_data["choices"] = eval_list[i]["choices"]
+        output_data["answerKey"] = eval_list[i]["Correct answer"]
+        out_file.write(json.dumps(output_data) + "\n")
+        out_file.flush()
         continue
+
     # if 20 <= i < 40:
     #     eval_list[i]['eval_result'] = "same"
     #     output_data["id"] = eval_list[i]["id"]

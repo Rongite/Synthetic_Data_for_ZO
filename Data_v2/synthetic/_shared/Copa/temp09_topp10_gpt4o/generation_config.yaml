@@ -15,7 +15,7 @@ dataset:
   task_name: copa
 experiment:
   batch_id: batch_20241229_temperature
-  description: Copa任务的prompt优化实验
+  description: CopaTask promptOptimizeExperiment
   experiment_id: copa_mezo_v1
   overwrite_strategy: prompt
   purpose: prompt_engineering

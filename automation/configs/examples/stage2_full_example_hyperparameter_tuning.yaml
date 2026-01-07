@@ -1,75 +1,75 @@
-# 完整的阶段2训练配置示例 - 超参数调优实验
-# 使用阶段1生成的合成数据进行MeZO训练
+# Complete Stage 2 Training Configuration Example - Hyperparameter tuningExperiment
+# Train MeZO using synthetic data generated in Stage 1
 
-# ========== 实验管理 ==========
+# ========== Experiment Management ==========
 experiment:
-  # 🔴 重要：阶段1和阶段2的实验目的是独立的！
+  # 🔴 Important: Stage 1 and Stage 2 experiment purposes are independent!
   #
-  # 【阶段1 - 数据生成的实验目的】：
+  # 【Stage 1 - Data generation experiment purpose】：
   #   Data_v2/synthetic/prompt_engineering/copa_mezo_v1/
-  #   ↑ purpose = "prompt_engineering"（测试不同prompt对数据质量的影响）
+  #   ↑ purpose = "prompt_engineering"（Test impact of different prompts on data quality）
   #
-  # 【阶段2 - 训练的实验目的】：
-  #   purpose = "hyperparameter_tuning"（测试不同学习率对训练效果的影响）
-  #   ↑ 这个值决定Results保存位置
+  # 【Stage 2 - Training experiment purpose】：
+  #   purpose = "hyperparameter_tuning"（Test impact of different learning rates on training performance）
+  #   ↑ This value determines where results are saved
   #
-  # 【结果保存位置】：
-  #   Results_v2/hyperparameter_tuning/  ← 按"训练目的"分类，不是数据生成目的！
+  # 【Results save location】：
+  #   Results_v2/hyperparameter_tuning/  ← Classified by "training purpose", not data generation purpose!
   #
-  # 【为什么要分开】：
-  #   - 同一个数据集可能用于多种不同的训练实验
-  #   - 例如：用prompt_engineering数据测试model_comparison
-  #   - 如果不分开，所有结果都会混在prompt_engineering目录下
+  # 【Why separate】：
+  #   - Same dataset may be used for multiple different training experiments
+  #   - For example: use prompt_engineering data to test model_comparison
+  #   - If not separated, all results will be mixed in prompt_engineering directory
   #
-  purpose: "hyperparameter_tuning"  # 训练实验目的（决定Results分类）
-  description: "使用copa_mezo_v1合成数据测试不同学习率的效果"
+  purpose: "hyperparameter_tuning"  # Training experiment purpose (determines results classification)
+  description: "Test effects of different learning rates using copa_mezo_v1 synthetic data"
 
-# ========== 模型配置 ==========
+# ========== Model Configuration ==========
 model: "meta-llama/Llama-3.2-1B"
 
-# ========== 任务 ==========
+# ========== Task ==========
 task: "Copa"  # Copa, CB, RTE, BOOLQ, ArcC_Cloze, ArcC_MC
 
-# ========== 训练方法 ==========
+# ========== Training Method ==========
 method: "zo"  # zo (MeZO), fo_full (Full Fine-tune), fo_lora (LoRA)
 
-# ========== 数据配置 ==========
+# ========== Data Configuration ==========
 data:
-  # 直接指定数据路径
-  # 路径格式：Data_v2/synthetic/{数据生成目的}/{实验ID}/{Dataset}
+  # Directly specify data path
+  # Path format:Data_v2/synthetic/{Data generation purpose}/{Experiment ID}/{Dataset}
   path: "Data_v2/synthetic/prompt_engineering/copa_mezo_v1/Copa"
 
-  # 📌 说明：
-  # - 数据来自"prompt_engineering"实验（阶段1的实验目的）
-  # - 但训练目的是"hyperparameter_tuning"（阶段2的实验目的）
-  # - 这两者是独立的！
+  # 📌 Note：
+  # - Data from"prompt_engineering"experiment (Stage 1 experiment purpose)
+  # - But training purpose is"hyperparameter_tuning"(Stage 2 experiment purpose)
+  # - These two are independent!
 
-# ========== 超参数配置 ==========
+# ========== Hyperparameter Configuration ==========
 hyperparameters:
-  # 学习率网格搜索
+  # Learning Rate Grid Search
   learning_rate:
-    - 1e-6   # 较大学习率
-    - 5e-7   # 推荐值
-    - 2e-7   # 较小学习率
-    - 1e-7   # 最小学习率
+    - 1e-6   # Larger learning rate
+    - 5e-7   # Recommended value
+    - 2e-7   # Smaller learning rate
+    - 1e-7   # Minimum learning rate
 
-  batch_size: 16  # Batch size
+  batch_size: 16  # Batch Size
 
-  steps: 20000  # 训练步数
+  steps: 20000  # Training steps
 
-  seed: 0  # 随机种子（可以设置多个seed进行重复实验）
+  seed: 0  # Random seed (can set multiple seeds for repeated experiments)
 
-  # MeZO 特定参数
-  zo_eps: 1e-3  # MeZO 的 epsilon 参数
+  # MeZO Specific parameters
+  zo_eps: 1e-3  # MeZO epsilon parameter
 
-# ========== CUDA设备配置 ==========
-cuda_devices: "0"  # 使用GPU 0，可以是 "0,1" 使用多GPU
+# ========== CUDA Device Configuration ==========
+cuda_devices: "0"  # Use GPU 0, can be "0,1" to use multiple GPUs
 
-# ========== 运行选项 ==========
-wait_for_completion: false  # 后台运行，不等待完成
-continue_on_error: true  # 出错时继续执行剩余实验
+# ========== Run Options ==========
+wait_for_completion: false  # Run in background, do not wait for completion
+continue_on_error: true  # Continue with remaining experiments on error
 
-# ========== 预期结果目录 ==========
+# ========== Expected Results Directory ==========
 # Results_v2/hyperparameter_tuning/meta-llama/Llama-3.2-1B/
 # ├── Copa_zo_copa_mezo_v1_1_6/
 # │   └── 20251226_HHMMSS/
@@ -83,23 +83,23 @@ continue_on_error: true  # 出错时继续执行剩余实验
 # └── Copa_zo_copa_mezo_v1_1_7/
 #     └── 20251226_HHMMSS/
 
-# ========== 更多实验目的示例 ==========
-# 训练实验目的（阶段2）推荐类别：
-#   - baseline_comparison: 与baseline对比
-#   - model_comparison: 对比不同模型
-#   - hyperparameter_tuning: 超参数调优
-#   - ablation_study: 消融实验
-#   - prompt_effectiveness: 测试prompt效果
-#   - data_quality_impact: 测试数据质量影响
-#   - scaling_study: 扩展性研究
+# ========== More Experiment Purpose Examples ==========
+# Training experiment purpose (Stage 2) recommended categories:
+#   - baseline_comparison: Comparison with baseline
+#   - model_comparison: Compare different models
+#   - hyperparameter_tuning: Hyperparameter tuning
+#   - ablation_study: Ablation study
+#   - prompt_effectiveness: Test prompt effectiveness
+#   - data_quality_impact: Test data quality impact
+#   - scaling_study: Scaling study
 
-# ========== 使用方法 ==========
-# 1. 执行训练：
+# ========== Usage ==========
+# 1. Run training:
 #    python automation/stage2_training/trainer.py automation/configs/examples/stage2_full_example_hyperparameter_tuning.yaml
 #
-# 2. 预览命令（不实际执行）：
+# 2. Preview command (without actually executing):
 #    python automation/stage2_training/trainer.py automation/configs/examples/stage2_full_example_hyperparameter_tuning.yaml --dry-run
 #
-# 3. 查看结果：
+# 3. viewResult：
 #    python automation/stage2_training/list_results.py
 #    python automation/stage2_training/list_results.py --detail --purpose hyperparameter_tuning

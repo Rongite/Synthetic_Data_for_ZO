@@ -5,9 +5,14 @@ from tqdm import tqdm
 import os
 
 client = OpenAI(
-    # api_key = 'sk-eYvV5PulUcRh5gX40d10873c274b41C3B596F4F1F06e1a34', # office
-    api_key = 'sk-eWSYPo0CvhRYgcJs55B0C3F00aC74f6e95F47c1f4772292c', # my
-    base_url = "https://api2.aigcbest.top/v1"
+    # 钱多多
+    # # api_key = 'sk-eYvV5PulUcRh5gX40d10873c274b41C3B596F4F1F06e1a34', # office
+    # api_key = 'sk-eWSYPo0CvhRYgcJs55B0C3F00aC74f6e95F47c1f4772292c', # my
+    # base_url = "https://api2.aigcbest.top/v1"
+
+    # OpenRouter
+    api_key = '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', 
+    base_url = "https://openrouter.ai/api/v1"
 )
 
 eval_list = []
@@ -155,7 +160,7 @@ def generate_prompt(question, answer, original_passage, rephrased_passage):
 
 eval_list = []
 count = 0
-with open('/home/jlong1/Downloads/Synthetic_Data_for_ZO/Data/original/BOOLQ/boolq_train.jsonl', 'r', encoding="utf-8") as f1: # modify
+with open('/home/ubuntu/LLM-inference/jikai-project/Synthetic_Data_for_ZO/Data/original/BOOLQ/boolq_train.jsonl', 'r', encoding="utf-8") as f1: # modify
     for line in f1:
         data = json.loads(line)
         temp = {}
@@ -165,13 +170,13 @@ with open('/home/jlong1/Downloads/Synthetic_Data_for_ZO/Data/original/BOOLQ/bool
         eval_list.append(temp)
 
 
-with open('/home/jlong1/Downloads/Synthetic_Data_for_ZO/Data/synthetic/mezo/BOOLQ/boolq_train.jsonl', 'r', encoding="utf-8") as f2: # modify
+with open('/home/ubuntu/LLM-inference/jikai-project/Synthetic_Data_for_ZO/Data/synthetic/mezo/BOOLQ/boolq_train.jsonl', 'r', encoding="utf-8") as f2: # modify
     for line in f2:
         data = json.loads(line)
         eval_list[count]["rephrased"] = data["passage"]
         count += 1
 
-output_file = os.path.expanduser("/home/jlong1/Downloads/Synthetic_Data_for_ZO/Data/rejection_sampling/0_data/BOOLQ/boolq_train.jsonl") # output file
+output_file = os.path.expanduser("/home/ubuntu/LLM-inference/jikai-project/Synthetic_Data_for_ZO/Data/rejection_sampling/0_data/BOOLQ/boolq_train.jsonl") # output file
 os.makedirs(os.path.dirname(output_file), exist_ok=True)
 out_file = open(output_file, "w")
 
@@ -180,20 +185,30 @@ total_answer = 0
 
 for i in tqdm(range(len(eval_list))):
     output_data = {}
-    if 20 <= i < 40:
-        eval_list[i]['eval_result'] = "same"
+    if i >= 500:
+        print(eval_list[i]["rephrased"])
+        eval_list[i]['eval_result'] = response.choices[0].message.content # change
         output_data["question"] = eval_list[i]["question"]
         output_data["answer"] = eval_list[i]["answer"]
-        output_data["passage"] = eval_list[i]["rephrased"]
-        correct_answer += 1
-        total_answer += 1
+        output_data["passage"] = eval_list[i]["original"]
         out_file.write(json.dumps(output_data) + "\n")
         out_file.flush()
         continue
+    
+    # if 20 <= i < 40:
+    #     eval_list[i]['eval_result'] = "same"
+    #     output_data["question"] = eval_list[i]["question"]
+    #     output_data["answer"] = eval_list[i]["answer"]
+    #     output_data["passage"] = eval_list[i]["rephrased"]
+    #     correct_answer += 1
+    #     total_answer += 1
+    #     out_file.write(json.dumps(output_data) + "\n")
+    #     out_file.flush()
+    #     continue
 
     prompt = generate_prompt(eval_list[i]["question"], eval_list[i]["answer"], eval_list[i]["original"], eval_list[i]["rephrased"])
     response = client.chat.completions.create( # change
-        model="gpt-4o",
+        model="openai/gpt-4o-2024-11-20",
         messages=[
             {"role": "system", "content": "You are a helpful judge."},
             {"role": "user", "content": prompt}

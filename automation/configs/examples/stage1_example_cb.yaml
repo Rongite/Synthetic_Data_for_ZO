@@ -1,7 +1,7 @@
 experiment:
   batch_id: batch_20241230_cb
   purpose: cb_synthetic_data
-  description: CB数据集合成数据生成实验 - textual entailment
+  description: CBDatasetSynthetic dataGenerateExperiment - textual entailment
 task_name: CB
 training_method: mezo
 version: v1

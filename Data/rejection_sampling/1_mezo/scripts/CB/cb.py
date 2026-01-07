@@ -149,7 +149,7 @@ def generate_prompt(premise, hypothesis, label, rephrased_premise):
 
 eval_list = []
 count = 0
-with open('/home/jlong1/Downloads/Synthetic_Data_for_ZO/Data/original/CB/cb_train.jsonl', 'r', encoding="utf-8") as f1: # modify
+with open('/home/ubuntu/LLM-inference/jikai-project/Synthetic_Data_for_ZO/Data/original/CB/cb_train.jsonl', 'r', encoding="utf-8") as f1: # modify
     for line in f1:
         data = json.loads(line)
         temp = {}
@@ -160,13 +160,13 @@ with open('/home/jlong1/Downloads/Synthetic_Data_for_ZO/Data/original/CB/cb_trai
         eval_list.append(temp)
 
 
-with open('/home/jlong1/Downloads/Synthetic_Data_for_ZO/Data/synthetic/mezo/CB/cb_train.jsonl', 'r', encoding="utf-8") as f2: # modify
+with open('/home/ubuntu/LLM-inference/jikai-project/Synthetic_Data_for_ZO/Data/synthetic/mezo/CB/cb_train.jsonl', 'r', encoding="utf-8") as f2: # modify
     for line in f2:
         data = json.loads(line)
         eval_list[count]["rephrased"] = data["premise"]
         count += 1
 
-output_file = os.path.expanduser("/home/jlong1/Downloads/Synthetic_Data_for_ZO/Data/rejection_sampling/mezo/CB/cb_train.jsonl") # output file
+output_file = os.path.expanduser("/home/ubuntu/LLM-inference/jikai-project/Synthetic_Data_for_ZO/Data/rejection_sampling/0_data/CB/cb_train.jsonl") # output file
 os.makedirs(os.path.dirname(output_file), exist_ok=True)
 out_file = open(output_file, "w")
 
@@ -175,17 +175,27 @@ total_answer = 0
 
 for i in tqdm(range(len(eval_list))):
     output_data = {}
-    if 20 <= i < 40:
-        eval_list[i]['eval_result'] = "same"
-        output_data["premise"] = eval_list[i]["rephrased"]
+    if i >= 150: 
+        print(eval_list[i]["rephrased"])
+        eval_list[i]['eval_result'] = response.choices[0].message.content # change
+        output_data["premise"] = eval_list[i]["original"]
         output_data["hypothesis"] = eval_list[i]["hypothesis"]
         output_data["idx"] = eval_list[i]["idx"]
         output_data["label"] = eval_list[i]["label"]
-        correct_answer += 1
-        total_answer += 1
         out_file.write(json.dumps(output_data) + "\n")
         out_file.flush()
         continue
+    # if 20 <= i < 40:
+    #     eval_list[i]['eval_result'] = "same"
+    #     output_data["premise"] = eval_list[i]["rephrased"]
+    #     output_data["hypothesis"] = eval_list[i]["hypothesis"]
+    #     output_data["idx"] = eval_list[i]["idx"]
+    #     output_data["label"] = eval_list[i]["label"]
+    #     correct_answer += 1
+    #     total_answer += 1
+    #     out_file.write(json.dumps(output_data) + "\n")
+    #     out_file.flush()
+    #     continue
 
     prompt = generate_prompt(eval_list[i]["original"], eval_list[i]["hypothesis"], eval_list[i]["label"], eval_list[i]["rephrased"])
     response = client.chat.completions.create( # change

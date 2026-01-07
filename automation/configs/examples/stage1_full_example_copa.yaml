@@ -1,33 +1,33 @@
-# 完整的Copa合成数据生成配置示例
-# 包含实验管理 + MeZO数据集结构
+# Complete Copa Synthetic Data Generation Configuration Example
+# Includes Experiment Management + MeZO Dataset Structure
 
-# ========== 实验管理（Batch方案3++） ==========
+# ========== Experiment Management (Batch Solution 3++) ==========
 experiment:
-  # Batch ID - 用于组织多个实验到同一批次（可选）
-  # 格式: batch_{date}_{purpose}
-  # 如果不指定，系统会自动生成: batch_{YYYYMMDD}_{purpose}
-  batch_id: "batch_20241229_temperature"  # 可选，不填则自动生成
+  # Batch ID - Used to organize multiple experiments into same batch (optional)
+  # Format: batch_{date}_{purpose}
+  # If not specified, system will auto-generate: batch_{YYYYMMDD}_{purpose}
+  batch_id: "batch_20241229_temperature"  # Optional, auto-generated if not filled
 
-  purpose: "prompt_engineering"  # 实验目的（用于自动生成batch_id）
-  description: "Copa任务的prompt优化实验"
-  experiment_id: "copa_mezo_v1"  # 实验标识（已废弃，保留兼容性）
-  overwrite_strategy: "prompt"  # 相同参数时提示是否覆盖（已废弃，Batch方案自动去重）
+  purpose: "prompt_engineering"  # Experiment purpose (used for auto-generating batch_id)
+  description: "Copa task prompt optimization experiment"
+  experiment_id: "copa_mezo_v1"  # Experiment identifier (deprecated, kept for compatibility)
+  overwrite_strategy: "prompt"  # Prompt for overwrite with same parameters (deprecated, Batch solution auto-deduplicates)
 
-# ========== 基本信息 ==========
+# ========== Basic Information ==========
 task_name: "Copa"
 training_method: "mezo"
 version: "v1"
 
-# ========== 数据集配置 ==========
+# ========== Dataset Configuration ==========
 dataset:
-  task_name: "copa"  # 小写，用于文件命名
-  dataset_name: "Copa"  # 🔧 大写，用于目录命名（MeZO期望的）
+  task_name: "copa"  # Lowercase, used for file naming
+  dataset_name: "Copa"  # 🔧 Uppercase, used for directory naming (expected by MeZO)
   input_path: "Data/original/Copa/copa_train.jsonl"
 
-  # 🔧 原始数据集目录（用于复制validation/test）
+  # 🔧 Original dataset directory (for copying validation/test)
   original_dir: "Data/original/Copa"
 
-  # 🔧 数据集文件列表
+  # 🔧 Dataset file list
   files:
     train: "copa_train.jsonl"
     validation: "copa_validation.jsonl"
@@ -40,20 +40,20 @@ dataset:
     - "question"
     - "label"
 
-# ========== 生成配置 ==========
+# ========== Generation configuration ==========
 generation:
-  # ⭐ Rewriter API配置
+  # ⭐ Rewriter API Configuration
   api_key: "sk-eWSYPo0CvhRYgcJs55B0C3F00aC74f6e95F47c1f4772292c"
   base_url: "https://api2.aigcbest.top/v1"
   timeout: 120
 
   model: "gpt-4o"
   temperature: 0.9
-  field_to_rephrase: "premise"  # ⭐ 指定要改写的字段
+  field_to_rephrase: "premise"  # ⭐ Specify field to rephrase
 
-  # ⭐ Rephrase Prompt - 支持Placeholder和字段引用
-  # - {{REPHRASE_FEWSHOT}}: 系统会自动插入few-shot examples（来自断点1审核通过的样本）
-  # - {field_name}: 使用Python .format()语法引用字段值
+  # ⭐ Rephrase Prompt - Supports placeholders and field references
+  # - {{REPHRASE_FEWSHOT}}: System will auto-insert few-shot examples (from checkpoint 1 approved samples)
+  # - {field_name}: Use Python .format() syntax to reference field values
   rephrase_prompt: |
     You are tasked with rephrasing the given premise while preserving its original meaning. Your goal is to create rephrased data optimized for enhancing gradient estimation in training with a memory-efficient zeroth-order optimizer (MeZO).
 
@@ -93,9 +93,9 @@ generation:
 
     **Directly output only one rephrased premise** without any other characters or explanatory statements:
 
-# ========== 验证配置 ==========
+# ========== Validation configuration ==========
 validation:
-  # ⭐ Judge API配置
+  # ⭐ Judge API Configuration
   api_key: "sk-eWSYPo0CvhRYgcJs55B0C3F00aC74f6e95F47c1f4772292c"
   base_url: "https://api2.aigcbest.top/v1"
   timeout: 120
@@ -103,9 +103,9 @@ validation:
   model: "gpt-4o"
   temperature: 0.0
 
-  # ⭐ Validation Prompt - 支持Placeholder和字段引用
-  # - {{VALIDATION_FEWSHOT}}: 系统会自动插入few-shot examples（来自断点2A审核通过的21-40样本）
-  # - {original_field}, {rephrased_field}: 使用Python .format()语法引用字段值
+  # ⭐ Validation Prompt - Supports placeholders and field references
+  # - {{VALIDATION_FEWSHOT}}: System will auto-insert few-shot examples (from checkpoint 2A approved samples 21-40)
+  # - {original_field}, {rephrased_field}: Use Python .format() syntax to reference field values
   validation_prompt: |
     Task: Verify if the rephrased premise maintains consistency with the correct answer choice.
 
@@ -120,7 +120,7 @@ validation:
 
     Output [same/not the same]:
 
-  # ⭐ Few-shot examples - 初始可留空，系统会在断点2A后自动生成
+  # ⭐ Few-shot examples - Can be left empty initially, system will auto-generate after checkpoint 2A
   few_shot_examples:
     - original_premise: "My body cast a shadow over the grass."
       rephrased_premise: "A shadow from my body fell across the grass."

@@ -1,118 +1,118 @@
-# 训练结果管理系统
+# trainingResults ManagementSystem
 
-## 🔴 核心设计理念：阶段1和阶段2的实验目的独立
+## 🔴 Core design philosophy: Stage 1 and Stage 2 experiment purposes are independently established
 
-### **为什么要分开？**
+### **Why do we need to classify?**
 
-**阶段1（数据生成）的实验目的**：
-- 回答："为什么生成这个数据？"
-- 示例：`prompt_engineering`, `temperature_study`, `data_quality_optimization`
-- 存储位置：`Data_v2/synthetic/{数据生成目的}/`
+**Stage 1（DataGenerate）Experimentobjective**：
+- Answer：" as whatGeneratethisData？"
+- Example：`prompt_engineering`, `temperature_study`, `data_quality_optimization`
+- storagelocation：`Data_v2/synthetic/{DataGenerateobjective}/`
 
-**阶段2（模型训练）的实验目的**：
-- 回答："为什么进行这个训练？"
-- 示例：`model_comparison`, `hyperparameter_tuning`, `baseline_comparison`
-- 存储位置：`Results_v2/{训练目的}/`
+**Stage 2（Model Training）Experimentobjective**：
+- Answer："Why conduct this training?"
+- Example：`model_comparison`, `hyperparameter_tuning`, `baseline_comparison`
+- storagelocation：`Results_v2/{trainingobjective}/`
 
-### **典型场景**
+### **Typical scenario**
 
 ```
-【场景】：使用同一个数据集进行多种不同的训练实验
+【Scenario】：Use the same dataset to conduct multiple types of different training experiments
 
-数据集（阶段1）：
+Dataset（Stage 1）：
 Data_v2/synthetic/prompt_engineering/copa_mezo_v1/
-↑ 数据生成目的：测试prompt对数据质量的影响
+↑ DataGenerateobjective：Testprompt for DataqualityImpact
 
-训练实验（阶段2）：
-├── Results_v2/model_comparison/        ← 训练目的：对比不同模型
-├── Results_v2/hyperparameter_tuning/   ← 训练目的：调整学习率
-├── Results_v2/baseline_comparison/     ← 训练目的：与原始数据对比
-└── Results_v2/ablation_study/          ← 训练目的：消融实验
+trainingExperiment（Stage 2）：
+├── Results_v2/model_comparison/        ← trainingobjective：comparisonDifferentModel
+├── Results_v2/hyperparameter_tuning/   ← trainingobjective：adjustmentLearning Rate
+├── Results_v2/baseline_comparison/     ← trainingobjective： and originalDatacomparison
+└── Results_v2/ablation_study/          ← trainingobjective：ablation experiment
 ```
 
-**关键点**：
-- ✅ 同一个数据集（`prompt_engineering/copa_mezo_v1`）可以用于多个不同的训练实验
-- ✅ 每个训练实验有自己的目的，结果按训练目的分类
-- ❌ 如果不分开，所有结果都会混在`prompt_engineering`目录下，无法区分
+**Key points**：
+- ✅ SameDataset（`prompt_engineering/copa_mezo_v1`）can use  at multipleDifferenttrainingExperiment
+- ✅ Each training experiment has its own purpose, results are classified according to training purpose
+- ❌ If not classified, all results will be mixed in the `prompt_engineering` directory, and cannot be distinguishshedsh
 
 ---
 
-## 📋 目录结构
+## 📋 Directorystructure
 
-### **新的Results_v2结构**
+### **NewResults_v2structure**
 
 ```
 Results_v2/
-└── {experiment_purpose}/           # 🆕 实验目的分类（与Data_v2对齐）
+└── {experiment_purpose}/           # 🆕 Experiment purpose classification (aligned with Data_v2)
     └── {Model}/
         └── {Task}_{Method}_{DataType}_{LR}/
             └── {Timestamp}/
-                ├── experiment_config.yaml  # 实验配置
-                ├── {lr}_train.out         # 训练输出
-                ├── {lr}_train.err         # 错误输出
-                └── ...                    # 模型checkpoint等
+                ├── experiment_config.yaml  # ExperimentConfiguration
+                ├── {lr}_train.out         # trainingoutput
+                ├── {lr}_train.err         # Erroroutput
+                └── ...                    # Modelcheckpoint etc.
 ```
 
-### **目录说明**
+### **DirectoryDescription**
 
-1. **experiment_purpose**: 实验目的分类
-   - 与Data_v2的experiment_purpose对应
-   - 例如：`prompt_engineering`, `temperature_study`, `model_comparison`
+1. **experiment_purpose**: Experimentobjectiveclassification
+   -  and Data_v2experiment_purpose for should
+   - example such as ：`prompt_engineering`, `temperature_study`, `model_comparison`
 
-2. **Model**: 模型名称
-   - 例如：`meta-llama/Llama-3.2-1B`, `mistralai/Mistral-Nemo-Base-2407`
+2. **Model**: ModelName
+   - example such as ：`meta-llama/Llama-3.2-1B`, `mistralai/Mistral-Nemo-Base-2407`
 
-3. **Task_Method_DataType_LR**: 实验标识
-   - Task: 任务名称（Copa, BOOLQ, CB等）
-   - Method: 训练方法（zo, fo_full, fo_lora）
-   - DataType: 数据类型（original, synthetic等）
-   - LR: 学习率（格式化，如`1_7`表示1e-7）
+3. **Task_Method_DataType_LR**: Experiment identifier
+   - Task: taskName（Copa, BOOLQ, CB etc.）
+   - Method: Training Method（zo, fo_full, fo_lora）
+   - DataType: Dataclasstype（original, synthetic etc.）
+   - LR: Learning Rate（format, e.g. `1_7` indicates 1e-7）
 
-4. **Timestamp**: 时间戳（格式：YYYYMMDD_HHMMSS）
-   - 同一配置的多次运行会创建不同的时间戳目录
+4. **Timestamp**: timestamp (format: YYYYMMDD_HHMMSS)
+   - Running same configuration multiple times will create different timestamp directories
 
 ---
 
-## 🎯 核心功能
+## 🎯 coreFeature
 
-### **1. 训练实验目的分类**
+### **1. trainingExperimentobjectiveclassification**
 
-训练结果按**训练实验目的**分类（与数据生成目的独立）：
+Training Results according to **trainingExperimentobjective**classification（ and DataGenerateobjectiveindependentestablish）：
 
 ```yaml
-# 配置文件
+# ConfigurationFile
 experiment:
-  purpose: "hyperparameter_tuning"  # 🔴 训练目的！结果保存到: Results_v2/hyperparameter_tuning/
+  purpose: "hyperparameter_tuning"  # 🔴 trainingobjective！resultSave to : Results_v2/hyperparameter_tuning/
 
 data:
   path: "Data_v2/synthetic/prompt_engineering/copa_mezo_v1/Copa"
-  #                        ↑ 数据生成目的（与训练目的不同）
+  #                        ↑ DataGenerateobjective（ and trainingobjectiveDifferent）
 ```
 
-### **2. 必须显式指定训练目的**
+### **2. Must explicitly specify training purpose**
 
-`experiment.purpose`必须显式指定，如果未指定则使用默认值`uncategorized`：
+`experiment.purpose` must be explicitly specified, otherwise results will use default value `uncategorized`：
 
 ```yaml
-# ✅ 推荐：显式指定
+# ✅ Recommended: Explicitly specify
 experiment:
   purpose: "model_comparison"
 
-# ⚠️  如果不指定，结果会保存到 Results_v2/uncategorized/
+# ⚠️  If not specified, results will be saved to Results_v2/uncategorized/
 ```
 
-**推荐的训练实验目的类别**：
-- `baseline_comparison` - 与baseline对比
-- `model_comparison` - 对比不同模型
-- `hyperparameter_tuning` - 超参数调优
-- `ablation_study` - 消融实验
-- `prompt_effectiveness` - 测试prompt效果
-- `data_quality_impact` - 测试数据质量影响
-- `scaling_study` - 扩展性研究
+**Recommended training experiment purpose categories**：
+- `baseline_comparison` -  and baselinecomparison
+- `model_comparison` - comparisonDifferentModel
+- `hyperparameter_tuning` - HyperparametersTune
+- `ablation_study` - ablation experiment
+- `prompt_effectiveness` - TestpromptEffect
+- `data_quality_impact` - TestDataqualityImpact
+- `scaling_study` - Scalability research
 
-### **3. 完整元数据追溯**
+### **3. CompletemetaDataTrace**
 
-每个训练实验自动保存完整配置：
+eachtrainingExperimentAutomaticSaveCompleteConfiguration：
 
 ```yaml
 # experiment_config.yaml
@@ -137,22 +137,22 @@ training_info:
 
 ---
 
-## 📖 使用指南
+## 📖 useGuide
 
-### **场景1：超参数调优（使用合成数据）**
+### **Scenario1：HyperparametersTune（useSyntheticData）**
 
 ```yaml
 # training_config.yaml
 experiment:
-  purpose: "hyperparameter_tuning"  # 🔴 训练目的：调优超参数
-  description: "使用copa_mezo_v1数据测试不同学习率"
+  purpose: "hyperparameter_tuning"  # 🔴 trainingobjective：TuneHyperparameters
+  description: "usecopa_mezo_v1DataTestDifferentLearning Rate"
 
 model: "meta-llama/Llama-3.2-1B"
 task: "Copa"
 method: "zo"
 
 data:
-  path: "Data_v2/synthetic/prompt_engineering/copa_mezo_v1/Copa"  # 🆕 直接指定路径
+  path: "Data_v2/synthetic/prompt_engineering/copa_mezo_v1/Copa"  # 🆕 Directly specify path
 
 hyperparameters:
   learning_rate: [1e-6, 5e-7, 2e-7, 1e-7]
@@ -161,15 +161,15 @@ hyperparameters:
   seed: 0
 ```
 
-**运行训练**：
+**Runtraining**：
 ```bash
 python automation/stage2_training/trainer.py training_config.yaml
 ```
 
-**结果保存到**：
+**resultSave to **：
 ```
 Results_v2/hyperparameter_tuning/meta-llama/Llama-3.2-1B/
-                ↑ 按训练目的分类（不是数据生成目的）
+                ↑  according to trainingobjectiveclassification（notYesDataGenerateobjective）
 ├── Copa_zo_copa_mezo_v1_1_6/
 │   └── 20251226_143000/
 ├── Copa_zo_copa_mezo_v1_5_7/
@@ -180,137 +180,137 @@ Results_v2/hyperparameter_tuning/meta-llama/Llama-3.2-1B/
     └── 20251226_143000/
 ```
 
-### **场景2：模型对比（使用相同数据）**
+### **Scenario2：Modelcomparison（usesameData）**
 
 ```yaml
 # training_config.yaml
 experiment:
-  purpose: "model_comparison"  # 🔴 训练目的：对比不同模型
-  description: "在copa_mezo_v1数据上对比Llama和Mistral"
+  purpose: "model_comparison"  # 🔴 trainingobjective：comparisonDifferentModel
+  description: " in copa_mezo_v1Data up comparisonLlama and Mistral"
 
-model: "mistralai/Mistral-Nemo-Base-2407"  # 🔧 测试不同模型
+model: "mistralai/Mistral-Nemo-Base-2407"  # 🔧 TestDifferentModel
 task: "Copa"
 method: "zo"
 
 data:
   path: "Data_v2/synthetic/prompt_engineering/copa_mezo_v1/Copa"
-  #                        ↑ 数据来自prompt_engineering实验
-  #                        ↑ 但训练目的是model_comparison
+  #                        ↑ Datafromselfprompt_engineeringExperiment
+  #                        ↑ buttrainingobjectiveYesmodel_comparison
 
 hyperparameters:
-  learning_rate: 5e-7  # 使用已知最佳学习率
+  learning_rate: 5e-7  # useKnownBestLearning Rate
   batch_size: 16
   steps: 20000
   seed: 0
 ```
 
-**系统行为**：
-- 数据来源：`Data_v2/synthetic/prompt_engineering/...`
-- 训练目的：`model_comparison`（与数据生成目的不同）
-- 结果保存到：`Results_v2/model_comparison/`
+**System as **：
+- DataSource：`Data_v2/synthetic/prompt_engineering/...`
+- trainingobjective：`model_comparison`（ and DataGenerateobjectiveDifferent）
+- resultSave to ：`Results_v2/model_comparison/`
 
-### **场景3：Baseline对比（原始数据 vs 合成数据）**
+### **Scenario3：Baselinecomparison（originalData vs SyntheticData）**
 
 ```yaml
 # training_config.yaml
 experiment:
-  purpose: "baseline_comparison"  # 🔴 训练目的：对比baseline
-  description: "对比原始数据和合成数据的训练效果"
+  purpose: "baseline_comparison"  # 🔴 trainingobjective：comparisonbaseline
+  description: "comparisonoriginalData and SyntheticDatatrainingEffect"
 
 model: "meta-llama/Llama-3.2-1B"
 task: "Copa"
 method: "zo"
 
 data:
-  path: "Data_v2/original/Copa"  # 🔧 使用原始数据作为baseline
+  path: "Data_v2/original/Copa"  # 🔧 useoriginalDataas as baseline
 
 hyperparameters:
-  learning_rate: 5e-7  # 使用与合成数据相同的超参数
+  learning_rate: 5e-7  # use and SyntheticDatasameHyperparameters
   batch_size: 16
   steps: 20000
   seed: 0
 ```
 
-**结果保存到**：
+**resultSave to **：
 ```
 Results_v2/baseline_comparison/meta-llama/Llama-3.2-1B/Copa_zo_original_5_7/20251226_143000/
 ```
 
-**对比分析**：
+**comparisonAnalysis**：
 ```
-合成数据结果：Results_v2/hyperparameter_tuning/.../Copa_zo_copa_mezo_v1_5_7/...
-原始数据结果：Results_v2/baseline_comparison/.../Copa_zo_original_5_7/...
-↑ 两个实验都保存在各自的实验目的目录下，方便对比
+SyntheticDataresult：Results_v2/hyperparameter_tuning/.../Copa_zo_copa_mezo_v1_5_7/...
+originalDataresult：Results_v2/baseline_comparison/.../Copa_zo_original_5_7/...
+↑ twoExperimentallSave in eachselfExperimentobjectivedirectory ，methodeasycomparison
 ```
 
 ---
 
-## 🔧 管理工具
+## 🔧 ManageTool
 
 ### **list_results.py**
 
-列出并管理所有训练结果。
+listoutandManageallTraining Results。
 
-#### **查看摘要**
+#### **Viewsummary need **
 
 ```bash
 python automation/stage2_training/list_results.py
 ```
 
-**输出示例**：
+**outputExample**：
 ```
 ================================================================================
-训练结果摘要 - Results_v2
+Training Resultssummary need  - Results_v2
 ================================================================================
 
-📁 实验目的: prompt_engineering
-   实验数量: 12
-   └─ meta-llama/Llama-3.2-1B: 12 个实验
+📁 Experimentobjective: prompt_engineering
+   Experimentcount: 12
+   └─ meta-llama/Llama-3.2-1B: 12 Experiment
 
-📁 实验目的: temperature_study
-   实验数量: 8
-   └─ meta-llama/Llama-3.2-1B: 8 个实验
+📁 Experimentobjective: temperature_study
+   Experimentcount: 8
+   └─ meta-llama/Llama-3.2-1B: 8 Experiment
 
-📁 实验目的: baseline
-   实验数量: 4
-   └─ meta-llama/Llama-3.2-1B: 4 个实验
+📁 Experimentobjective: baseline
+   Experimentcount: 4
+   └─ meta-llama/Llama-3.2-1B: 4 Experiment
 
 ================================================================================
-总计: 3 个实验目的, 24 个训练实验
+total: 3 Experimentobjective, 24 trainingExperiment
 ================================================================================
 ```
 
-#### **查看详细信息**
+#### **ViewDetailedinformation**
 
 ```bash
-# 查看所有实验的详细信息
+# ViewallExperimentDetailedinformation
 python automation/stage2_training/list_results.py --detail
 
-# 查看特定实验目的的详细信息
+# ViewspecialspecifyExperimentobjectiveDetailedinformation
 python automation/stage2_training/list_results.py --detail --purpose prompt_engineering
 ```
 
-**输出示例**：
+**outputExample**：
 ```
 ================================================================================
-训练结果详情
+Training ResultsDetails
 ================================================================================
 
-📁 实验目的: prompt_engineering
+📁 Experimentobjective: prompt_engineering
 --------------------------------------------------------------------------------
 
   [1] Copa_zo_copa_mezo_v1_1_6
-      模型: meta-llama/Llama-3.2-1B
-      时间: 20251226_143000
-      路径: Results_v2/prompt_engineering/meta-llama/Llama-3.2-1B/Copa_zo_copa_mezo_v1_1_6/20251226_143000
-      任务: Copa
-      方法: zo
-      超参数:
+      Model: meta-llama/Llama-3.2-1B
+      time: 20251226_143000
+      Path: Results_v2/prompt_engineering/meta-llama/Llama-3.2-1B/Copa_zo_copa_mezo_v1_1_6/20251226_143000
+      task: Copa
+      method: zo
+      Hyperparameters:
         - LR: 1e-06
         - BS: 16
         - Steps: 20000
         - Seed: 0
-      数据: Data_v2/synthetic/prompt_engineering/copa_mezo_v1/Copa
+      Data: Data_v2/synthetic/prompt_engineering/copa_mezo_v1/Copa
 
   [2] Copa_zo_copa_mezo_v1_5_7
       ...
@@ -318,70 +318,70 @@ python automation/stage2_training/list_results.py --detail --purpose prompt_engi
 
 ---
 
-## 🔄 数据-结果对应关系
+## 🔄 Data-result for shouldOffsystem
 
-### **完整的实验追溯链**
+### **CompleteExperimentTracechain**
 
 ```
-阶段1：数据生成
+Stage 1：DataGenerate
 Data_v2/synthetic/
-└── prompt_engineering/           # 实验目的
-    └── copa_mezo_v1/              # 实验ID
-        ├── Copa/                  # 数据集
+└── prompt_engineering/           # Experimentobjective
+    └── copa_mezo_v1/              # ExperimentID
+        ├── Copa/                  # Dataset
         │   ├── copa_train.jsonl
         │   ├── copa_validation.jsonl
         │   └── copa_test.jsonl
-        └── experiment_metadata.json  # 数据生成参数
+        └── experiment_metadata.json  # DataGeneration parameters
 
                     ⬇
 
-阶段2：模型训练
+Stage 2：Model Training
 Results_v2/
-└── prompt_engineering/           # 🔗 相同的实验目的
+└── prompt_engineering/           # 🔗 sameExperimentobjective
     └── meta-llama/Llama-3.2-1B/
         └── Copa_zo_copa_mezo_v1_1_6/
             └── 20251226_143000/
-                └── experiment_config.yaml  # 训练参数
+                └── experiment_config.yaml  # trainingParameter
 ```
 
-### **对应关系**
+### ** for shouldOffsystem**
 
-| 数据集 | 训练结果 |
+| Dataset | Training Results |
 |--------|----------|
 | `Data_v2/synthetic/{purpose}/{exp_id}/{Dataset}` | `Results_v2/{purpose}/{Model}/{Task}_{Method}_{exp_id}_{LR}/{Timestamp}` |
 
-**关键点**：
-- `{purpose}` 在两边保持一致
-- `{exp_id}` 在结果目录名中体现
-- 通过`experiment_config.yaml`中的`data.path`可以追溯到源数据
+**Key points**：
+- `{purpose}`  in twosideMaintainConsistent
+- `{exp_id}`  in Results Directoryname in bodycurrent
+- pass`experiment_config.yaml` in `data.path`canTrace to sourceData
 
 ---
 
-## 📊 最佳实践
+## 📊 best practices
 
-### **1. 训练实验目的命名规范**
+### **1. trainingExperimentobjectiveNamingspecification**
 
-**推荐的训练实验目的类别**（阶段2）：
+**Recommended training experiment purpose categories**（Stage 2）：
 
-- `baseline_comparison` - 与baseline对比
-- `model_comparison` - 模型对比实验
-- `hyperparameter_tuning` - 超参数调优
-- `ablation_study` - 消融实验
-- `prompt_effectiveness` - 测试prompt效果
-- `data_quality_impact` - 测试数据质量影响
-- `scaling_study` - 扩展性研究
-- `method_comparison` - 训练方法对比（MeZO vs LoRA vs Full FT）
+- `baseline_comparison` -  and baselinecomparison
+- `model_comparison` - ModelcomparisonExperiment
+- `hyperparameter_tuning` - HyperparametersTune
+- `ablation_study` - ablation experiment
+- `prompt_effectiveness` - TestpromptEffect
+- `data_quality_impact` - TestDataqualityImpact
+- `scaling_study` - Scalability research
+- `method_comparison` - Training Methodcomparison（MeZO vs LoRA vs Full FT）
 
-**数据生成实验目的类别**（阶段1，仅供参考）：
+**DataGenerateExperimentobjectiveclasscategory**（Stage 1，onlyprovideReference）：
 
-- `prompt_engineering` - Prompt优化实验
-- `temperature_study` - 温度参数研究
-- `data_quality_optimization` - 数据质量优化
-- `few_shot_study` - Few-shot示例研究
+- `prompt_engineering` - PromptoptimizeExperiment
+- `temperature_study` - TemperatureParameterResearch
+- `data_quality_optimization` - Dataqualityoptimize
+- `few_shot_study` - Few-shotExampleResearch
 
-### **2. 配置文件组织**
+### **2. ConfigurationFileOrganize**
 
-按**训练实验目的**组织配置文件：
+ according to **trainingExperimentobjective**OrganizeConfigurationFile：
 
 ```
 automation/configs/stage2/
@@ -399,109 +399,109 @@ automation/configs/stage2/
     └── copa_temp_comparison.yaml
 ```
 
-**注意**：配置文件按训练目的分类，不是按数据集分类
+**Note**：ConfigurationFile according to trainingobjectiveclassification，notYes according to Datasetclassification
 
-### **3. 实验记录**
+### **3. ExperimentRecord**
 
-每次重要实验后，在对应的实验目的目录下记录：
+eachtimesImportantExperiment back ， in  for shouldExperimentobjectivedirectory Record：
 
 ```bash
-# 在Results_v2/{训练目的}/README.md中记录
-echo "## 实验记录
+#  in Results_v2/{trainingobjective}/README.md in Record
+echo "## ExperimentRecord
 
-### 2025-12-26: 学习率扫描实验
-- 训练目的: hyperparameter_tuning
-- 数据集: Data_v2/synthetic/prompt_engineering/copa_mezo_v1/
-- 模型: Llama-3.2-1B
-- 学习率网格: [1e-6, 5e-7, 2e-7, 1e-7]
-- 最佳结果: LR=5e-7, Acc=85.2%
-- 备注: 5e-7是最佳学习率，用于后续实验
+### 2025-12-26: Learning RatescanExperiment
+- trainingobjective: hyperparameter_tuning
+- Dataset: Data_v2/synthetic/prompt_engineering/copa_mezo_v1/
+- Model: Llama-3.2-1B
+- Learning Rategrid: [1e-6, 5e-7, 2e-7, 1e-7]
+- Bestresult: LR=5e-7, Acc=85.2%
+- preparenote: 5e-7YesBestLearning Rate， use  at  back continueExperiment
 " >> Results_v2/hyperparameter_tuning/README.md
 ```
 
 ---
 
-## ⚠️ 注意事项
+## ⚠️ Notematteritem
 
-### **1. 阶段1和阶段2的实验目的是独立的！**
+### **1. Stage 1 and Stage 2ExperimentobjectiveYesindependentestablish！**
 
-🔴 **最重要的概念**：
+🔴 **mostImportantconcept**：
 
 ```
-❌ 错误理解：
-   数据来自 Data_v2/synthetic/prompt_engineering/...
-   → 结果应该保存到 Results_v2/prompt_engineering/
+❌ ErrorUnderstand：
+   Datafromself Data_v2/synthetic/prompt_engineering/...
+   → resultshouldSave to  Results_v2/prompt_engineering/
 
-✅ 正确理解：
-   数据来自 Data_v2/synthetic/prompt_engineering/...  ← 数据生成目的
-   训练目的是 hyperparameter_tuning                    ← 训练实验目的
-   → 结果保存到 Results_v2/hyperparameter_tuning/
+✅ correctUnderstand：
+   Datafromself Data_v2/synthetic/prompt_engineering/...  ← DataGenerateobjective
+   trainingobjectiveYes hyperparameter_tuning                    ← trainingExperimentobjective
+   → resultSave to  Results_v2/hyperparameter_tuning/
 ```
 
-### **2. 必须显式指定训练实验目的**
+### **2. mustexplicitlyreferspecifytrainingExperimentobjective**
 
-系统**不会**从数据路径自动推断训练实验目的：
+System**not will ** from DataPathAutomaticInferencetrainingExperimentobjective：
 
 ```yaml
-# ❌ 错误：没有指定experiment.purpose
+# ❌ Error：nohasreferspecifyexperiment.purpose
 data:
   path: "Data_v2/synthetic/prompt_engineering/copa_mezo_v1/Copa"
-# → 结果会保存到 Results_v2/uncategorized/
+# → result will Save to  Results_v2/uncategorized/
 
-# ✅ 正确：显式指定训练目的
+# ✅ correct：explicitlyreferspecifytrainingobjective
 experiment:
   purpose: "hyperparameter_tuning"
 data:
   path: "Data_v2/synthetic/prompt_engineering/copa_mezo_v1/Copa"
-# → 结果保存到 Results_v2/hyperparameter_tuning/
+# → resultSave to  Results_v2/hyperparameter_tuning/
 ```
 
-### **3. 旧格式兼容性**
+### **3. Oldformatcompatibility**
 
-系统仍支持旧的`data.type`格式，但推荐使用新的`data.path`：
+SystemstillsupportOld`data.type`format，butRecommendeduseNew`data.path`：
 
 ```yaml
-# ✅ 推荐（新格式）
+# ✅ Recommended（Newformat）
 data:
   path: "Data_v2/synthetic/prompt_engineering/copa_mezo_v1/Copa"
 
-# ⚠️  已弃用（旧格式）
+# ⚠️  alreadydiscard use （Oldformat）
 data:
   type: "synthetic_mezo_gpt4o_v1"
 ```
 
-### **3. 时间戳隔离**
+### **3. timestampisolated**
 
-相同配置的多次运行会创建不同的时间戳目录，避免覆盖：
+sameConfigurationmultipletimesRun will CreateDifferenttimestampDirectory，avoidOverride：
 
 ```
 Copa_zo_copa_mezo_v1_1_6/
-├── 20251226_143000/  # 第1次运行
-├── 20251226_153000/  # 第2次运行
-└── 20251227_093000/  # 第3次运行
+├── 20251226_143000/  # line1timesRun
+├── 20251226_153000/  # line2timesRun
+└── 20251227_093000/  # line3timesRun
 ```
 
 ---
 
-## 🎉 总结
+## 🎉 Summary
 
-### **新系统优势**
+### **NewSystemAdvantage**
 
-1. ✅ **实验目的分类**：结果按实验目的自动组织
-2. ✅ **智能推断**：从数据路径自动推断实验目的
-3. ✅ **完整追溯**：数据集 ↔ 训练结果完整对应
-4. ✅ **元数据管理**：自动保存所有实验参数
-5. ✅ **管理工具**：list_results.py快速查看结果
+1. ✅ **Experimentobjectiveclassification**：result according to ExperimentobjectiveAutomaticOrganize
+2. ✅ **smart can Inference**： from DataPathAutomaticInferenceExperimentobjective
+3. ✅ **CompleteTrace**：Dataset ↔ Training ResultsComplete for should
+4. ✅ **metaData management**：AutomaticSaveallExperimentParameter
+5. ✅ **ManageTool**：list_results.pyQuickViewresult
 
-### **与旧系统对比**
+### ** and OldSystemcomparison**
 
-| 功能 | 旧系统 | 新系统 |
+| Feature | OldSystem | NewSystem |
 |------|--------|--------|
-| 结果组织 | ❌ 所有结果混在一起 | ✅ 按实验目的分类 |
-| 实验追溯 | ❌ 手动记录 | ✅ 自动追溯到数据集 |
-| 配置管理 | ⚠️  部分保存 | ✅ 完整保存 |
-| 查看工具 | ❌ 无 | ✅ list_results.py |
+| resultOrganize | ❌ allresultmixed in thisup | ✅  according to Experimentobjectiveclassification |
+| ExperimentTrace | ❌ ManualRecord | ✅ AutomaticTrace to Dataset |
+| ConfigurationManage | ⚠️  PartialSave | ✅ CompleteSave |
+| ViewTool | ❌ None | ✅ list_results.py |
 
 ---
 
-**开始您的训练实验！** 🚀
+**OnstartyoutrainingExperiment！** 🚀

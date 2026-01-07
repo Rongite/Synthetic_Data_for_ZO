@@ -1,35 +1,35 @@
-# 阶段1完整工作流程：人工断点 + 调参复用
+# Stage 1CompleteWorkflowprocess：Manual checkpoint + Parameter tuningRepeat use 
 
-本文档说明新自动化系统如何支持：
-1. **首次生成**：包含3个必要的人工断点验证
-2. **调参实验**：基于已验证prompt，快速调参复用
+versionDocumentDescriptionNewAutomated System such as whatsupport：
+1. **First timeGenerate**：contain3must need Manual checkpointValidate
+2. **Parameter tuningExperiment**：base at alreadyValidateprompt，Quick parameter tuningRepeat use 
 
 ---
 
-## ✅ 实现状态
+## ✅ ImplementationStatus
 
-### 已实现工具
+### ImplementedTool
 
-| 工具 | 位置 | 功能 | 状态 |
+| Tool | location | Feature | Status |
 |------|------|------|------|
-| `generator.py` | `automation/stage1_generation/` | 生成rephrase和validation脚本 | ✅ **已修复** |
-| `review_top20.py` | `automation/stage1_generation/tools/` | 断点1：人工审核前20个样本 | ✅ 已实现 |
-| `extract_samples.py` | `automation/stage1_generation/tools/` | 提取指定范围样本 | ✅ 已实现 |
-| `annotate_samples.py` | `automation/stage1_generation/tools/` | 断点2：人工标注21-80样本 | ✅ 已实现 |
-| `generate_validation_test.py` | `automation/stage1_generation/tools/` | 生成judger测试脚本 | ✅ 已实现 |
+| `generator.py` | `automation/stage1_generation/` | Generaterephrase and validationScript | ✅ **alreadyFix** |
+| `review_top20.py` | `automation/stage1_generation/tools/` | Checkpoint1：manual review front 20Sample | ✅ Implemented |
+| `extract_samples.py` | `automation/stage1_generation/tools/` | ExtractSpecifyScopeSample | ✅ Implemented |
+| `annotate_samples.py` | `automation/stage1_generation/tools/` | Checkpoint2：Manual annotation21-80Sample | ✅ Implemented |
+| `generate_validation_test.py` | `automation/stage1_generation/tools/` | GeneratejudgerTestScript | ✅ Implemented |
 
-### 🔧 关键修复
+### 🔧 Key fixes
 
-**generator.py (validate.py生成逻辑)**:
-- ✅ **已修复排除21-40样本的逻辑**
-- 生成的`validate.py`现在会跳过样本21-40（索引20-39）
-- 这些样本用作judger的few-shot examples，不应被judger验证（避免数据泄露）
-- 修复位置：`generator.py:300-308`
+**generator.py (validate.pyGenerateLogic)**:
+- ✅ **alreadyFixExclude21-40SampleLogic**
+- Generate`validate.py`current in  will skipSample21-40（Index20-39）
+- theseSample use asjudgerfew-shot examples，Should not by judgerValidate（AvoidDataLeak）
+- Fixlocation：`generator.py:300-308`
 
 ```python
-# 🔴 排除样本21-40（索引20-39）
+# 🔴 ExcludeSample21-40（Index20-39）
 if 20 <= i < 40:
-    # 直接使用合成数据，不经过judger验证
+    # DirectlyuseSyntheticData，WithoutjudgerValidate
     out_file.write(json.dumps(synthetic, ensure_ascii=False) + "\n")
     correct_count += 1
     total_count += 1
@@ -38,174 +38,174 @@ if 20 <= i < 40:
 
 ---
 
-## ⚠️ 重要说明
+## ⚠️ ImportantDescription
 
-### 只合成train数据
+### OnlySynthetictrainData
 
-**Pipeline只会合成/改写训练数据（train.jsonl），validation和test数据直接从原始数据集复制**：
+**PipelineOnly will Synthetic/RephrasetrainingData（train.jsonl），validation and testDataDirectly from originalDataCollectCopy**：
 
-- ✅ **{dataset}_train.jsonl** → 合成数据（经过rephrase + validation + rejection sampling）
-- 📋 **{dataset}_validation.jsonl** → 原始数据（从 Data/original/ 复制）
-- 📋 **{dataset}_test.jsonl** → 原始数据（从 Data/original/ 复制）
+- ✅ **{dataset}_train.jsonl** → SyntheticData（alreadyrephrase + validation + rejection sampling）
+- 📋 **{dataset}_validation.jsonl** → originalData（ from  Data/original/ Copy）
+- 📋 **{dataset}_test.jsonl** → originalData（ from  Data/original/ Copy）
 
-这样做是为了：
-1. **保持evaluation标准化** - validation和test数据保持原始状态，确保公平评估
-2. **实验结果可比较** - 不同实验使用相同的evaluation数据
-3. **符合研究惯例** - 只在训练阶段使用合成数据增强
+ this Do thisYes as ：
+1. **Maintainevaluationstandardation** - validation and testDataMaintainoriginalStatus，EnsureFairEvaluate
+2. **Experiment Results can compare** - DifferentExperimentusesameevaluationData
+3. **SymbolResearch conventions** - Only in trainingstageuseSyntheticDataenhance
 
-**自动处理**: `validate.py` 在验证train数据后，会自动从原始数据集复制validation和test文件。
+**Automaticprocess**: `validate.py`  in ValidatetrainData back ， will Automatic from originalDataCollectCopyvalidation and testFile。
 
 ---
 
-## 🗂️ Batch方案3++ - 智能实验管理
+## 🗂️ BatchSolution3++ - smart can ExperimentManage
 
-### 什么是Batch方案？
+### whatYesBatchSolution？
 
-Batch方案3++通过**物理存储与逻辑视图分离**，实现多参数实验的智能管理和自动去重。
+BatchSolution3++pass**Physicalstorage and LogicviewGraphSeparation**，ImplementationMoreParameterExperimentsmart can Manage and AutomaticremoveHeavy。
 
-**核心机制**:
-- **物理存储 (_shared/)**: 存放实际数据，按参数指纹去重
-- **逻辑视图 (batch_*)**: 通过符号链接组织实验，按时间/目的分组
+**coreMechanism**:
+- **Physicalstorage (_shared/)**: StoreActualData， according to ParameterFingerprintremoveHeavy
+- **LogicviewGraph (batch_*)**: passSymbolIDLinkOrganizeExperiment， according to time/objectiveGroup
 
-**参数去重**: 相同参数配置的数据只生成一次，不同batch可以复用
+**ParameterremoveHeavy**: sameParameter configurationDataOnlyGenerateOnce，DifferentbatchcanRepeat use 
 
-### 目录结构示例
+### DirectorystructureExample
 
 ```
 Data_v2/synthetic/
-├── _shared/                                    # 物理数据（去重）
+├── _shared/                                    # PhysicalData（removeHeavy）
 │   └── Copa/
-│       ├── temp05_topp10_gpt4o/               # 实际数据
+│       ├── temp05_topp10_gpt4o/               # ActualData
 │       ├── temp07_topp09_gpt4o/
 │       └── temp09_topp10_gpt4o/
 │
-├── batch_20241229_temperature/                 # Batch 1: 温度实验
+├── batch_20241229_temperature/                 # Batch 1: TemperatureExperiment
 │   └── Copa/
 │       ├── temp05_topp10_gpt4o -> ../../_shared/...
 │       ├── temp07_topp10_gpt4o -> ../../_shared/...
 │       └── temp09_topp10_gpt4o -> ../../_shared/...
 │
-└── batch_20241230_topp/                        # Batch 2: top_p实验
+└── batch_20241230_topp/                        # Batch 2: top_pExperiment
     └── Copa/
         ├── temp07_topp08_gpt4o -> ../../_shared/...
-        └── temp07_topp09_gpt4o -> ../../_shared/...  # 复用！
+        └── temp07_topp09_gpt4o -> ../../_shared/...  # Repeat use ！
 ```
 
-### 配置文件设置
+### ConfigurationFileSettings
 
-在配置文件中添加 `experiment.batch_id`:
+ in ConfigurationFile in add `experiment.batch_id`:
 
 ```yaml
 experiment:
-  # Batch ID（可选，不指定则自动生成）
+  # Batch ID（ can select，notSpecifythenAutomaticGenerate）
   batch_id: "batch_20241229_temperature"
   purpose: "temperature_study"
-  description: "研究temperature参数对合成数据质量的影响"
+  description: "ResearchtemperatureParameter for SyntheticDataqualityImpact"
 
 generation:
   model: "gpt-4o"
-  temperature: 0.7  # 实验变量
+  temperature: 0.7  # Experimentvariable
   # ...
 ```
 
-### 自动去重原理
+### AutomaticremoveHeavyOriginalmanage
 
-当你运行 `generator.py` 时：
+When youRun `generator.py` Sometimes：
 
-1. **计算参数指纹**: 基于所有影响数据生成的参数（模型、temperature、top_p、prompts等）
-2. **查找已有数据**: 在 `_shared/{Dataset}/` 中搜索相同指纹
-3. **复用或新建**:
-   - 找到相同指纹 → 复用物理数据，创建batch符号链接
-   - 未找到 → 创建新物理目录，生成数据
+1. **CalculateParameterFingerprint**: base at allImpactDataGenerateParameter（Model、temperature、top_p、prompts etc.）
+2. **FindalreadyhasData**:  in  `_shared/{Dataset}/`  in SearchsameFingerprint
+3. **Repeat use  or New**:
+   - find to sameFingerprint → Repeat use PhysicalData，CreatebatchSymbolIDLink
+   - Not found to  → CreateNewPhysicalDirectory，GenerateData
 
-**节省资源**: 无需重复生成相同参数的数据，节省API调用成本和时间
+**Sectionsaveresource**: NoneneedRepeatGeneratesameParameterData，SectionsaveAPIadjust use Cost and time
 
-### Batch管理工具
+### BatchManageTool
 
 ```bash
-# 列出所有batch
+# Columnoutallbatch
 python automation/stage1_generation/batch_tools/list_batches.py --verbose
 
-# 查看batch详情
+# ViewbatchDetails
 python automation/stage1_generation/batch_tools/list_batch_experiments.py \
     batch_20241229_temperature --verbose
 
-# 查看物理数据使用情况
+# ViewPhysicalDatauseCase
 python automation/stage1_generation/batch_tools/list_shared_experiments.py \
     --dataset Copa --verbose
 
-# 比较实验参数
+# compareExperimentParameter
 python automation/stage1_generation/batch_tools/compare_experiments.py \
     --shared Copa/temp07_topp10_gpt4o \
     --shared Copa/temp09_topp10_gpt4o
 ```
 
-**详细说明**: 参见 [BATCH_GUIDE.md](../../BATCH_GUIDE.md)
+**DetailedDescription**: See [BATCH_GUIDE.md](../../BATCH_GUIDE.md)
 
 ---
 
-## 工作流程概览
+## WorkflowProcess overview
 
 ```
-首次生成（有人工断点）              调参实验（无人工断点）
+First timeGenerate（hasManual checkpoint）              Parameter tuningExperiment（NoneManual checkpoint）
 ┌────────────────────────┐          ┌────────────────────────┐
-│ 1. 创建draft配置        │          │ 1. 基于validated模板    │
-│    (人工编写初始prompt) │          │    创建实验配置         │
+│ 1. CreatedraftConfiguration        │          │ 1. base at validatedTemplate    │
+│    (ManualWriteinitialprompt) │          │    CreateExperimentConfiguration         │
 └───────────┬────────────┘          └───────────┬────────────┘
             │                                   │
             v                                   v
 ┌────────────────────────┐          ┌────────────────────────┐
-│ 2. 生成脚本             │          │ 2. 生成脚本             │
+│ 2. GenerateScript             │          │ 2. GenerateScript             │
 │    (generator.py)      │          │    (generator.py)      │
 └───────────┬────────────┘          └───────────┬────────────┘
             │                                   │
             v                                   v
 ┌────────────────────────┐          ┌────────────────────────┐
-│ 🔴 断点1: 审核top20    │          │ 3. 直接运行             │
-│    → 生成few-shot      │          │    rephrase_all.py     │
-└───────────┬────────────┘          │    (无需人工审核)      │
+│ 🔴 Checkpoint1: Reviewtop20    │          │ 3. DirectlyRun             │
+│    → Generatefew-shot      │          │    rephrase_all.py     │
+└───────────┬────────────┘          │    (Noneneedmanual review)      │
             │                       └───────────┬────────────┘
             v                                   │
 ┌────────────────────────┐                     │
-│ 3. 生成rest数据         │                     │
+│ 3. GeneraterestData         │                     │
 └───────────┬────────────┘                     │
             │                                   │
             v                                   │
 ┌────────────────────────┐                     │
-│ 🔴 断点2: 标注21-80    │                     │
-│    → 生成validation    │                     │
+│ 🔴 Checkpoint2: Annotate21-80    │                     │
+│    → Generatevalidation    │                     │
 │       prompt few-shot  │                     │
 └───────────┬────────────┘                     │
             │                                   │
             v                                   v
 ┌────────────────────────┐          ┌────────────────────────┐
-│ 🔴 断点3: 测试prompt   │          │ 4. 使用已验证的         │
-│    → 调优直到≥95%      │          │    validation prompt   │
-└───────────┬────────────┘          │    验证数据             │
+│ 🔴 Checkpoint3: Testprompt   │          │ 4. usealreadyValidate         │
+│    → Tunedirect to ≥95%      │          │    validation prompt   │
+└───────────┬────────────┘          │    ValidateData             │
             │                       └───────────┬────────────┘
             v                                   │
 ┌────────────────────────┐                     │
-│ 4. 批量验证数据         │                     │
+│ 4. batchValidateData         │                     │
 └───────────┬────────────┘                     │
             │                                   │
             v                                   v
 ┌────────────────────────┐          ┌────────────────────────┐
-│ 5. 存档为validated模板  │          │ 5. 完成！               │
-│    (可复用)            │          │    对比不同版本质量     │
+│ 5. Archive as validatedTemplate  │          │ 5. Complete！               │
+│    ( can Repeat use )            │          │    comparisonDifferentVersionquality     │
 └────────────────────────┘          └────────────────────────┘
 ```
 
 ---
 
-## 场景A：首次生成（需要人工验证）
+## ScenarioA：First timeGenerate（needManualValidate）
 
-### 前置条件
-- 原始数据已准备：`Data/original/{Task}/{task}_train.jsonl`
-- 您已人工编写初始版prompt（无few-shot）
+###  front setCondition
+- originalDataalreadyAccurateprepare：`Data/original/{Task}/{task}_train.jsonl`
+- You haveManualWriteinitialversionprompt（Nonefew-shot）
 
-### Step 1: 创建draft配置
+### Step 1: CreatedraftConfiguration
 
-创建配置文件：`automation/configs/stage1/drafts/copa_mezo_v1_draft.yaml`
+CreateConfigurationFile：`automation/configs/stage1/drafts/copa_mezo_v1_draft.yaml`
 
 ```yaml
 task_name: "Copa"
@@ -222,32 +222,32 @@ generation:
   temperature: 0.5
   field_to_rephrase: "premise"
 
-  # 人工编写的初始prompt（无few-shot）
+  # ManualWriteinitialprompt（Nonefew-shot）
   rephrase_prompt: |
     You are tasked with rephrasing...
-    （人工编写的prompt内容）
+    （ManualWritepromptContent）
 
 validation:
   model: "gpt-4o"
   temperature: 0.0
 
-  # 人工编写的初始validation prompt（无few-shot）
+  # ManualWriteinitialvalidation prompt（Nonefew-shot）
   validation_prompt: |
     Judge if the rephrased premise...
-    （人工编写的prompt内容）
+    （ManualWritepromptContent）
 
-  # 暂时留空，后续自动生成
+  # tempSometimeskeepNull， back continueAutomaticGenerate
   few_shot_examples: []
 ```
 
-### Step 2: 生成脚本
+### Step 2: GenerateScript
 
 ```bash
 python automation/stage1_generation/generator.py \
        automation/configs/stage1/drafts/copa_mezo_v1_draft.yaml
 ```
 
-**输出**：
+**output**：
 ```
 Data_v2/synthetic/Copa_mezo_gpt4o_v1/
 ├── scripts/
@@ -259,7 +259,7 @@ Data_v2/synthetic/Copa_mezo_gpt4o_v1/
 └── README.md
 ```
 
-### Step 3: 生成前20个样本
+### Step 3: Generate front 20Sample
 
 ```bash
 cd Data_v2/synthetic/Copa_mezo_gpt4o_v1/scripts/
@@ -267,27 +267,27 @@ export OPENAI_API_KEY="your-key"
 python rephrase_top20.py
 ```
 
-**输出**：`copa_train_top20.jsonl`（20个样本）
+**output**：`copa_train_top20.jsonl`（20Sample）
 
 ---
 
-### 🔴 **断点1：人工审核top20样本**
+### 🔴 **Checkpoint1：manual reviewtop20Sample**
 
-#### 3.1 并排查看原始vs合成数据
+#### 3.1 Side by sideVieworiginalvsSyntheticData
 
 ```bash
-# 使用人工审核工具（待实现）
+# usemanual reviewTool（To be implemented）
 python review_top20.py
 ```
 
-**审核界面示例**：
+**ReviewInterfaceExample**：
 ```
-样本 1/20:
+Sample 1/20:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-原始premise:
+originalpremise:
   "My body cast a shadow over the grass."
 
-合成premise:
+Syntheticpremise:
   "A shadow from my body fell across the grass."
 
 Choice 1: The sun was rising.
@@ -295,17 +295,17 @@ Choice 2: The grass was cut.
 Question: cause
 Correct answer: Choice 1
 
-此改写是否合格？
-  [y] 合格 - 语义一致，质量良好
-  [n] 不合格 - 语义改变或质量差
-  [s] 跳过
+This rephraseYesNoqualified？
+  [y] qualified - SemanticsConsistent，qualityGood
+  [n] unqualified - SemanticsChange or qualitydifference
+  [s] skip
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-您的判断: y
+youJudgment: y
 
-（继续审核样本2-20...）
+（ContinueReviewSample2-20...）
 ```
 
-**输出**：
+**output**：
 ```json
 // validation_checkpoints/top20_review.json
 {
@@ -320,36 +320,36 @@ Correct answer: Choice 1
       "judgment": "approved",
       "note": ""
     },
-    // ... 19个更多样本
+    // ... 19MoreSample
   ]
 }
 ```
 
-#### 3.2 自动生成few-shot并注入到rephrase_rest.py
+#### 3.2 AutomaticGeneratefew-shotAnd inject to rephrase_rest.py
 
 ```bash
-# 基于审核结果自动生成few-shot examples
+# base at ReviewresultAutomaticGeneratefew-shot examples
 python update_rest_prompt.py
 ```
 
-**功能**：
-1. 读取`top20_review.json`
-2. 提取`judgment == "approved"`的样本
-3. 格式化成few-shot examples
-4. 自动更新`rephrase_rest.py`中的prompt
+**Feature**：
+1. read`top20_review.json`
+2. Extract`judgment == "approved"`Sample
+3. formatIntofew-shot examples
+4. AutomaticUpdate`rephrase_rest.py` in prompt
 
 ---
 
-### Step 4: 生成剩余380个样本
+### Step 4: GenerateRemaining380Sample
 
 ```bash
 python rephrase_rest.py
-# 现在prompt中包含了人工审核通过的few-shot examples
+# current in prompt in containmanual reviewpassfew-shot examples
 ```
 
-**输出**：`copa_train_rest.jsonl`（380个样本）
+**output**：`copa_train_rest.jsonl`（380Sample）
 
-### Step 5: 合并数据
+### Step 5: MergeData
 
 ```bash
 cat copa_train_top20.jsonl copa_train_rest.jsonl > ../copa_train.jsonl
@@ -357,52 +357,52 @@ cat copa_train_top20.jsonl copa_train_rest.jsonl > ../copa_train.jsonl
 
 ---
 
-### 🔴 **断点2：人工标注第21-80个样本**
+### 🔴 **Checkpoint2：Manual annotationline21-80Sample**
 
-> **✅ 工具已实现**: `extract_samples.py`, `annotate_samples.py` 位于 `automation/stage1_generation/tools/`
+> **✅ ToolImplemented**: `extract_samples.py`, `annotate_samples.py` Bit at  `automation/stage1_generation/tools/`
 
-#### 5.1 提取第21-80个样本
+#### 5.1 Extractline21-80Sample
 
 ```bash
-# 进入数据集目录
+# EnterDataCollectDirectory
 cd Data_v2/synthetic/{experiment_purpose}/{experiment_id}/{Dataset}/
 
-# 提取样本21-80（共60个）
+# ExtractSample21-80（Total60）
 python /path/to/automation/stage1_generation/tools/extract_samples.py \
     --range 21-80 \
     --input Copa/copa_train.jsonl
 
-# 或者在tools目录直接运行
+#  or er in toolsDirectoryDirectlyRun
 cd /path/to/automation/stage1_generation/tools/
 python extract_samples.py \
     --range 21-80 \
     --input /path/to/Copa/copa_train.jsonl
 ```
 
-**输出**：
+**output**：
 ```
-validation_checkpoints/samples_21_80.jsonl  # 60个样本
+validation_checkpoints/samples_21_80.jsonl  # 60Sample
 ```
 
-#### 5.2 人工标注
+#### 5.2 Manual annotation
 
 ```bash
-# 在数据集目录或tools目录运行
+#  in DataCollectDirectory or toolsDirectoryRun
 python annotate_samples.py validation_checkpoints/samples_21_80.jsonl
 
-# 可选参数：
-# --output validation_checkpoints/custom_name_annotated.json  # 自定义输出文件
-# --no-resume                                                  # 重新开始，不继续上次标注
+#  can selectParameter：
+# --output validation_checkpoints/custom_name_annotated.json  # CustomoutputFile
+# --no-resume                                                  # HeavyNewOnstart，notContinue up timesAnnotate
 ```
 
-**标注界面示例**：
+**AnnotateInterfaceExample**：
 ```
-样本 1/60 (原始数据第21个):
+Sample 1/60 (originalDataline21):
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-原始premise:
+originalpremise:
   "The tenant misplaced his keys."
 
-合成premise:
+Syntheticpremise:
   "The tenant lost his apartment keys."
 
 Choice 1: His landlord unlocked the door.
@@ -410,16 +410,16 @@ Choice 2: His landlord repaired the door.
 Question: effect
 Correct answer: Choice 1
 
-语义是否一致？
-  [s] same - 语义一致
-  [n] not the same - 语义改变
+SemanticsYesNoConsistent？
+  [s] same - SemanticsConsistent
+  [n] not the same - SemanticsChange
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-您的判断: s
+youJudgment: s
 
-（继续标注样本2-60...）
+（ContinueAnnotateSample2-60...）
 ```
 
-**输出**：
+**output**：
 ```json
 // validation_checkpoints/samples_21_80_annotated.json
 {
@@ -428,30 +428,30 @@ Correct answer: Choice 1
   "not_the_same": 3,
   "annotations": [
     {
-      "index": 20,  // 原始数据中的索引（第21个）
+      "index": 20,  // originalData in Index（line21）
       "original_premise": "The tenant misplaced his keys.",
       "rephrased_premise": "The tenant lost his apartment keys.",
       "choice1": "His landlord unlocked the door.",
       "choice2": "His landlord repaired the door.",
       "question_type": "effect",
       "correct_answer": "Choice 1",
-      "judgment": "same",  // 人工判断
+      "judgment": "same",  // ManualJudgment
       "note": ""
     },
-    // ... 59个更多样本
+    // ... 59MoreSample
   ]
 }
 ```
 
-#### 5.3 自动生成validation prompt测试脚本
+#### 5.3 AutomaticGeneratevalidation promptTestScript
 
-> **✅ 工具已实现**: `generate_validation_test.py` 位于 `automation/stage1_generation/tools/`
+> **✅ ToolImplemented**: `generate_validation_test.py` Bit at  `automation/stage1_generation/tools/`
 
 ```bash
-# 使用默认路径
+# useDefaultPath
 python /path/to/automation/stage1_generation/tools/generate_validation_test.py
 
-# 或指定参数
+#  or SpecifyParameter
 python generate_validation_test.py \
     --annotations validation_checkpoints/samples_21_80_annotated.json \
     --fewshot-range 21-40 \
@@ -461,59 +461,59 @@ python generate_validation_test.py \
     --base-url https://api.openai.com/v1
 ```
 
-**功能**：
-1. 读取`samples_21_80_annotated.json`
-2. **第21-40个"same"样本** → 格式化成validation prompt的few-shot examples
-3. **第41-80个所有样本** → 格式化成test_set（包含ground truth）
-4. 自动生成`validate_prompt_test.py`
+**Feature**：
+1. read`samples_21_80_annotated.json`
+2. **line21-40"same"Sample** → formatIntovalidation promptfew-shot examples
+3. **line41-80allSample** → formatIntotest_set（containground truth）
+4. AutomaticGenerate`validate_prompt_test.py`
 
-**生成的测试脚本**：
+**GenerateTestScript**：
 ```python
 # scripts/validate_prompt_test.py
 def generate_validation_prompt(...):
     return f"""
     Judge if the rephrased premise...
 
-    ### Few-shot Examples (来自第21-40个):
+    ### Few-shot Examples (Fromline21-40):
     Example 1:
     Original: The tenant misplaced his keys.
     Rephrased: The tenant lost his apartment keys.
     Judgment: same
 
-    ... (共20个few-shot)
+    ... (Total20few-shot)
     """
 
-# Test set（来自第41-80个，共40个）
+# Test set（Fromline41-80，Total40）
 test_set = [
     {
         "original_premise": "...",
         "rephrased_premise": "...",
-        "ground_truth": "same"  # 人工标注
+        "ground_truth": "same"  # Manual annotation
     },
     ...
 ]
 
-# 测试prompt准确率
+# Testpromptaccuracy
 for item in test_set:
     response = gpt4o_judge(item)
     if response == item["ground_truth"]:
         correct += 1
 
 accuracy = correct / len(test_set)
-print(f"Prompt准确率: {accuracy:.2%}")
+print(f"Promptaccuracy: {accuracy:.2%}")
 ```
 
 ---
 
-### 🔴 **断点3：测试并调优validation prompt**
+### 🔴 **Checkpoint3：TestandTunevalidation prompt**
 
-#### 6.1 测试prompt准确率
+#### 6.1 Testpromptaccuracy
 
 ```bash
 python validate_prompt_test.py
 ```
 
-**输出示例**：
+**outputExample**：
 ```
 Testing validation prompt on 40 samples...
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -521,80 +521,80 @@ Test Results:
   Correct: 36 / 40
   Accuracy: 90.0%
 
-✗ Prompt未达标（需要≥95%）
+✗ PromptNot met standard（need≥95%）
 
-错误样本:
-  Sample 23: 判断为same，实际为not the same
-  Sample 45: 判断为not the same，实际为same
-  Sample 67: 判断为same，实际为not the same
-  Sample 78: 判断为not the same，实际为same
+ErrorSample:
+  Sample 23: Judgment as same，Actual as not the same
+  Sample 45: Judgment as not the same，Actual as same
+  Sample 67: Judgment as same，Actual as not the same
+  Sample 78: Judgment as not the same，Actual as same
 
-建议:
-  1. 检查few-shot examples中是否包含类似的反例
-  2. 调整validation_prompt中的判断标准描述
-  3. 增加对边界情况的说明
+Recommendation:
+  1. Checkfew-shot examples in YesNocontainclassSimilar counter examples
+  2. adjustmentvalidation_prompt in JudgmentstandardDescribe
+  3. Increase for BoundaryCaseDescription
 
-请手动调整配置文件中的validation_prompt，然后重新运行此测试。
+pleaseManualadjustmentConfigurationFile in validation_prompt，natural back HeavyNewRunthisTest。
 ```
 
-#### 6.2 手动调优prompt
+#### 6.2 ManualTuneprompt
 
-编辑配置文件：
+EditConfigurationFile：
 ```bash
 vim automation/configs/stage1/drafts/copa_mezo_v1_draft.yaml
 ```
 
-修改`validation.validation_prompt`，例如：
-- 添加更明确的判断标准
-- 补充边界情况的few-shot examples
-- 调整prompt用词
+Modify`validation.validation_prompt`，example such as ：
+- addMoreExplicitJudgmentstandard
+- SupplementBoundaryCasefew-shot examples
+- adjustmentprompt use Word
 
-#### 6.3 重新生成脚本并测试
+#### 6.3 HeavyNewGenerateScriptandTest
 
 ```bash
-# 重新生成脚本
+# HeavyNewGenerateScript
 python automation/stage1_generation/generator.py \
        automation/configs/stage1/drafts/copa_mezo_v1_draft.yaml
 
-# 重新测试
+# HeavyNewTest
 cd Data_v2/synthetic/Copa_mezo_gpt4o_v1/scripts/
 python validate_prompt_test.py
 ```
 
-**重复6.1-6.3直到准确率≥95%**：
+**Repeat6.1-6.3direct to accuracy≥95%**：
 ```
 Test Results:
   Correct: 39 / 40
   Accuracy: 97.5%
 
-✓ Prompt已达标！
-  创建通过标记: validation_checkpoints/prompt_test_passed.flag
+✓ PromptMet the standard！
+  CreatepassTag: validation_checkpoints/prompt_test_passed.flag
 ```
 
 ---
 
-### Step 7: 批量验证所有400个样本
+### Step 7: batchValidateall400Sample
 
 ```bash
 python validate.py
 ```
 
-**功能**：
-1. 检查是否存在`prompt_test_passed.flag`（门禁）
-2. 如果不存在，拒绝执行并提示先运行测试
-3. 如果存在，使用已验证的validation prompt验证所有400个样本
-4. Rejection sampling：不合格的用原始数据替换
+**Feature**：
+1. CheckYesNoexist in `prompt_test_passed.flag`（Gate）
+2.  such as If does not exist in ，RejectExecuteandTipfirstRunTest
+3.  such as If exists in ，usealreadyValidatevalidation promptValidateall400Sample
+4. Rejection sampling：unqualified use originalDataReplace
 
-**输出**：
+**output**：
 ```
-验证完成!
-通过率: 381/400 = 95.25%
-输出文件: copa_train_validated.jsonl
+ValidateComplete!
+Pass rate: 381/400 = 95.25%
+outputFile: copa_train_validated.jsonl
 ```
 
 ---
 
-### Step 8: 存档为validated模板
+### Step 8: Archive as validatedTemplate
 
 ```bash
 cd /home/ubuntu/LLM-inference/jikai-project/Synthetic_Data_for_ZO/
@@ -604,118 +604,118 @@ python automation/stage1_generation/archive_validated_config.py \
        --data-dir Data_v2/synthetic/Copa_mezo_gpt4o_v1/
 ```
 
-**输出**：
+**output**：
 ```
-✓ 配置已存档!
+✓ ConfigurationalreadyArchive!
 
-模板路径: automation/configs/stage1/templates/copa_mezo_validated.yaml
-归档路径: automation/configs/stage1/archive/2024-12/copa_mezo_v1_complete_20241224_153000.yaml
+TemplatePath: automation/configs/stage1/templates/copa_mezo_validated.yaml
+ArchivePath: automation/configs/stage1/archive/2024-12/copa_mezo_v1_complete_20241224_153000.yaml
 
-现在可以基于此模板创建调参实验配置。
+current in canbase at thisTemplateCreateParameter tuningExperimentConfiguration。
 ```
 
 ---
 
-## 场景B：调参实验（基于已验证prompt）
+## ScenarioB：Parameter tuningExperiment（base at alreadyValidateprompt）
 
-### 前置条件
-- 已有validated模板：`automation/configs/stage1/templates/copa_mezo_validated.yaml`
-- Prompt已通过所有人工验证
-- 想要调整生成参数观察对数据质量的影响
+###  front setCondition
+- alreadyhasvalidatedTemplate：`automation/configs/stage1/templates/copa_mezo_validated.yaml`
+- PromptPassedallManualValidate
+- want need adjustmentGenerateParameterObserve for DataqualityImpact
 
-### Step 1: 创建实验配置
+### Step 1: CreateExperimentConfiguration
 
 ```bash
-# 实验1: 提高temperature
+# Experiment1: Raisetemperature
 python automation/stage1_generation/create_experiment.py \
        --template automation/configs/stage1/templates/copa_mezo_validated.yaml \
        --version v2 \
        --param generation.temperature=0.7
 ```
 
-**输出**：
+**output**：
 ```
-✓ 配置已创建: automation/configs/stage1/experiments/copa_mezo_v2_temperature07.yaml
+✓ ConfigurationalreadyCreate: automation/configs/stage1/experiments/copa_mezo_v2_temperature07.yaml
 
-参数变更:
+ParameterchangeMore:
   - generation.temperature: 0.5 → 0.7
 ```
 
-### Step 2: 生成脚本
+### Step 2: GenerateScript
 
 ```bash
 python automation/stage1_generation/generator.py \
        automation/configs/stage1/experiments/copa_mezo_v2_temperature07.yaml
 ```
 
-**输出**：
+**output**：
 ```
 Data_v2/synthetic/Copa_mezo_gpt4o_v2/
 ├── scripts/
-│   ├── rephrase_all.py      # 包含已验证的few-shot
+│   ├── rephrase_all.py      # containalreadyValidatefew-shot
 │   ├── rephrase_top20.py
 │   ├── rephrase_rest.py
-│   └── validate.py          # 包含已验证的validation prompt
+│   └── validate.py          # containalreadyValidatevalidation prompt
 └── ...
 ```
 
-### Step 3: 直接生成完整数据集（无需人工审核）
+### Step 3: DirectlyGenerateCompleteDataCollect（Noneneedmanual review）
 
 ```bash
 cd Data_v2/synthetic/Copa_mezo_gpt4o_v2/scripts/
 export OPENAI_API_KEY="your-key"
 
-# 直接运行rephrase_all.py（400个样本）
+# DirectlyRunrephrase_all.py（400Sample）
 python rephrase_all.py
 ```
 
-**关键**：
-- ✅ 使用已验证的few-shot examples
-- ✅ 只有temperature改变（0.5 → 0.7）
-- ✅ 无需重复人工审核断点1-3
+**Key**：
+- ✅ usealreadyValidatefew-shot examples
+- ✅ OnlyhastemperatureChange（0.5 → 0.7）
+- ✅ NoneneedRepeatmanual reviewCheckpoint1-3
 
-### Step 4: 使用已验证的validation prompt验证
+### Step 4: usealreadyValidatevalidation promptValidate
 
 ```bash
 python validate.py
 ```
 
-**输出**：
+**output**：
 ```
-验证完成!
-通过率: 378/400 = 94.5%
-输出文件: copa_train_validated.jsonl
+ValidateComplete!
+Pass rate: 378/400 = 94.5%
+outputFile: copa_train_validated.jsonl
 ```
 
-### Step 5: 对比不同版本
+### Step 5: comparisonDifferentVersion
 
 ```bash
-# 对比v1和v2的数据质量
+# comparisonv1 and v2Dataquality
 python automation/analysis/compare_versions.py \
        --v1 Data_v2/synthetic/Copa_mezo_gpt4o_v1/copa_train_validated.jsonl \
        --v2 Data_v2/synthetic/Copa_mezo_gpt4o_v2/copa_train_validated.jsonl
 ```
 
-**输出**：
+**output**：
 ```
-版本对比:
+Versioncomparison:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-指标                   v1          v2
+metrics                   v1          v2
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-验证通过率           95.25%      94.50%
-平均编辑距离         12.3        15.7
-词汇多样性 (TTR)     0.82        0.87
+ValidatePass rate           95.25%      94.50%
+averageEditDistance         12.3        15.7
+WordGatherMoreDiversity (TTR)     0.82        0.87
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-结论: v2 (temp=0.7) 多样性更高，但通过率略低
+Conclusion: v2 (temp=0.7) MoreDiversityHigher，ButPass rateSlightlyLow
 ```
 
 ---
 
-## 多实验并行
+## MoreExperimentparallel
 
 ```bash
-# 创建多个实验配置
+# CreatemultipleExperimentConfiguration
 python automation/stage1_generation/create_experiment.py \
        --template automation/configs/stage1/templates/copa_mezo_validated.yaml \
        --version v3 \
@@ -726,7 +726,7 @@ python automation/stage1_generation/create_experiment.py \
        --version v4 \
        --param generation.temperature=0.9
 
-# 并行生成（使用不同GPU或时间段）
+# parallelGenerate（useDifferentGPU or timeParagraph）
 for version in v2 v3 v4; do
   config="automation/configs/stage1/experiments/copa_mezo_${version}_*.yaml"
   python automation/stage1_generation/generator.py $config
@@ -738,28 +738,28 @@ done
 
 ---
 
-## 目录结构总结
+## DirectorystructureSummary
 
 ```
 automation/configs/stage1/
-├── drafts/                                    # 首次生成：待验证配置
-│   └── copa_mezo_v1_draft.yaml               # 人工编写初始prompt
+├── drafts/                                    # First timeGenerate：pendingValidateConfiguration
+│   └── copa_mezo_v1_draft.yaml               # ManualWriteinitialprompt
 │
-├── templates/                                 # 已验证模板（可复用）
-│   ├── copa_mezo_validated.yaml              # Copa任务MeZO方法模板
-│   ├── rte_mezo_validated.yaml               # RTE任务模板
+├── templates/                                 # alreadyValidateTemplate（ can Repeat use ）
+│   ├── copa_mezo_validated.yaml              # CopataskMeZOmethodTemplate
+│   ├── rte_mezo_validated.yaml               # RTEtaskTemplate
 │   └── README.md
 │
-├── experiments/                               # 调参实验配置
-│   ├── copa_mezo_v2_temperature07.yaml       # 实验：temp=0.7
-│   ├── copa_mezo_v3_gpt4omini.yaml           # 实验：换模型
-│   └── copa_mezo_v4_temperature09.yaml       # 实验：temp=0.9
+├── experiments/                               # Parameter tuningExperimentConfiguration
+│   ├── copa_mezo_v2_temperature07.yaml       # Experiment：temp=0.7
+│   ├── copa_mezo_v3_gpt4omini.yaml           # Experiment：changeModel
+│   └── copa_mezo_v4_temperature09.yaml       # Experiment：temp=0.9
 │
-├── archive/                                   # 历史存档
+├── archive/                                   # HistoryArchive
 │   └── 2024-12/
 │       └── copa_mezo_v1_complete_20241224.yaml
 │
-└── examples/                                  # 示例
+└── examples/                                  # Example
     └── stage1_example_copa_mezo.yaml
 
 Data_v2/synthetic/Copa_mezo_gpt4o_v1/
@@ -768,70 +768,70 @@ Data_v2/synthetic/Copa_mezo_gpt4o_v1/
 │   ├── rephrase_rest.py
 │   ├── rephrase_all.py
 │   ├── validate.py
-│   ├── review_top20.py                       # 🆕 人工审核工具
-│   ├── annotate_samples.py                   # 🆕 人工标注工具
-│   ├── validate_prompt_test.py               # 🆕 自动生成测试脚本
-│   ├── extract_samples.py                    # 🆕 样本提取
-│   ├── update_rest_prompt.py                 # 🆕 自动注入few-shot
-│   └── generate_validation_test.py           # 🆕 生成测试脚本
-├── validation_checkpoints/                    # 🆕 人工验证记录
-│   ├── top20_review.json                     # 断点1记录
-│   ├── samples_21_80_annotated.json          # 断点2记录
-│   ├── prompt_test_results.json              # 断点3记录
-│   └── prompt_test_passed.flag               # 通过标记
+│   ├── review_top20.py                       # 🆕 manual reviewTool
+│   ├── annotate_samples.py                   # 🆕 Manual annotationTool
+│   ├── validate_prompt_test.py               # 🆕 AutomaticGenerateTestScript
+│   ├── extract_samples.py                    # 🆕 SampleExtract
+│   ├── update_rest_prompt.py                 # 🆕 AutomaticInjectfew-shot
+│   └── generate_validation_test.py           # 🆕 GenerateTestScript
+├── validation_checkpoints/                    # 🆕 ManualValidateRecord
+│   ├── top20_review.json                     # Checkpoint1Record
+│   ├── samples_21_80_annotated.json          # Checkpoint2Record
+│   ├── prompt_test_results.json              # Checkpoint3Record
+│   └── prompt_test_passed.flag               # passTag
 ├── copa_train_top20.jsonl
 ├── copa_train_rest.jsonl
-├── copa_train.jsonl                          # 合并后的未验证数据
-├── copa_train_validated.jsonl                # 最终验证通过数据
+├── copa_train.jsonl                          # Merge back notValidateData
+├── copa_train_validated.jsonl                # finalValidatepassData
 ├── generation_config.yaml
 └── README.md
 ```
 
 ---
 
-## 关键原则
+## KeyOriginalthen
 
-1. **首次生成必须经过人工断点**
-   - 断点1：审核top20 → 生成rephrase few-shot
-   - 断点2：标注21-80 → 生成validation few-shot和test_set
-   - 断点3：测试prompt → 调优直到≥95%
+1. **First timeGeneratemustalreadyManual checkpoint**
+   - Checkpoint1：Reviewtop20 → Generaterephrase few-shot
+   - Checkpoint2：Annotate21-80 → Generatevalidation few-shot and test_set
+   - Checkpoint3：Testprompt → Tunedirect to ≥95%
 
-2. **调参实验复用已验证prompt**
-   - 继承templates/中的配置
-   - 只修改生成参数
-   - 直接使用rephrase_all.py
-   - 无需重复人工审核
+2. **Parameter tuningExperimentRepeat use alreadyValidateprompt**
+   - Inheritancetemplates/ in Configuration
+   - OnlyModifyGenerateParameter
+   - Directlyuserephrase_all.py
+   - NoneneedRepeatmanual review
 
-3. **所有prompt都需人工制作**
-   - 初始prompt人工编写
-   - Few-shot examples由人工审核自动生成
-   - Prompt调优由人工迭代完成
+3. **allpromptAll needManualCreate**
+   - initialpromptManualWrite
+   - Few-shot examplesbymanual reviewAutomaticGenerate
+   - PromptTunebyManualIterationComplete
 
-4. **版本管理**
-   - drafts/: 首次生成的配置
-   - templates/: 验证通过的模板
-   - experiments/: 调参实验配置
-   - archive/: 历史记录（包含完整验证历史）
+4. **VersionManage**
+   - drafts/: First timeGenerateConfiguration
+   - templates/: ValidatepassTemplate
+   - experiments/: Parameter tuningExperimentConfiguration
+   - archive/: HistoryRecord（containCompleteValidateHistory）
 
 ---
 
-## 待实现工具清单
+## To be implementedToolclearSingle
 
-### 高优先级（人工断点必需）
-- [ ] `review_top20.py` - 断点1人工审核界面
-- [ ] `update_rest_prompt.py` - 自动注入few-shot到rephrase_rest.py
-- [ ] `extract_samples.py` - 提取第21-80个样本
-- [ ] `annotate_samples.py` - 断点2人工标注界面
-- [ ] `generate_validation_test.py` - 自动生成validation测试脚本
-- [ ] `validate_prompt_test.py` - 测试prompt准确率（自动生成）
-- [ ] 修改`validate.py` - 添加门禁检查
+### HighPriority（Manual checkpointRequired）
+- [ ] `review_top20.py` - Checkpoint1manual reviewInterface
+- [ ] `update_rest_prompt.py` - AutomaticInjectfew-shot to rephrase_rest.py
+- [ ] `extract_samples.py` - Extractline21-80Sample
+- [ ] `annotate_samples.py` - Checkpoint2Manual annotationInterface
+- [ ] `generate_validation_test.py` - AutomaticGeneratevalidationTestScript
+- [ ] `validate_prompt_test.py` - Testpromptaccuracy（AutomaticGenerate）
+- [ ] Modify`validate.py` - addGateCheck
 
-### 中优先级（提升体验）
-- [ ] `tune_validation_prompt.py` - Prompt调优辅助工具
-- [ ] `compare_versions.py` - 版本对比分析
-- [ ] 修改`generator.py` - 支持自动few-shot注入
+###  in Priority（ImproveExperience）
+- [ ] `tune_validation_prompt.py` - PromptTuneauxiliaryTool
+- [ ] `compare_versions.py` - VersioncomparisonAnalysis
+- [ ] Modify`generator.py` - supportAutomaticfew-shotInject
 
-### 低优先级（锦上添花）
-- [ ] Web界面替代CLI审核/标注工具
-- [ ] 自动化prompt调优建议
-- [ ] 批量实验管理工具
+### LowPriority（elegant up Icing on cake）
+- [ ] WebInterfaceReplaceCLIReview/AnnotateTool
+- [ ] AutomaticationpromptTuneRecommendation
+- [ ] batchExperimentManageTool

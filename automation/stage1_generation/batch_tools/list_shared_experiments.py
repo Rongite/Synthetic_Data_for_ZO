@@ -13,12 +13,12 @@ import json
 import sys
 from pathlib import Path
 
-# 添加父目录到路径
+# addParentdirectory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from experiment_manager_batch import BatchExperimentManager
 
-# 导入统一配置
+# Importsystemthisconfiguration
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from config import PROJECT_ROOT

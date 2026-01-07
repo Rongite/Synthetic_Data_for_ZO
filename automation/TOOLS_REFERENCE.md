@@ -53,70 +53,70 @@ python automation/stage1_generation/generator.py \
 
 ### review_top20.py
 
-**用途**: 交互式审核前20个样本
+**Purpose**: Interactive review first 20 samples
 
-**位置**: `automation/stage1_generation/tools/review_top20.py`
+**location**: `automation/stage1_generation/tools/review_top20.py`
 
-**用法**:
+**Usage**:
 ```bash
-# 复制到实验目录
+# copy to experimentdirectory
 cp automation/stage1_generation/tools/review_top20.py <exp_dir>/scripts/
 
-# 运行（在生成前20个样本后）
+# run（ in generate first 20 samples back ）
 cd <exp_dir>/scripts/
 python review_top20.py
 ```
 
-**交互流程**:
+**Interactive workflow**:
 ```
-样本 1/20:
-原文: The man broke his toe because...
-改写: The individual fractured his toe due to...
+sample 1/20:
+Original: The man broke his toe because...
+Rephrased: The individual fractured his toe due to...
 
 Is this a good rephrase? (y/n): y
 
-样本 2/20:
+sample 2/20:
 ...
 ```
 
-**输出**:
-- `../copa_train_top20_annotated.jsonl` - 标注的前20个样本
-- 优质样本自动提取用于few-shot
+**output**:
+- `../copa_train_top20_annotated.jsonl` - Annotate first 20 samples
+- High-quality samplesAutomatically extract forfew-shot
 
 ---
 
 ### annotate_samples.py
 
-**用途**: 标注样本21-40是否与原文相同
+**Purpose**: Annotatesample21-40YesNoandOriginalsame
 
-**位置**: `automation/stage1_generation/tools/annotate_samples.py`
+**location**: `automation/stage1_generation/tools/annotate_samples.py`
 
-**用法**:
+**Usage**:
 ```bash
 cd <exp_dir>/scripts/
 python annotate_samples.py
 ```
 
-**交互**:
+**Interaction**:
 ```
-请标注样本是否与原文相同:
-样本 21: same/not the same? same
-样本 22: same/not the same? not the same
+Please annotate whether samples are same as original (yes/no):
+sample 21: same/not the same? same
+sample 22: same/not the same? not the same
 ...
 ```
 
-**输出**:
+**output**:
 - `../copa_train_samples21to40_annotated.jsonl`
 
 ---
 
 ### extract_samples.py
 
-**用途**: 从标注数据提取优质样本
+**Purpose**:  Extract high-quality samples from annotated data
 
-**位置**: `automation/stage1_generation/tools/extract_samples.py`
+**location**: `automation/stage1_generation/tools/extract_samples.py`
 
-**用法**:
+**Usage**:
 ```bash
 python automation/stage1_generation/tools/extract_samples.py \
     <annotated.jsonl> \
@@ -128,11 +128,11 @@ python automation/stage1_generation/tools/extract_samples.py \
 
 ### publish_dataset.py
 
-**用途**: 发布数据到训练目录（可选）
+**Purpose**: Release data to training directory (optional)
 
-**位置**: `automation/stage1_generation/tools/publish_dataset.py`
+**location**: `automation/stage1_generation/tools/publish_dataset.py`
 
-**用法**:
+**Usage**:
 ```bash
 python automation/stage1_generation/tools/publish_dataset.py \
     --source Data_v2/synthetic/_shared/Copa/temp07_topp10_gpt4o/Copa \
@@ -140,39 +140,39 @@ python automation/stage1_generation/tools/publish_dataset.py \
     --target Data/rejection_sampling/0_data
 ```
 
-**注意**:
-- ⚠️ 训练脚本可以直接使用 `Data_v2/` 路径，此工具是可选的
-- 仅用于兼容旧的训练脚本结构
+**note**:
+- ⚠️ Training scripts can directly use `Data_v2/` path, this tool is optional
+- Only forCompatible with oldtrainingscriptstructure
 
 ---
 
-## 阶段2工具
+## stage2tool
 
 ### trainer.py
 
-**用途**: 自动化模型训练
+**Purpose**: Automated model training
 
-**位置**: `automation/stage2_training/trainer.py`
+**location**: `automation/stage2_training/trainer.py`
 
-**用法**:
+**Usage**:
 ```bash
-# 执行训练
+# executetraining
 python automation/stage2_training/trainer.py <config.yaml>
 
-# 预览（不实际训练）
+# Preview (no actual training)
 python automation/stage2_training/trainer.py <config.yaml> --dry-run
 ```
 
-**支持的训练方法**:
-- `zo` - MeZO (零阶优化)
-- `fo_full` - 全参数微调
-- `fo_lora` - LoRA微调
+**supporttrainingmethod**:
+- `zo` - MeZO (Zero-order optimization)
+- `fo_full` - Full parameter fine-tuning
+- `fo_lora` - LoRAFine-tuning
 
-**配置示例**:
+**configureexample**:
 ```yaml
 experiment:
   purpose: "hyperparameter_tuning"
-  description: "测试不同学习率"
+  description: "Test different learning rates"
 
 model: "meta-llama/Llama-3.2-1B"
 task: "Copa"
@@ -182,19 +182,19 @@ data:
   path: "Data_v2/synthetic/_shared/Copa/temp07_topp10_gpt4o/Copa"
 
 hyperparameters:
-  learning_rate: [1e-6, 5e-7]  # 网格搜索
+  learning_rate: [1e-6, 5e-7]  # Grid search
   batch_size: 16
   steps: 20000
   seed: 0
-  lora_rank: 8  # LoRA专用
+  lora_rank: 8  # LoRASpecific use 
 
 cuda_devices: "0"
 ```
 
-**输出**:
+**output**:
 ```
 Results_v2/
-└── hyperparameter_tuning/  # 按实验目的组织
+└── hyperparameter_tuning/  # Organized by experiment purpose
     └── Llama-3.2-1B/
         └── Copa_fo_lora_temp07_1e-6/
             └── 20260101_120000/
@@ -207,145 +207,145 @@ Results_v2/
 
 ### list_results.py
 
-**用途**: 查看训练结果摘要
+**Purpose**: View training results summary 
 
-**位置**: `automation/stage2_training/list_results.py`
+**location**: `automation/stage2_training/list_results.py`
 
-**用法**:
+**Usage**:
 ```bash
-# 查看摘要
+# View summary 
 python automation/stage2_training/list_results.py
 
-# 查看详细结果
+# viewDetailedresult
 python automation/stage2_training/list_results.py --detail
 
-# 筛选特定实验目的
+# Filter specific experiment purpose
 python automation/stage2_training/list_results.py --purpose hyperparameter_tuning
 ```
 
-**输出示例**:
+**outputexample**:
 ```
 ================================================================================
-训练结果摘要 - Results_v2
+Training results summary  - Results_v2
 ================================================================================
 
-📁 实验目的: hyperparameter_tuning
-   实验数量: 5
-   └─ meta-llama: 5 个实验
+📁 experimentpurpose: hyperparameter_tuning
+   experimentcount: 5
+   └─ meta-llama: 5 experiment
 
-📁 实验目的: baseline_comparison
-   实验数量: 3
-   └─ meta-llama: 3 个实验
+📁 experimentpurpose: baseline_comparison
+   experimentcount: 3
+   └─ meta-llama: 3 experiment
 
-总计: 2 个实验目的, 8 个训练实验
+total: 2 experimentpurpose, 8 trainingexperiment
 ```
 
 ---
 
-## Batch管理工具
+## Batchmanagetool
 
 ### list_batches.py
 
-**用途**: 列出所有batch
+**Purpose**: Listallbatch
 
-**位置**: `automation/stage1_generation/batch_tools/list_batches.py`
+**location**: `automation/stage1_generation/batch_tools/list_batches.py`
 
-**用法**:
+**Usage**:
 ```bash
-# 列出所有batch
+# Listallbatch
 python automation/stage1_generation/batch_tools/list_batches.py
 
-# 显示详细信息
+# ShowDetailedinformation
 python automation/stage1_generation/batch_tools/list_batches.py --verbose
 ```
 
-**输出示例**:
+**outputexample**:
 ```
 ================================================================================
-找到 2 个batch
+Found 2 batch
 ================================================================================
 
 📦 batch_20241229_temperature
-   实验数: 3
-   Copa: 3 个实验
+   Number of experiments: 3
+   Copa: 3 experiment
 
 📦 batch_20241230_topp
-   实验数: 2
-   Copa: 2 个实验
+   Number of experiments: 2
+   Copa: 2 experiment
 ```
 
 ---
 
 ### list_batch_experiments.py
 
-**用途**: 查看batch中的实验
+**Purpose**: viewbatch in experiment
 
-**位置**: `automation/stage1_generation/batch_tools/list_batch_experiments.py`
+**location**: `automation/stage1_generation/batch_tools/list_batch_experiments.py`
 
-**用法**:
+**Usage**:
 ```bash
-# 列出batch中的实验
+# Listbatch in experiment
 python automation/stage1_generation/batch_tools/list_batch_experiments.py <batch_id>
 
-# 只看特定数据集
+# Only view specificdataset
 python automation/stage1_generation/batch_tools/list_batch_experiments.py <batch_id> --dataset Copa
 
-# 显示详细信息
+# ShowDetailedinformation
 python automation/stage1_generation/batch_tools/list_batch_experiments.py <batch_id> --verbose
 ```
 
-**输出示例**:
+**outputexample**:
 ```
-📊 Copa (3 个实验)
+📊 Copa (3 experiment)
 
   🔧 temp05_topp10_gpt4o
-     ⚡ 数据复用: 否 (新生成)
+     ⚡ data reuse: No (Newly generated)
 
   🔧 temp07_topp10_gpt4o
-     ⚡ 数据复用: 是 (原batch: batch_20241228_pilot)
+     ⚡ data reuse: Yes (Originalbatch: batch_20241228_pilot)
 ```
 
 ---
 
 ### list_shared_experiments.py
 
-**用途**: 查看物理存储的所有实验
+**Purpose**: viewphysical storageallexperiment
 
-**位置**: `automation/stage1_generation/batch_tools/list_shared_experiments.py`
+**location**: `automation/stage1_generation/batch_tools/list_shared_experiments.py`
 
-**用法**:
+**Usage**:
 ```bash
-# 列出所有物理实验
+# List all physical experiments
 python automation/stage1_generation/batch_tools/list_shared_experiments.py
 
-# 只看特定数据集
+# Only view specificdataset
 python automation/stage1_generation/batch_tools/list_shared_experiments.py --dataset Copa
 
-# 显示详细信息
+# ShowDetailedinformation
 python automation/stage1_generation/batch_tools/list_shared_experiments.py --verbose
 ```
 
-**用途**:
-- 查看哪些参数配置已生成过数据
-- 避免重复生成相同参数的数据
-- 了解物理存储使用情况
+**Purpose**:
+- View which parameter configurations have already generated data
+- Avoid duplicate generation of same parameter data
+- Understand physical storage usage
 
 ---
 
 ### compare_experiments.py
 
-**用途**: 比较实验参数
+**Purpose**: compareexperimentparameter
 
-**位置**: `automation/stage1_generation/batch_tools/compare_experiments.py`
+**location**: `automation/stage1_generation/batch_tools/compare_experiments.py`
 
-**用法**:
+**Usage**:
 ```bash
-# 比较两个物理实验
+# compareTwo physicalexperiment
 python automation/stage1_generation/batch_tools/compare_experiments.py \
     --shared Copa/temp07_topp10_gpt4o \
     --shared Copa/temp09_topp10_gpt4o
 
-# 比较batch中的实验
+# comparebatch in experiment
 python automation/stage1_generation/batch_tools/compare_experiments.py \
     --batch1 batch_20241229_temperature \
     --batch2 batch_20241230_topp \
@@ -353,48 +353,48 @@ python automation/stage1_generation/batch_tools/compare_experiments.py \
     --dataset2 Copa
 ```
 
-**输出示例**:
+**outputexample**:
 ```
-✅ 相同参数:
+✅ sameparameter:
   generation.model: gpt-4o
   generation.top_p: 1.0
 
-⚠️  不同参数:
+⚠️  Differentparameter:
   generation.temperature:
-    实验1: 0.7
-    实验2: 0.9
+    experiment1: 0.7
+    experiment2: 0.9
 ```
 
 ---
 
-## 数据路径工具
+## datapathtool
 
-### list_data_paths.py ⭐ 新增
+### list_data_paths.py ⭐ New
 
-**用途**: 列出所有可用的训练数据路径
+**Purpose**: Listall can  use trainingdatapath
 
-**位置**: `automation/stage1_generation/batch_tools/list_data_paths.py`
+**location**: `automation/stage1_generation/batch_tools/list_data_paths.py`
 
-**用法**:
+**Usage**:
 ```bash
-# 列出所有数据
+# Listalldata
 python automation/stage1_generation/batch_tools/list_data_paths.py
 
-# 只看某个batch
+# Only view certainbatch
 python automation/stage1_generation/batch_tools/list_data_paths.py \
     --batch batch_20241229_temperature
 
-# 只看某个数据集
+# Only view certaindataset
 python automation/stage1_generation/batch_tools/list_data_paths.py --dataset Copa
 
-# 输出YAML格式（可直接复制到配置文件）
+# Output YAML format (can be directly copied to configuration file)
 python automation/stage1_generation/batch_tools/list_data_paths.py --format yaml
 ```
 
-**输出示例（简洁模式）**:
+**Output example (Concise mode)**:
 ```
 ====================================================================================================
-📊 可用的训练数据路径
+📊  can  use trainingdatapath
 ====================================================================================================
 
 ====================================================================================================
@@ -402,99 +402,99 @@ python automation/stage1_generation/batch_tools/list_data_paths.py --format yaml
 ====================================================================================================
 
 📁 Copa / temp07_topp10_gpt4o
-   📝 描述: 研究temperature参数对合成数据质量的影响
+   📝 description: Study temperature parameter impact on synthetic data quality
 
-   ✅ Batch路径（推荐 - 按实验目的组织）:
+   ✅ Batch path (recommended - Organized by experiment purpose):
       Data_v2/synthetic/batch_20241229_temperature/Copa/temp07_topp10_gpt4o/Copa
 
-   📦 Shared路径（物理存储）:
+   📦 Sharedpath（physical storage）:
       Data_v2/synthetic/_shared/Copa/temp07_topp10_gpt4o/Copa
 ```
 
-**输出示例（YAML模式）**:
+**Output example (YAML mode)**:
 ```yaml
-# 可直接复制到训练配置文件
+# Can be directly copied to training configuration file
 data:
-  # Batch路径（推荐）
+  # Batch path (recommended)
   path: "Data_v2/synthetic/batch_20241229_temperature/Copa/temp07_topp10_gpt4o/Copa"
-  # 或使用 Shared路径
+  # oruse Sharedpath
   # path: "Data_v2/synthetic/_shared/Copa/temp07_topp10_gpt4o/Copa"
 ```
 
-**使用场景**:
-- 编写训练配置时查找数据路径
-- 快速浏览所有可用数据
-- 生成配置文件模板
+**Use Cases**:
+- Find data path when writing training configuration
+- Quick browseall can  use data
+- Generate configuration file template
 
 ---
 
-### resolve_data_path.py ⭐ 新增
+### resolve_data_path.py ⭐ New
 
-**用途**: 转换batch路径和shared路径
+**Purpose**: convertbatchpathandsharedpath
 
-**位置**: `automation/stage1_generation/batch_tools/resolve_data_path.py`
+**location**: `automation/stage1_generation/batch_tools/resolve_data_path.py`
 
-**用法**:
+**Usage**:
 ```bash
-# Batch路径 → Shared路径
+# Batchpath → Sharedpath
 python automation/stage1_generation/batch_tools/resolve_data_path.py \
     "Data_v2/synthetic/batch_20241229_temperature/Copa/temp07_topp10_gpt4o/Copa"
 
-# Shared路径 → 所有引用的batch
+# Shared path → all batches reference
 python automation/stage1_generation/batch_tools/resolve_data_path.py \
     "Data_v2/synthetic/_shared/Copa/temp07_topp10_gpt4o/Copa"
 ```
 
-**输出示例**:
+**outputexample**:
 ```
 ====================================================================================================
-🔍 路径解析：Batch → Shared
+🔍 pathparse：Batch → Shared
 ====================================================================================================
 
-输入路径: batch_20241229_temperature/Copa/temp07_topp10_gpt4o
-物理路径: _shared/Copa/temp07_topp10_gpt4o
+inputpath: batch_20241229_temperature/Copa/temp07_topp10_gpt4o
+Physical path: _shared/Copa/temp07_topp10_gpt4o
 
-✅ 此数据被以下batch引用:
+✅ This data is referenced by the following batches:
   • batch_20241229_temperature
   • batch_20241230_model_comparison
 ```
 
-**使用场景**:
-- 查找物理数据位置
-- 了解数据复用情况
-- 验证符号链接是否正确
+**Use Cases**:
+- Find physical data location
+- Understand data reuse situation
+- validatesymbolic linkYesNocorrect
 
 ---
 
-## 配置和诊断工具
+## configureandDiagnostictool
 
 ### config.py
 
-**用途**: 验证项目路径配置
+**Purpose**: validateprojectpathconfigure
 
-**位置**: `automation/config.py`
+**location**: `automation/config.py`
 
-**用法**:
+**Usage**:
 ```bash
-# 验证配置
+# validateconfigure
 python automation/config.py
 ```
 
-**输出**:
+**output**:
 ```
 ================================================================================
-🔧 项目配置
+🔧 projectconfigure
 ================================================================================
 PROJECT_ROOT:         /path/to/Synthetic_Data_for_ZO
 AUTOMATION_DIR:       /path/to/Synthetic_Data_for_ZO/automation
 DATA_V2_DIR:          /path/to/Synthetic_Data_for_ZO/Data_v2
 RESULTS_V2_DIR:       /path/to/Synthetic_Data_for_ZO/Results_v2
 ================================================================================
-✅ 所有关键路径验证通过
+✅ All critical paths validated successfully
 ================================================================================
 ```
 
-**环境变量覆盖**:
+**Environment variable override**:
 ```bash
 export SYNTHETIC_DATA_PROJECT_ROOT="/your/custom/path"
 python automation/config.py
@@ -504,109 +504,109 @@ python automation/config.py
 
 ### fix_hardcoded_paths.py
 
-**用途**: 批量修复硬编码路径（维护工具）
+**Purpose**: Batch fix hardcoded paths (maintenance tool)
 
-**位置**: `automation/fix_hardcoded_paths.py`
+**location**: `automation/fix_hardcoded_paths.py`
 
-**用法**:
+**Usage**:
 ```bash
 cd automation
 python fix_hardcoded_paths.py
 ```
 
-**说明**:
-- 已在v2.1版本中执行
-- 修复了10个文件的硬编码路径问题
-- 一般用户无需使用此工具
+**Description**:
+- Already in v2.1Version in execute
+- Fix 10 files with hardcoded path issues
+- General users do not need to use this tool
 
 ---
 
-## 工具使用流程
+## tooluseworkflow
 
-### 完整数据生成流程
+### Completedatagenerateworkflow
 
 ```bash
-# 1. 生成脚本
+# 1. generatescript
 python automation/stage1_generation/generator.py config.yaml
 
-# 2. 查看生成的batch
+# 2. viewgeneratebatch
 python automation/stage1_generation/batch_tools/list_batches.py --verbose
 
-# 3. 执行数据生成（见 USER_GUIDE.md）
+# 3. Execute data generation (see USER_GUIDE.md)
 cd Data_v2/synthetic/_shared/Copa/temp07_topp10_gpt4o/scripts/
 python rephrase_top20.py
 python review_top20.py
 ...
 
-# 4. 查找数据路径（用于训练配置）
+# 4. Finddatapath（ fortrainingconfigure）
 python automation/stage1_generation/batch_tools/list_data_paths.py --dataset Copa --format yaml
 ```
 
-### 完整训练流程
+### Completetrainingworkflow
 
 ```bash
-# 1. 编写训练配置（使用list_data_paths获取的路径）
+# 1. Write training configuration (use list_data_paths to get path)
 vim automation/configs/stage2/my_training.yaml
 
-# 2. 预览训练
+# 2. Previewtraining
 python automation/stage2_training/trainer.py my_training.yaml --dry-run
 
-# 3. 执行训练
+# 3. executetraining
 python automation/stage2_training/trainer.py my_training.yaml
 
-# 4. 查看结果
+# 4. viewresult
 python automation/stage2_training/list_results.py --detail
 ```
 
 ---
 
-## 常见问题
+## FAQ
 
-### Q: 如何快速找到数据路径用于训练？
+### Q: How to quickly find data path for training?
 
-A: 使用 `list_data_paths.py`:
+A: use `list_data_paths.py`:
 ```bash
 python automation/stage1_generation/batch_tools/list_data_paths.py \
     --dataset Copa --format yaml
 ```
 
-### Q: 如何检查是否已生成过某个参数配置？
+### Q: How to check if a parameter configuration has already generated data?
 
-A: 使用 `list_shared_experiments.py`:
+A: use `list_shared_experiments.py`:
 ```bash
 python automation/stage1_generation/batch_tools/list_shared_experiments.py \
     --dataset Copa --verbose
 ```
 
-### Q: 训练配置应该使用batch路径还是shared路径？
+### Q: Should training configuration use batch path or shared path?
 
-A: **都可以！** 推荐使用batch路径（更直观）：
+A: **Both work!** Recommend using batch path (more intuitive)：
 ```yaml
 data:
   path: "Data_v2/synthetic/batch_20241229_temperature/Copa/temp07_topp10_gpt4o/Copa"
 ```
 
-### Q: 还需要用publish_dataset.py吗？
+### Q: Still need to use publish_dataset.py?
 
-A: **不需要！** trainer.py可以直接使用 `Data_v2/` 路径。`publish_dataset.py` 仅用于兼容旧代码。
+A: **Not needed!** trainer.py can directly use `Data_v2/` path. `publish_dataset.py` only for compatibility with old code.
 
 ---
 
-## 更新日志
+## UpdateLog
 
 ### v2.1 (2026-01-01)
-- ✅ 新增 `list_data_paths.py` - 数据路径查找工具
-- ✅ 新增 `resolve_data_path.py` - 路径转换工具
-- ✅ 修复LoRA训练脚本名称错误
-- ✅ 修复LoRA环境变量错误
-- ✅ 移除所有硬编码路径，使用统一config.py
-- ✅ 修复batch_tools路径导入问题
+- ✅ New `list_data_paths.py` - data path finder tool
+- ✅ New `resolve_data_path.py` - path conversion tool
+- ✅ fixLoRAtrainingscriptNameerror
+- ✅ fixLoRAenvironment variableerror
+- ✅ Remove all hardcoded paths, use unified config.py
+- ✅ fixbatch_toolspathimportissue
 
 ### v2.0 (2024-12-30)
-- ✅ 实现Batch方案3++
-- ✅ 完全配置驱动的系统
-- ✅ 多数据集支持
+- ✅ Implementation of Batch Solution 3++
+- ✅ FullyconfigureDrivensystem
+- ✅ Multipledatasetsupport
 
 ---
 
-**完整的工具生态系统！使用这些工具提升效率！** 🚀
+**Complete tool ecosystem! Use these tools to improve efficiency!** 🚀

@@ -1,7 +1,7 @@
 experiment:
   batch_id: batch_20241230_rte
   purpose: rte_synthetic_data
-  description: RTE数据集合成数据生成实验 - recognizing textual entailment
+  description: RTEDatasetSynthetic dataGenerateExperiment - recognizing textual entailment
 task_name: RTE
 training_method: mezo
 version: v1

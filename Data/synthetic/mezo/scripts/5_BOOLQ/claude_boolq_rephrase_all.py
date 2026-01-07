@@ -20,9 +20,14 @@ export CUDA_HOME=/soft/compilers/cudatoolkit/cuda-11.8.0
 '''
 
 client = OpenAI(
-    # api_key = 'sk-eYvV5PulUcRh5gX40d10873c274b41C3B596F4F1F06e1a34', # office
-    api_key = 'sk-eWSYPo0CvhRYgcJs55B0C3F00aC74f6e95F47c1f4772292c', # my
-    base_url = "https://api2.aigcbest.top/v1"
+    # 钱多多
+    # # api_key = 'sk-eYvV5PulUcRh5gX40d10873c274b41C3B596F4F1F06e1a34', # office
+    # api_key = 'sk-eWSYPo0CvhRYgcJs55B0C3F00aC74f6e95F47c1f4772292c', # my
+    # base_url = "https://api2.aigcbest.top/v1"
+
+    # OpenRouter
+    api_key = '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', 
+    base_url = "https://openrouter.ai/api/v1"
 )
 
 def generate_prompt(question, passage, answer):
@@ -177,21 +182,21 @@ with open('/home/ubuntu/LLM-inference/jikai-project/Synthetic_Data_for_ZO/Data/o
             # Parses the JSON data for each row and appends it to the data list
         data.append(json.loads(line.strip()))
 
-output_file = os.path.expanduser("/home/ubuntu/LLM-inference/jikai-project/Synthetic_Data_for_ZO/Data/synthetic/mezo/BOOLQ/boolq_train_rest.jsonl") # output file
+output_file = os.path.expanduser("/home/ubuntu/LLM-inference/jikai-project/Synthetic_Data_for_ZO/Data/synthetic/mezo/BOOLQ/boolq_train.jsonl") # output file
 
 os.makedirs(os.path.dirname(output_file), exist_ok=True)
 out_file = open(output_file, "w")
 progress = 0 # delete
 for i in tqdm(range(len(data))):
     progress += 1 # delete
-    if progress <= 20: # delete
-        continue # delete
+    # if progress <= 20: # delete
+    #     continue # delete
     if progress > 500: # delete
         break # delete
 
     prompt = generate_prompt(data[i]["question"], data[i]["passage"], data[i]["answer"])
     response = client.chat.completions.create( # change
-        model="claude-3-7-sonnet-latest",
+        model="anthropic/claude-3.7-sonnet",
         messages=[
             {"role": "user", "content": prompt}
         ],

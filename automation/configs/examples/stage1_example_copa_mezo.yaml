@@ -1,6 +1,6 @@
 experiment:
   purpose: general
-  description: Copa任务的MeZO训练数据生成
+  description: CopaTask MeZOTrainingDataGenerate
 task_name: Copa
 training_method: mezo
 version: v1

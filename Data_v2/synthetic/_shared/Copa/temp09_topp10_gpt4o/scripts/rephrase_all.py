@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-自动生成的合成数据生成脚本
+Auto-generated synthetic data generation script
 
-任务: Copa
-训练方法: mezo
-生成模型: gpt-4o
-策略: all
-生成时间: 2025-12-30 18:43:11
+Task: Copa
+Training Method: mezo
+Generation Model: gpt-4o
+Strategy: all
+Generation Time: 2025-12-30 18:43:11
 """
 
 from tqdm import tqdm
@@ -14,7 +14,7 @@ import os
 import json
 from openai import OpenAI
 
-# 配置
+# Configuration
 API_KEY = os.environ.get("OPENAI_API_KEY", "sk-eWSYPo0CvhRYgcJs55B0C3F00aC74f6e95F47c1f4772292c")
 API_BASE = os.environ.get("OPENAI_API_BASE", "https://api2.aigcbest.top/v1")
 
@@ -28,22 +28,22 @@ client = OpenAI(
 # FEWSHOT_EXAMPLES = [...]
 
 def generate_prompt(premise, choice1, choice2, question, label):
-    """生成改写提示词"""
+    """Generate rephrasing prompt"""
 
-    # ⭐ 构建few-shot文本（如果存在FEWSHOT_EXAMPLES）
+    # ⭐ Build few-shot text（If existsFEWSHOT_EXAMPLES）
     fewshot_text = ""
     if 'FEWSHOT_EXAMPLES' in globals() and len(FEWSHOT_EXAMPLES) > 0:
         for i, ex in enumerate(FEWSHOT_EXAMPLES, 1):
             fewshot_text += f"Example {i}:\n"
             fewshot_text += f"Original premise: {ex['original']}\n"
             fewshot_text += f"Rephrased premise: {ex['rephrased']}\n"
-            # 添加其他字段作为上下文
+            # add other fieldsas as  up  down text
             for key in ex:
                 if key not in ['original', 'rephrased']:
                     fewshot_text += f"{key}: {ex[key]}\n"
             fewshot_text += "\n"
 
-    # ⭐ 原始prompt模板
+    # ⭐ Original prompt template
     prompt_template = """\
 You are tasked with rephrasing the given premise while preserving its original meaning. Your goal is to create rephrased data optimized for enhancing gradient estimation in training with a memory-efficient zeroth-order optimizer (MeZO).
 
@@ -85,41 +85,41 @@ Rephrase the following premise while ensuring it remains consistent with the cor
 
 """
 
-    # ⭐ 替换{{REPHRASE_FEWSHOT}}占位符
+    # ⭐ Replace {{REPHRASE_FEWSHOT}} placeholder
     prompt = prompt_template.replace("{{REPHRASE_FEWSHOT}}", fewshot_text)
 
-    # ⭐ 替换字段值（使用.format()）
+    # ⭐ Replace field values（use.format()）
     return prompt.format(premise=premise, choice1=choice1, choice2=choice2, question=question, label=label)
 
-# 加载原始数据
+# Loaded original data
 data = []
 input_file = "/home/ubuntu/LLM-inference/jikai-project/Synthetic_Data_for_ZO/Data/original/Copa/copa_train.jsonl"
 with open(input_file, 'r', encoding='utf-8') as f:
     for line in f:
         data.append(json.loads(line.strip()))
 
-print(f"加载了 {len(data)} 条原始数据")
+print(f"Loaded {len(data)}  samplesoriginalData")
 
-# 准备输出
-# 🆕 创建数据集子目录
+# Prepare output
+# 🆕 CreateDatasetSubDirectory
 dataset_dir = os.path.join("/home/ubuntu/LLM-inference/jikai-project/Synthetic_Data_for_ZO/Data_v2/synthetic/_shared/Copa/temp09_topp10_gpt4o", "Copa")
 os.makedirs(dataset_dir, exist_ok=True)
 
 output_file = os.path.join(dataset_dir, "copa_train.jsonl")
 out_file = open(output_file, "w", encoding='utf-8')
 
-print(f"输出文件: {output_file}")
+print(f"outputFile: {output_file}")
 
-# 处理数据
+# Process data
 progress = 0
 for i in tqdm(range(len(data))):
     progress += 1
 
-    # 构造提示词
+    # ConstructPrompt
     prompt_args = {"premise": data[i]["premise"], "choice1": data[i]["choice1"], "choice2": data[i]["choice2"], "question": data[i]["question"], "label": data[i]["label"]}
     prompt = generate_prompt(**prompt_args)
 
-    # 调用 API
+    # Call API
     try:
         response = client.chat.completions.create(
             model="gpt-4o",
@@ -129,22 +129,22 @@ for i in tqdm(range(len(data))):
             temperature=0.9
         )
 
-        # 提取结果
+        # Extract result
         rephrased_text = response.choices[0].message.content.strip()
 
-        # 构造输出
+        # Constructoutput
         result = data[i].copy()
         result["premise"] = rephrased_text
 
-        # 写入文件
+        # writeFile
         out_file.write(json.dumps(result, ensure_ascii=False) + "\n")
         out_file.flush()
 
     except Exception as e:
-        print(f"\n处理第 {i} 条数据时出错: {e}")
-        # 出错时使用原始数据
+        print(f"\nProcessline {i}  samplesDataError when: {e}")
+        # Use original data on error
         out_file.write(json.dumps(data[i], ensure_ascii=False) + "\n")
         out_file.flush()
 
 out_file.close()
-print(f"\n完成! 输出: {output_file}")
+print(f"\nComplete! output: {output_file}")

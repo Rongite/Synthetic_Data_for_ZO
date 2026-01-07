@@ -1,25 +1,25 @@
 # Complete Pipeline Interaction Flow Simulation
 
-This document simulates the complete interaction process between users and the system in the entire synthetic data generation pipeline, covering **all 5 datasets** and **two generation strategies**.
+This document simulates the complete interaction process between users and the system in the entire synthetic data generation pipeline, covering **all 5 Datasets** and **two generation strategies**.
 
 ## 📚 Table of Contents
 
 ### Part 1: Two-Stage Mode (Detailed Complete Workflow)
-- [Scenario 1: Copa Dataset (Two-Stage Mode)](#scenario-1-copa-dataset-two-stage-mode)
-- [Scenario 2: BOOLQ Dataset (Two-Stage Mode)](#scenario-2-boolq-dataset-two-stage-mode)
-- [Scenario 3: CB Dataset (Two-Stage Mode)](#scenario-3-cb-dataset-two-stage-mode)
-- [Scenario 4: RTE Dataset (Two-Stage Mode)](#scenario-4-rte-dataset-two-stage-mode)
-- [Scenario 5: ArcC Dataset (Two-Stage Mode)](#scenario-5-arcc-dataset-two-stage-mode)
+- [Scenario 1: Copa Dataset (Two-Stage Mode)](#scenario-1-copa-Dataset-two-stage-Mode)
+- [Scenario 2: BOOLQ Dataset (Two-Stage Mode)](#scenario-2-boolq-Dataset-two-stage-Mode)
+- [Scenario 3: CB Dataset (Two-Stage Mode)](#scenario-3-cb-Dataset-two-stage-Mode)
+- [Scenario 4: RTE Dataset (Two-Stage Mode)](#scenario-4-rte-Dataset-two-stage-Mode)
+- [Scenario 5: ArcC Dataset (Two-Stage Mode)](#scenario-5-arcc-Dataset-two-stage-Mode)
 
 ### Part 2: Direct-All Mode (Parameter Study)
-- [Scenario 6: Copa Dataset (Direct-All Mode)](#scenario-6-copa-dataset-direct-all-mode)
-- [Scenario 7: BOOLQ Dataset (Direct-All Mode)](#scenario-7-boolq-dataset-direct-all-mode)
-- [Scenario 8: CB Dataset (Direct-All Mode)](#scenario-8-cb-dataset-direct-all-mode)
-- [Scenario 9: RTE Dataset (Direct-All Mode)](#scenario-9-rte-dataset-direct-all-mode)
-- [Scenario 10: ArcC Dataset (Direct-All Mode)](#scenario-10-arcc-dataset-direct-all-mode)
+- [Scenario 6: Copa Dataset (Direct-All Mode)](#scenario-6-copa-Dataset-direct-all-Mode)
+- [Scenario 7: BOOLQ Dataset (Direct-All Mode)](#scenario-7-boolq-Dataset-direct-all-Mode)
+- [Scenario 8: CB Dataset (Direct-All Mode)](#scenario-8-cb-Dataset-direct-all-Mode)
+- [Scenario 9: RTE Dataset (Direct-All Mode)](#scenario-9-rte-Dataset-direct-all-Mode)
+- [Scenario 10: ArcC Dataset (Direct-All Mode)](#scenario-10-arcc-Dataset-direct-all-Mode)
 
 ### Appendix
-- [Dataset Comparison Table](#dataset-comparison-table)
+- [Dataset Comparison Table](#Dataset-comparison-table)
 - [Key Points Summary](#key-points-summary)
 
 ---
@@ -36,7 +36,7 @@ $ cd /home/ubuntu/LLM-inference/jikai-project/Synthetic_Data_for_ZO/automation
 # Copy configuration template
 $ cp configs/examples/stage1_full_example_copa.yaml configs/stage1/my_copa.yaml
 
-# Edit configuration file
+# Edit Configuration file
 $ vim configs/stage1/my_copa.yaml
 ```
 
@@ -45,14 +45,14 @@ $ vim configs/stage1/my_copa.yaml
 experiment:
   batch_id: "batch_20241230_copa_baseline"
   purpose: "copa_baseline"
-  description: "Copa dataset baseline experiment"
+  description: "Copa Dataset baseline experiment"
 
 task_name: "Copa"
 training_method: "mezo"
 
-dataset:
+Dataset:
   task_name: "copa"
-  dataset_name: "Copa"
+  Dataset_name: "Copa"
   input_path: "Data/original/Copa/copa_train.jsonl"
   original_dir: "Data/original/Copa"
   fields:
@@ -69,7 +69,7 @@ generation:
   timeout: 120
 
   strategy: "two_stage"  # Default, exploratory experiment
-  model: "gpt-4o"
+  Model: "gpt-4o"
   temperature: 0.9
   top_p: 1.0
   field_to_rephrase: "premise"
@@ -85,7 +85,7 @@ validation:
   base_url: "https://api2.aigcbest.top/v1"
   timeout: 120
 
-  model: "gpt-4o"
+  Model: "gpt-4o"
   temperature: 0.0
 
   validation_prompt: |
@@ -93,7 +93,7 @@ validation:
     {{VALIDATION_FEWSHOT}}
     ... (complete prompt) ...
 
-  few_shot_examples: []  # Initially empty, auto-generated after checkpoint 2A
+  few_shot_examples: []  # Initially empty, auto-Generate after checkpoint 2A
 ```
 
 ### Step 1: Generate Scripts
@@ -110,7 +110,7 @@ Synthetic Data Generation Script Auto-Generator
 ================================================================================
 Generation Strategy: two_stage
 Experiment Purpose: copa_baseline
-Experiment Description: Copa dataset baseline experiment
+Experiment Description: Copa Dataset baseline experiment
 Task: Copa
 Training Method: mezo
 Generation Model: gpt-4o
@@ -156,7 +156,7 @@ Generation Complete!
 
 Script Location: Data_v2/synthetic/_shared/Copa/temp09_topp10_gpt4o/scripts
 
-Usage (two_stage mode):
+Usage (two_stage Mode):
   1. Run generation: python .../rephrase_top20.py
   2. Run validation: python .../validate.py
 
@@ -298,11 +298,11 @@ $ python annotate_samples.py --range 21-40
 **System Output**：
 ```
 Loading data...
-  原始: /home/ubuntu/.../Data/original/Copa/copa_train.jsonl
-  改写: ../Copa/copa_train.jsonl
+  Original: /home/ubuntu/.../Data/original/Copa/copa_train.jsonl
+  Rephrased: ../Copa/copa_train.jsonl
 
 ================================================================================
-样本 21-40 对比 - 请仔细查看原始数据与改写数据
+Samples 21-40 Comparison - Please carefully review original and rephrased data
 ================================================================================
 
 【Sample 21】
@@ -313,12 +313,12 @@ Loading data...
   question: cause
   label: 0
 
-... (样本22-40) ...
+... (Samples 22-40) ...
 
 ================================================================================
 
-请输入不合格样本的序号（21-40），多个序号用逗号分隔
-示例: 23,27,35  表示这几个样本不合格
+Please enter unqualified sample numbers (21-40), separate multiple numbers with commas
+Example: 23,27,35  indicates these samples are unqualified
 If all are qualified, press Enter directly
 
 Unqualified sample numbers:
@@ -335,7 +335,7 @@ Statistics:
   Qualified samples: 18
   Unqualified samples: 2
 
-【Checkpoint 2A: 第21-40个样本处理】
+【Checkpoint 2A: Processing samples 21-40】
 
 Performing rejection sampling...
   Sample23: Using original data (unqualified)
@@ -343,34 +343,34 @@ Performing rejection sampling...
 
 ✓ Rejection sampling complete: ../validation_checkpoints/samples_21_40_validated.jsonl
 
-生成validation few-shot examples...
-✓ Generated18个validation few-shot examples
-✓ Validation few-shot已保存: ../validation_checkpoints/validation_fewshot.json
+Generating validation few-shot examples...
+✓ Generated 18 validation few-shot examples
+✓ Validation few-shot saved: ../validation_checkpoints/validation_fewshot.json
 
-✓ 标注记录已保存: ../validation_checkpoints/samples_21_40_annotation.json
+✓ Annotation records saved: ../validation_checkpoints/samples_21_40_annotation.json
 
 ================================================================================
-✅ 样本 21-40 处理完成！
+✅ Samples 21-40 processing complete!
 ================================================================================
 
-✅ Checkpoint 2A Complete总结:
-  1. Rejection sampling: 18/20 个样本保留改写
-  2. Validation few-shot: 生成了 18 个examples
+✅ Checkpoint 2A Complete Summary:
+  1. Rejection sampling: 18/20 samples kept rephrased version
+  2. Validation few-shot: Generated 18 examples
 
 Next step:
   Run: python annotate_samples.py --range 41-80
 ```
 
-### Step7: Checkpoint 2B - 处理第41-80个样本
+### Step7: Checkpoint 2B - Processing samples 41-80
 
 ```bash
 $ python annotate_samples.py --range 41-80
 ```
 
-**System Output**（显示样本41-80后）：
+**System Output** (After displaying samples 41-80):
 ```
-请输入不合格样本的序号（41-80），多个序号用逗号分隔
-示例: 43,47,55,72  表示这几个样本不合格
+Please enter unqualified sample numbers (41-80), separate multiple numbers with commas
+Example: 43,47,55,72  indicates these samples are unqualified
 If all are qualified, press Enter directly
 
 Unqualified sample numbers:
@@ -387,7 +387,7 @@ Statistics:
   Qualified samples: 37
   Unqualified samples: 3
 
-【Checkpoint 2B: 第41-80个样本处理】
+【Checkpoint 2B: Processing samples 41-80】
 
 Performing rejection sampling...
   Sample43: Using original data (unqualified)
@@ -396,31 +396,31 @@ Performing rejection sampling...
 
 ✓ Rejection sampling complete: ../validation_checkpoints/samples_41_80_validated.jsonl
 
-生成test_set...
-✓ Generated40个test样本
-  Ground Truth标注Statistics:
-  - same (合格): 37
-  - not the same (不合格): 3
-✓ Test set已保存: ../validation_checkpoints/validation_test_set.json
-  用途: 测试AI judge validation prompt的准确率
+Generating test_set...
+✓ Generated 40 test samples
+  Ground Truth annotation Statistics:
+  - same (qualified): 37
+  - not the same (unqualified): 3
+✓ Test set saved: ../validation_checkpoints/validation_test_set.json
+  Purpose: Test accuracy of AI judge validation prompt
 
-✓ 标注记录已保存: ../validation_checkpoints/samples_41_80_annotation.json
+✓ Annotation records saved: ../validation_checkpoints/samples_41_80_annotation.json
 
 ================================================================================
-✅ 样本 41-80 处理完成！
+✅ Samples 41-80 processing complete!
 ================================================================================
 
-✅ Checkpoint 2B Complete总结:
-  1. Rejection sampling: 37/40 个样本保留改写
-  2. Test set: 生成了 40 个标注样本
+✅ Checkpoint 2B Complete Summary:
+  1. Rejection sampling: 37/40 samples kept rephrased version
+  2. Test set: Generated 40 annotated samples
   3. Ground Truth: same=37, not the same=3
 
 Next step:
-  使用test_set测试validation prompt准确率
+  Use test_set to test validation prompt accuracy
   Run: python generate_validation_test.py
 ```
 
-### Step8: 测试AI Judge准确率
+### Step8: Test AI Judge Accuracy
 
 ```bash
 $ cp ../../../../automation/stage1_generation/tools/generate_validation_test.py .
@@ -429,39 +429,39 @@ $ python generate_validation_test.py
 
 **System Output**：
 ```
-加载test set...
-  文件: ../validation_checkpoints/validation_test_set.json
-  Sample数: 40
+loadingtest set...
+  File: ../validation_checkpoints/validation_test_set.json
+  Samplecount: 40
 
-加载validation配置...
-  模型: gpt-4o
+loadingvalidationconfiguration...
+  Model: gpt-4o
   Temperature: 0.0
 
-开始测试AI judge...
+Starting testAI judge...
 
-测试样本 1/40: 100%|████████████████████| 40/40 [05:30<00:00]
-
-================================================================================
-📊 测试结果
-================================================================================
-总测试样本: 40
-AI判断为 same: 38
-AI判断为 not the same: 2
-
-与Ground Truth对比:
-  ✓ 判断正确: 39
-  ✗ 判断错误: 1
-
-准确率: 97.5%
+test samples 1/40: 100%|████████████████████| 40/40 [05:30<00:00]
 
 ================================================================================
-✅ 测试通过！准确率 ≥ 95%
+📊 test results
+================================================================================
+Totaltest samples: 40
+AIjudged as same: 38
+AIjudged as not the same: 2
+
+andGround Truthcomparison:
+  ✓ correctly judged: 39
+  ✗ incorrectly judged: 1
+
+accuracy: 97.5%
+
+================================================================================
+✅ test passed！accuracy ≥ 95%
 ================================================================================
 
-可以继续执行Checkpoint 3（自动验证剩余数据）
+Can proceed to Checkpoint 3（automatically validate remaining data）
 ```
 
-### Step9: Checkpoint 3 - 自动验证剩余数据
+### Step9: Checkpoint 3 - automatically validate remaining data
 
 ```bash
 $ python validate.py
@@ -469,53 +469,53 @@ $ python validate.py
 
 **System Output**：
 ```
-加载训练数据...
-  文件: ../Copa/copa_train.jsonl
-  总样本数: 400
+loading training data...
+  File: ../Copa/copa_train.jsonl
+  Totalsamplescount: 400
 
-已处理样本（Checkpoint 1和2）: 80
-待验证样本: 320 (样本81-400)
+processedsamples（Checkpoint 1and2）: 80
+to be validatedsamples: 320 (samples81-400)
 
-加载validation配置...
-  模型: gpt-4o
+loadingvalidationconfiguration...
+  Model: gpt-4o
   Temperature: 0.0
-  Few-shot examples: 18个
+  Few-shot examples: 18
 
-开始自动验证...
+Starting automatic validation...
 
-验证进度: 100%|████████████████████| 320/320 [38:45<00:00]
+Validation progress: 100%|████████████████████| 320/320 [38:45<00:00]
 
 ================================================================================
-📊 验证结果统计
+📊 Validation results statistics
 ================================================================================
-总验证样本: 320
-判断为 same: 307 (95.9%)
-判断为 not the same: 13 (4.1%)
+total validatedsamples: 320
+judged as same: 307 (95.9%)
+judged as not the same: 13 (4.1%)
 
 Performing rejection sampling...
-  ✓ 保留改写: 307 条
-  ✗ 替换为原始: 13 条
+  ✓ kept rephrased version: 307 
+  ✗ replaced with original: 13 
 
-保存最终数据...
+Saving final data...
 ✓ Saved: ../Copa/copa_train_final.jsonl
 
-复制validation和test集...
-✓ 已复制: ../Copa/copa_validation.jsonl
-✓ 已复制: ../Copa/copa_test.jsonl
+Copyingvalidationandtest set...
+✓ copied: ../Copa/copa_validation.jsonl
+✓ copied: ../Copa/copa_test.jsonl
 
 ================================================================================
-✅ 数据集生成完成！
+✅ Dataset generation complete！
 ================================================================================
 
-最终数据集:
-  训练集: ../Copa/copa_train_final.jsonl (400条)
-    - 改写数据: 359条 (89.8%)
-    - 原始数据: 41条 (10.2%)
-  验证集: ../Copa/copa_validation.jsonl
-  测试集: ../Copa/copa_test.jsonl
+Final Dataset:
+  training set: ../Copa/copa_train_final.jsonl (400)
+    - rephrased data: 359 (89.8%)
+    - original data: 41 (10.2%)
+  validation set: ../Copa/copa_validation.jsonl
+  test set: ../Copa/copa_test.jsonl
 
-数据集路径: Data_v2/synthetic/_shared/Copa/temp09_topp10_gpt4o/Copa/
-可直接用于MeZO训练！
+Dataset path: Data_v2/synthetic/_shared/Copa/temp09_topp10_gpt4o/Copa/
+Can be directly used for MeZO training！
 ```
 
 ---
@@ -524,9 +524,9 @@ Performing rejection sampling...
 
 ### Dataset Characteristics
 
-- **Task Type**: 布尔问答（Yes/No）
-- **Field to Rephrase**: `passage`（段落）
-- **Other Fields**: `question`（问题）、`label`（0=No, 1=Yes）
+- **Task Type**: Boolean question answering（Yes/No）
+- **Field to Rephrase**: `passage`（passage）
+- **Other Fields**: `question`（question）、`label`（0=No, 1=Yes）
 
 ### Key Configuration Modifications
 
@@ -537,9 +537,9 @@ experiment:
 task_name: "BOOLQ"
 training_method: "mezo"
 
-dataset:
+Dataset:
   task_name: "boolq"
-  dataset_name: "BOOLQ"
+  Dataset_name: "BOOLQ"
   input_path: "Data/original/BOOLQ/boolq_train.jsonl"
   original_dir: "Data/original/BOOLQ"
   fields:
@@ -548,7 +548,7 @@ dataset:
     - "label"
 
 generation:
-  field_to_rephrase: "passage"  # BOOLQ改写passage字段
+  field_to_rephrase: "passage"  # BOOLQrephrasedpassagefield
 
   rephrase_prompt: |
     You are tasked with rephrasing the given passage...
@@ -561,9 +561,9 @@ generation:
     **Directly output only one rephrased passage**:
 ```
 
-### The workflow is the same as Copa
+### The Workflow is the same as Copa
 
-执行步骤1-10与Copa相同，只是字段名从`premise`变为`passage`。
+executeStep1-10andCopasame，only the field name changed from`premise`to`passage`。
 
 ### Sample Comparison Examples (BOOLQ specific)
 
@@ -587,9 +587,9 @@ generation:
 
 ### Dataset Characteristics
 
-- **Task Type**: 自然语言推理（NLI）
-- **Field to Rephrase**: `hypothesis`（假设）
-- **Other Fields**: `premise`（前提）、`label`（0=entailment, 1=contradiction, 2=neutral）
+- **Task Type**: Natural language inference（NLI）
+- **Field to Rephrase**: `hypothesis`（hypothesis）
+- **Other Fields**: `premise`（premise）、`label`（0=entailment, 1=contradiction, 2=neutral）
 
 ### Key Configuration Modifications
 
@@ -600,9 +600,9 @@ experiment:
 task_name: "CB"
 training_method: "mezo"
 
-dataset:
+Dataset:
   task_name: "cb"
-  dataset_name: "CB"
+  Dataset_name: "CB"
   input_path: "Data/original/CB/cb_train.jsonl"
   original_dir: "Data/original/CB"
   fields:
@@ -611,7 +611,7 @@ dataset:
     - "label"
 
 generation:
-  field_to_rephrase: "hypothesis"  # CB改写hypothesis字段
+  field_to_rephrase: "hypothesis"  # CBrephrasedhypothesisfield
 
   rephrase_prompt: |
     You are tasked with rephrasing the given hypothesis...
@@ -646,9 +646,9 @@ generation:
 
 ### Dataset Characteristics
 
-- **Task Type**: 自然语言推理（Recognizing Textual Entailment）
-- **Field to Rephrase**: `premise`（前提）
-- **Other Fields**: `hypothesis`（假设）、`label`（0=entailment, 1=not_entailment）
+- **Task Type**: Natural language inference（Recognizing Textual Entailment）
+- **Field to Rephrase**: `premise`（premise）
+- **Other Fields**: `hypothesis`（hypothesis）、`label`（0=entailment, 1=not_entailment）
 - **Data Example**:
   ```json
   {"premise": "No Weapons of Mass Destruction Found in Iraq Yet.",
@@ -662,14 +662,14 @@ generation:
 experiment:
   batch_id: "batch_20241230_rte_baseline"
   purpose: "rte_baseline"
-  description: "RTE数据集基线实验"
+  description: "RTEDatasetbaseline experiment"
 
 task_name: "RTE"
 training_method: "mezo"
 
-dataset:
+Dataset:
   task_name: "rte"
-  dataset_name: "RTE"
+  Dataset_name: "RTE"
   input_path: "Data/original/RTE/rte_train.jsonl"
   original_dir: "Data/original/RTE"
   fields:
@@ -679,10 +679,10 @@ dataset:
 
 generation:
   strategy: "two_stage"
-  model: "gpt-4o"
+  Model: "gpt-4o"
   temperature: 0.9
   top_p: 1.0
-  field_to_rephrase: "premise"  # RTE改写premise字段
+  field_to_rephrase: "premise"  # RTErephrasedpremisefield
 
   rephrase_prompt: |
     You are tasked with rephrasing the given premise for a textual entailment task.
@@ -695,7 +695,7 @@ generation:
     **Directly output only one rephrased premise**:
 
 validation:
-  model: "gpt-4o"
+  Model: "gpt-4o"
   temperature: 0.0
 
   validation_prompt: |
@@ -735,10 +735,10 @@ validation:
 
 ### Complete Execution Workflow
 
-流程与Copa完全相同（步骤1-10），只需：
-1. 准备RTE配置文件
-2. 执行 `python generator.py ../configs/stage1/my_rte.yaml`
-3. 按照Checkpoint 1→Checkpoint 2A→Checkpoint 2B→Checkpoint 3依次执行
+Workflow andCopacompletely the same（Step1-10），only need to：
+1. PrepareRTEConfiguration file
+2. execute `python generator.py ../configs/stage1/my_rte.yaml`
+3. according toCheckpoint 1→Checkpoint 2A→Checkpoint 2B→Checkpoint 3execute sequentially
 
 ---
 
@@ -746,9 +746,9 @@ validation:
 
 ### Dataset Characteristics
 
-- **Task Type**: 多选题（科学推理）
-- **Field to Rephrase**: `question`（问题）
-- **Other Fields**: `choices`（选项）、`answerKey`（答案）
+- **Task Type**: multiple choice（Scientific reasoning）
+- **Field to Rephrase**: `question`（question）
+- **Other Fields**: `choices`（choices）、`answerKey`（answer）
 - **Data Example**:
   ```json
   {"id": "Mercury_SC_415702",
@@ -766,14 +766,14 @@ validation:
 experiment:
   batch_id: "batch_20241230_arcc_baseline"
   purpose: "arcc_baseline"
-  description: "ARC-Challenge数据集基线实验"
+  description: "ARC-ChallengeDatasetbaseline experiment"
 
 task_name: "ArcC"
 training_method: "mezo"
 
-dataset:
+Dataset:
   task_name: "arc_challenge"
-  dataset_name: "ArcC"
+  Dataset_name: "ArcC"
   input_path: "Data/original/ArcC_Cloze/ARC-Challenge_train.jsonl"
   original_dir: "Data/original/ArcC_Cloze"
   fields:
@@ -783,10 +783,10 @@ dataset:
 
 generation:
   strategy: "two_stage"
-  model: "gpt-4o"
+  Model: "gpt-4o"
   temperature: 0.9
   top_p: 1.0
-  field_to_rephrase: "question"  # ArcC改写question字段
+  field_to_rephrase: "question"  # ArcCrephrasedquestionfield
 
   rephrase_prompt: |
     You are tasked with rephrasing multiple-choice science questions.
@@ -799,7 +799,7 @@ generation:
     **Directly output only one rephrased question**:
 
 validation:
-  model: "gpt-4o"
+  Model: "gpt-4o"
   temperature: 0.0
 
   validation_prompt: |
@@ -834,25 +834,25 @@ validation:
 【Sample 3】
   Original question:  Which of these do scientists most likely do when studying the interaction of animals in their natural habitat?
   Rephrased question:  When observing animals in their natural environment, which activity would scientists typically perform?
-  choices: A: design a mathematical model, B: perform a controlled experiment, C: collect data, D: formulate a hypothesis
+  choices: A: design a mathematical Model, B: perform a controlled experiment, C: collect data, D: formulate a hypothesis
   answerKey: C
 ```
 
 ### Complete Execution Workflow
 
-流程与Copa完全相同（步骤1-10），只是改写字段为`question`。
+Workflow andCopacompletely the same（Step1-10），only the rephrased field is`question`。
 
 ---
 
-# Part 2: Direct-All模式（参数研究）
+# Part 2: Direct-AllMode（Parametersstudy）
 
 ## Scenario6: Copa Dataset (Direct-All Mode)
 
 ### Use Case
 
-已经通过第一次two-stage生成获得了可用的prompt和few-shot examples，现在想要快速探究不同temperature参数（0.5, 0.7, 0.9）对合成数据质量的影响。
+Already through the first two-stage generation, obtained usable prompt and few-shot examples, now want to quickly explore different temperature parameters (0.5, 0.7, 0.9) impact on synthetic data quality.
 
-### Step1: 准备Direct-All配置
+### Step1: PrepareDirect-Allconfiguration
 
 ```bash
 $ cd automation/configs/stage1
@@ -860,19 +860,19 @@ $ cp ../examples/stage1_direct_all_copa.yaml temperature_05.yaml
 $ vim temperature_05.yaml
 ```
 
-**配置内容**：
+**Configuration content**：
 ```yaml
 experiment:
   batch_id: "batch_20241230_temperature_study"
   purpose: "temperature_comparison"
-  description: "比较temperature=0.5/0.7/0.9对Copa合成数据质量的影响"
+  description: "Comparingtemperature=0.5/0.7/0.9 forCopaimpact on synthetic data quality"
 
 task_name: "Copa"
 training_method: "mezo"
 
-dataset:
+Dataset:
   task_name: "copa"
-  dataset_name: "Copa"
+  Dataset_name: "Copa"
   input_path: "Data/original/Copa/copa_train.jsonl"
   original_dir: "Data/original/Copa"
   fields:
@@ -883,18 +883,18 @@ dataset:
     - "label"
 
 generation:
-  # Rewriter API配置
+  # Rewriter APIconfiguration
   api_key: "sk-eWSYPo0CvhRYgcJs55B0C3F00aC74f6e95F47c1f4772292c"
   base_url: "https://api2.aigcbest.top/v1"
   timeout: 120
 
-  strategy: "direct_all"  # 🔥 直接全量生成
-  model: "gpt-4o"
-  temperature: 0.5  # 🔬 参数变量
+  strategy: "direct_all"  # 🔥 Direct full generation
+  Model: "gpt-4o"
+  temperature: 0.5  # 🔬 Parametersvariable
   top_p: 1.0
   field_to_rephrase: "premise"
 
-  # ⚠️ 必须包含完整的few-shot（从第一次two-stage生成中获得）
+  # ⚠️ must containcompletefew-shot（from the firsttwo-stageGenerateobtained from）
   rephrase_prompt: |
     You are tasked with rephrasing the given premise...
 
@@ -905,7 +905,7 @@ generation:
     Original premise: "The woman tolerated her friend's difficult behavior."
     Rephrased premise: "The woman was patient with her friend's challenging attitude."
 
-    ... (完整的17 few-shot examples) ...
+    ... (complete17 few-shot examples) ...
 
     ### Your Task:
     **Original premise**: "{premise}"
@@ -916,10 +916,10 @@ generation:
 
     **Directly output only one rephrased premise**:
 
-# ⚠️ direct_all模式不需要validation配置
+# ⚠️ direct_allModedoes not requirevalidationconfiguration
 ```
 
-### Step2: 生成3个不同temperature的配置
+### Step2: Generate3differenttemperature configuration
 
 ```bash
 # Temperature 0.5
@@ -932,7 +932,7 @@ $ sed 's/temperature: 0.5/temperature: 0.7/' temperature_05.yaml > temperature_0
 $ sed 's/temperature: 0.5/temperature: 0.9/' temperature_05.yaml > temperature_09.yaml
 ```
 
-### Step3: 生成并运行（Temperature 0.5）
+### Step3: Generateand run（Temperature 0.5）
 
 ```bash
 $ cd ../stage1_generation
@@ -952,7 +952,7 @@ Processing data: 100%|███████████████████�
 Complete! Output: ../Copa/copa_train.jsonl
 ```
 
-### Step4: 重复生成其他temperature
+### Step4: duplicateGenerateothertemperature
 
 ```bash
 # Temperature 0.7
@@ -968,11 +968,11 @@ $ cd Data_v2/synthetic/_shared/Copa/temp09_topp10_gpt4o/scripts
 $ python rephrase_all.py
 ```
 
-### Batch系统自动管理
+### Batch systemautomatically managed
 
 ```
 Data_v2/synthetic/
-├── _shared/                              # 物理存储
+├── _shared/                              # Physical storage
 │   └── Copa/
 │       ├── temp05_topp10_gpt4o/         # Temperature 0.5
 │       │   └── Copa/copa_train.jsonl
@@ -981,7 +981,7 @@ Data_v2/synthetic/
 │       └── temp09_topp10_gpt4o/         # Temperature 0.9
 │           └── Copa/copa_train.jsonl
 │
-└── batch_20241230_temperature_study/    # Batch视图（符号链接）
+└── batch_20241230_temperature_study/    # Batch view（symbolic link）
     └── Copa/
         ├── temp05_topp10_gpt4o -> ../../_shared/Copa/temp05_topp10_gpt4o/
         ├── temp07_topp10_gpt4o -> ../../_shared/Copa/temp07_topp10_gpt4o/
@@ -992,19 +992,19 @@ Data_v2/synthetic/
 
 ## Scenario7: BOOLQ Dataset (Direct-All Mode)
 
-### 配置文件关键差异
+### Configuration filekey differences
 
 ```yaml
 experiment:
   batch_id: "batch_20241230_boolq_topp_study"
   purpose: "boolq_topp_comparison"
-  description: "比较top_p=0.8/0.9/1.0对BOOLQ合成数据质量的影响"
+  description: "Comparingtop_p=0.8/0.9/1.0 forBOOLQimpact on synthetic data quality"
 
 task_name: "BOOLQ"
 
-dataset:
+Dataset:
   task_name: "boolq"
-  dataset_name: "BOOLQ"
+  Dataset_name: "BOOLQ"
   input_path: "Data/original/BOOLQ/boolq_train.jsonl"
   fields:
     - "passage"
@@ -1013,8 +1013,8 @@ dataset:
 
 generation:
   strategy: "direct_all"
-  temperature: 0.9  # 固定
-  top_p: 0.8  # 🔬 研究变量
+  temperature: 0.9  # fixed
+  top_p: 0.8  # 🔬 studyvariable
   field_to_rephrase: "passage"
 
   rephrase_prompt: |
@@ -1024,7 +1024,7 @@ generation:
     Original passage: "The Supreme Court of the United States is..."
     Rephrased passage: "As the highest federal court in..."
 
-    ... (17个完整examples) ...
+    ... (17completeexamples) ...
 
     **Original passage**: "{passage}"
     **Question**: "{question}"
@@ -1033,20 +1033,20 @@ generation:
     **Directly output only one rephrased passage**:
 ```
 
-### 执行流程
+### execution flow
 
 ```bash
-# 生成top_p=0.8的配置
+# Generatetop_p=0.8 configuration
 $ python generator.py ../configs/stage1/boolq_topp08.yaml
 $ cd Data_v2/synthetic/_shared/BOOLQ/temp09_topp08_gpt4o/scripts
 $ python rephrase_all.py
 
-# 生成top_p=0.9的配置
+# Generatetop_p=0.9 configuration
 $ python generator.py ../configs/stage1/boolq_topp09.yaml
 $ cd Data_v2/synthetic/_shared/BOOLQ/temp09_topp09_gpt4o/scripts
 $ python rephrase_all.py
 
-# 生成top_p=1.0的配置
+# Generatetop_p=1.0 configuration
 $ python generator.py ../configs/stage1/boolq_topp10.yaml
 $ cd Data_v2/synthetic/_shared/BOOLQ/temp09_topp10_gpt4o/scripts
 $ python rephrase_all.py
@@ -1056,19 +1056,19 @@ $ python rephrase_all.py
 
 ## Scenario8: CB Dataset (Direct-All Mode)
 
-### 配置文件关键差异
+### Configuration filekey differences
 
 ```yaml
 experiment:
-  batch_id: "batch_20241230_cb_model_study"
-  purpose: "cb_model_comparison"
-  description: "比较gpt-4o vs gpt-4o-mini对CB合成数据质量的影响"
+  batch_id: "batch_20241230_cb_Model_study"
+  purpose: "cb_Model_comparison"
+  description: "Comparinggpt-4o vs gpt-4o-mini forCBimpact on synthetic data quality"
 
 task_name: "CB"
 
-dataset:
+Dataset:
   task_name: "cb"
-  dataset_name: "CB"
+  Dataset_name: "CB"
   input_path: "Data/original/CB/cb_train.jsonl"
   fields:
     - "premise"
@@ -1077,7 +1077,7 @@ dataset:
 
 generation:
   strategy: "direct_all"
-  model: "gpt-4o"  # 🔬 研究变量（可改为gpt-4o-mini）
+  Model: "gpt-4o"  # 🔬 studyvariable（can be changedasgpt-4o-mini）
   temperature: 0.9
   top_p: 1.0
   field_to_rephrase: "hypothesis"
@@ -1090,7 +1090,7 @@ generation:
     Original hypothesis: "the language was written down"
     Rephrased hypothesis: "the language existed in written form"
 
-    ... (17个完整examples) ...
+    ... (17completeexamples) ...
 
     **Premise**: "{premise}"
     **Original hypothesis**: "{hypothesis}"
@@ -1099,7 +1099,7 @@ generation:
     **Directly output only one rephrased hypothesis**:
 ```
 
-### 执行流程
+### execution flow
 
 ```bash
 # GPT-4o
@@ -1117,19 +1117,19 @@ $ python rephrase_all.py
 
 ## Scenario9: RTE Dataset (Direct-All Mode)
 
-### 配置文件关键差异
+### Configuration filekey differences
 
 ```yaml
 experiment:
   batch_id: "batch_20241230_rte_temp_study"
   purpose: "rte_temperature_comparison"
-  description: "比较temperature=0.5/0.7/0.9对RTE合成数据质量的影响"
+  description: "Comparingtemperature=0.5/0.7/0.9 forRTEimpact on synthetic data quality"
 
 task_name: "RTE"
 
-dataset:
+Dataset:
   task_name: "rte"
-  dataset_name: "RTE"
+  Dataset_name: "RTE"
   input_path: "Data/original/RTE/rte_train.jsonl"
   fields:
     - "premise"
@@ -1138,8 +1138,8 @@ dataset:
 
 generation:
   strategy: "direct_all"
-  model: "gpt-4o"
-  temperature: 0.5  # 🔬 研究变量
+  Model: "gpt-4o"
+  temperature: 0.5  # 🔬 studyvariable
   top_p: 1.0
   field_to_rephrase: "premise"
 
@@ -1150,7 +1150,7 @@ generation:
     Original premise: "No Weapons of Mass Destruction Found in Iraq Yet."
     Rephrased premise: "Weapons of mass destruction have not been discovered in Iraq so far."
 
-    ... (17个完整examples) ...
+    ... (17completeexamples) ...
 
     **Original premise**: "{premise}"
     **Hypothesis**: "{hypothesis}"
@@ -1159,7 +1159,7 @@ generation:
     **Directly output only one rephrased premise**:
 ```
 
-### 执行流程
+### execution flow
 
 ```bash
 # Temperature 0.5
@@ -1182,19 +1182,19 @@ $ python rephrase_all.py
 
 ## Scenario10: ArcC Dataset (Direct-All Mode)
 
-### 配置文件关键差异
+### Configuration filekey differences
 
 ```yaml
 experiment:
   batch_id: "batch_20241230_arcc_temp_study"
   purpose: "arcc_temperature_comparison"
-  description: "比较temperature=0.5/0.7/0.9对ArcC合成数据质量的影响"
+  description: "Comparingtemperature=0.5/0.7/0.9 forArcCimpact on synthetic data quality"
 
 task_name: "ArcC"
 
-dataset:
+Dataset:
   task_name: "arc_challenge"
-  dataset_name: "ArcC"
+  Dataset_name: "ArcC"
   input_path: "Data/original/ArcC_Cloze/ARC-Challenge_train.jsonl"
   fields:
     - "question"
@@ -1203,8 +1203,8 @@ dataset:
 
 generation:
   strategy: "direct_all"
-  model: "gpt-4o"
-  temperature: 0.5  # 🔬 研究变量
+  Model: "gpt-4o"
+  temperature: 0.5  # 🔬 studyvariable
   top_p: 1.0
   field_to_rephrase: "question"
 
@@ -1215,7 +1215,7 @@ generation:
     Original question: "George wants to warm his hands quickly by rubbing them. Which skin surface will produce the most heat?"
     Rephrased question: "To rapidly warm his hands through rubbing, which type of skin surface should George use to generate maximum heat?"
 
-    ... (17个完整examples) ...
+    ... (17completeexamples) ...
 
     **Original question**: "{question}"
     **Choices**: {', '.join([f"{label}: {text}" for label, text in zip(choices['label'], choices['text'])])}
@@ -1224,7 +1224,7 @@ generation:
     **Directly output only one rephrased question**:
 ```
 
-### 执行流程
+### execution flow
 
 ```bash
 # Temperature 0.5
@@ -1245,71 +1245,71 @@ $ python rephrase_all.py
 
 ---
 
-# 附录
+# Appendix
 
-## 数据集对比表
+## Dataset Comparison Table
 
-| 场景 | 数据集 | 模式 | 改写字段 | 其他字段 | 断点数 | 总耗时（估算） |
+| Scenario | Dataset | Mode | rephrasedfield | otherfield | checkpointcount | Total time（estimated） |
 |------|--------|------|----------|----------|--------|---------------|
-| 场景1 | Copa | Two-Stage | premise | choice1, choice2, question, label | 3个 | ~90分钟 |
-| 场景2 | BOOLQ | Two-Stage | passage | question, label | 3个 | ~90分钟 |
-| 场景3 | CB | Two-Stage | hypothesis | premise, label | 3个 | ~90分钟 |
-| 场景4 | RTE | Two-Stage | premise | hypothesis, label | 3个 | ~90分钟 |
-| 场景5 | ArcC | Two-Stage | question | choices, answerKey | 3个 | ~90分钟 |
-| 场景6 | Copa | Direct-All | premise | choice1, choice2, question, label | 0个 | ~50分钟 |
-| 场景7 | BOOLQ | Direct-All | passage | question, label | 0个 | ~50分钟 |
-| 场景8 | CB | Direct-All | hypothesis | premise, label | 0个 | ~50分钟 |
-| 场景9 | RTE | Direct-All | premise | hypothesis, label | 0个 | ~50分钟 |
-| 场景10 | ArcC | Direct-All | question | choices, answerKey | 0个 | ~50分钟 |
+| Scenario1 | Copa | Two-Stage | premise | choice1, choice2, question, label | 3 | ~90minutes |
+| Scenario2 | BOOLQ | Two-Stage | passage | question, label | 3 | ~90minutes |
+| Scenario3 | CB | Two-Stage | hypothesis | premise, label | 3 | ~90minutes |
+| Scenario4 | RTE | Two-Stage | premise | hypothesis, label | 3 | ~90minutes |
+| Scenario5 | ArcC | Two-Stage | question | choices, answerKey | 3 | ~90minutes |
+| Scenario6 | Copa | Direct-All | premise | choice1, choice2, question, label | 0 | ~50minutes |
+| Scenario7 | BOOLQ | Direct-All | passage | question, label | 0 | ~50minutes |
+| Scenario8 | CB | Direct-All | hypothesis | premise, label | 0 | ~50minutes |
+| Scenario9 | RTE | Direct-All | premise | hypothesis, label | 0 | ~50minutes |
+| Scenario10 | ArcC | Direct-All | question | choices, answerKey | 0 | ~50minutes |
 
-## 人工参与时间对比
+## manual participation timecomparison
 
-### Two-Stage模式（场景1-5）:
-- **Checkpoint 1审核**: 浏览20个样本 + 输入序号 ≈ **1分钟**
-- **Checkpoint 2A审核**: 浏览20个样本 + 输入序号 ≈ **1分钟**
-- **Checkpoint 2B审核**: 浏览40个样本 + 输入序号 ≈ **2分钟**
-- **总计人工时间**: ~**4分钟**
+### Two-StageMode（Scenario1-5）:
+- **Checkpoint 1review**: review20samples + input numbers ≈ **1minutes**
+- **Checkpoint 2Areview**: review20samples + input numbers ≈ **1minutes**
+- **Checkpoint 2Breview**: review40samples + input numbers ≈ **2minutes**
+- **Totalmanual time**: ~**4minutes**
 
-### Direct-All模式（场景6-10）:
-- **无需人工参与** ✅
-- 完全自动化，适合参数研究
+### Direct-AllMode（Scenario6-10）:
+- **no manual participation required** ✅
+- completelyautomated，suitable forParametersstudy
 
-## 关键要点总结
+## Key pointsSummary
 
-### 1. 批量输入模式
-- 用户只需输入不合格序号（如：`3,7,12`），无需逐个确认
-- 大幅减少人工交互时间
+### 1. batch inputMode
+- Useronly need toinput unqualifiednumbers（such as：`3,7,12`），no need to confirm one by one
+- significantly reducemanual interaction time
 
-### 2. 自动Rejection Sampling
-- 系统自动替换不合格样本为原始数据
-- 所有3个断点（1-20, 21-40, 41-80）都执行rejection sampling
+### 2. Automatic rejection sampling
+- System automaticallyreplace unqualifiedsamplesasoriginal data
+- All3checkpoint（1-20, 21-40, 41-80）all executerejection sampling
 
-### 3. 自动Few-shot生成
-- Checkpoint 1：从17个合格样本生成rephrase few-shot
-- Checkpoint 2A：从18个合格样本生成validation few-shot
+### 3. Automatic few-shotGenerate
+- Checkpoint 1：from17qualifiedsamplesGeneraterephrase few-shot
+- Checkpoint 2A：from18qualifiedsamplesGeneratevalidation few-shot
 
-### 4. 自动标注
-- 所有same/not the same标注由系统自动完成
-- 生成test_set用于测试AI judge准确率
+### 4. automatic annotation
+- Allsame/not the sameannotation bySystem automaticallycomplete
+- Generatetest_setfor testingAI judgeaccuracy
 
-### 5. 多数据集零代码支持
-- 5个数据集（Copa, BOOLQ, CB, RTE, ArcC）
-- 只需修改配置文件中的字段名和prompt
-- 无需修改任何代码
+### 5. multipleDatasetzero-code support
+- 5Dataset（Copa, BOOLQ, CB, RTE, ArcC）
+- only need tomodifyConfiguration file field names andprompt
+- no need to modify any code
 
-### 6. 参数去重（Batch方案3++）
-- 自动检测相同参数配置
-- 物理存储在`_shared/`，避免重复生成
-- Batch视图通过符号链接组织实验
+### 6. Parametersdeduplication（Batch solution3++）
+- Automatically detectsameParametersconfiguration
+- Physical storagein`_shared/`，avoid duplicationGenerate
+- Batch view organizes experiments through symbolic links
 
-### 7. 两种生成策略
-- **Two-Stage**: 探索性实验，需要确定prompt和few-shot
-- **Direct-All**: prompt已确定，快速参数研究
+### 7. twoGeneratestrategy
+- **Two-Stage**: Exploratory experiment，need to determinepromptandfew-shot
+- **Direct-All**: promptconfirmed，quicklyParametersstudy
 
-## 使用建议
+## Usage recommendations
 
-1. **首次实验**：使用Two-Stage模式确定最佳prompt和few-shot examples
-2. **参数研究**：从Two-Stage获得few-shot后，使用Direct-All模式快速生成不同参数配置的数据
-3. **人工审核**：认真审核前80个样本，确保AI judge准确率≥95%
-4. **Batch管理**：使用`list_batches.py`等工具查看和管理实验
-5. **数据复用**：善用Batch系统的参数去重功能，避免重复生成
+1. **First experiment**：useTwo-StageModedetermine the bestpromptandfew-shot examples
+2. **Parameters study**: After obtaining few-shot from Two-Stage, use Direct-All Mode to quickly generate data with different parameter configurations
+3. **manual review**：carefully reviewfront80samples，ensureAI judgeaccuracy≥95%
+4. **Batch management**：use`list_batches.py`and other tools to view and manage experiments
+5. **Data reuse**：Make good use ofBatch systemParametersdeduplication feature，avoid duplicationGenerate

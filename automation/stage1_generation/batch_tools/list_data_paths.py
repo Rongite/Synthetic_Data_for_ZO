@@ -32,7 +32,7 @@ import argparse
 from pathlib import Path
 import sys
 
-# 添加父目录到路径
+# addParentdirectory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from experiment_manager_batch import BatchExperimentManager

@@ -1,20 +1,20 @@
-# 直接全量生成配置示例（用于参数研究）
-# 适用场景：prompt和few-shot已确定，探究temperature/top_p等参数对合成数据质量的影响
+# Direct full generation configuration example (for parameter research)
+# Applicable scenario: when prompt and few-shot are confirmed, studying the impact of temperature/top_p parameters on synthetic data quality
 
-# ========== 实验管理（Batch方案3++） ==========
+# ========== Experiment Management (Batch Solution 3++) ==========
 experiment:
-  # Batch ID - 参数研究通常在同一batch下组织多个实验
+  # Batch ID - Parameter research typically organizes multiple experiments under the same batch
   batch_id: "batch_20241230_temperature_study"
 
   purpose: "temperature_comparison"
-  description: "比较temperature=0.5/0.7/0.9对Copa合成数据质量的影响"
+  description: "Compare the impact of temperature=0.5/0.7/0.9 on Copa synthetic data quality"
 
-# ========== 基本信息 ==========
+# ========== Basic Information ==========
 task_name: "Copa"
 training_method: "mezo"
 version: "v1"
 
-# ========== 数据集配置 ==========
+# ========== Dataset Configuration ==========
 dataset:
   task_name: "copa"
   dataset_name: "Copa"
@@ -33,26 +33,26 @@ dataset:
     - "question"
     - "label"
 
-# ========== 生成配置 ==========
+# ========== Generation configuration ==========
 generation:
-  # ⭐ 生成策略
-  # - "two_stage": 两阶段生成（top20 → 人工审核 → rest），适合探索性实验
-  # - "direct_all": 直接全量生成，适合prompt已确定的参数研究
-  strategy: "direct_all"  # 🔥 关键配置！
+  # ⭐ Generation strategy
+  # - "two_stage": Two-stage generation (top20 → manual review → rest), suitable for exploratory experiments
+  # - "direct_all": Direct full generation, suitable for parameter research when prompt is confirmed
+  strategy: "direct_all"  # 🔥 Key configuration!
 
-  # ⭐ Rewriter API配置
+  # ⭐ Rewriter API Configuration
   api_key: "sk-eWSYPo0CvhRYgcJs55B0C3F00aC74f6e95F47c1f4772292c"
   base_url: "https://api2.aigcbest.top/v1"
   timeout: 120
 
   model: "gpt-4o"
-  temperature: 0.7  # 🔬 参数研究的变量（可改为0.5, 0.9等）
-  top_p: 1.0        # 🔬 参数研究的变量
+  temperature: 0.7  # 🔬 Variable for parameter research (can be changed to 0.5, 0.9, etc.)
+  top_p: 1.0        # 🔬 ParameterresearchVariable
 
   field_to_rephrase: "premise"
 
-  # ⭐ Rephrase Prompt - direct_all模式下，必须提供完整的few-shot examples
-  # 不再使用 {{REPHRASE_FEWSHOT}} placeholder，而是直接在prompt中包含few-shot
+  # ⭐ Rephrase Prompt - In direct_all mode, must provide complete few-shot examples
+  # No longer use {{REPHRASE_FEWSHOT}} placeholder, but directly include few-shot in prompt
   rephrase_prompt: |
     You are tasked with rephrasing the given premise while preserving its original meaning. Your goal is to create rephrased data optimized for enhancing gradient estimation in training with a memory-efficient zeroth-order optimizer (MeZO).
 
@@ -231,11 +231,11 @@ generation:
 
     **Directly output only one rephrased premise** without any other characters or explanatory statements:
 
-# ========== 验证配置（direct_all模式可选） ==========
-# direct_all模式下通常跳过validation，因为prompt已经过验证
-# 如果需要validation，可以取消注释以下配置
+# ========== Validation configuration（Optional in direct_all mode） ==========
+# In direct_all mode, typically skip validation because prompt has been validated
+# If validation is needed, can uncomment the configuration below
 
 # validation:
 #   model: "gpt-4o"
 #   temperature: 0.0
-#   skip: true  # 跳过validation步骤
+#   skip: true  # Skip validation step

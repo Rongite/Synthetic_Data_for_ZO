@@ -89,7 +89,7 @@ for i in tqdm(range(len(data))):
 
     prompt = generate_prompt(data[i]["premise"], data[i]["hypothesis"], data[i]["label"])
     response = client.chat.completions.create( # change
-        model="gpt-4o",
+        model="claude-3-7-sonnet-latest",
         messages=[
             {"role": "user", "content": prompt}
         ],

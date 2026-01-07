@@ -10,7 +10,7 @@ from openai import OpenAI
 # enter the environment
 '''
 
-cd /home/jlong1/Downloads/Synthetic_Data_for_ZO/Data/synthetic/mezo
+cd /home/ubuntu/LLM-inference/jikai-project/Synthetic_Data_for_ZO/Data/synthetic/mezo
 module use /soft/modulefiles
 module load conda
 conda activate llava
@@ -20,8 +20,8 @@ export CUDA_HOME=/soft/compilers/cudatoolkit/cuda-11.8.0
 '''
 
 client = OpenAI(
-    api_key = 'sk-eYvV5PulUcRh5gX40d10873c274b41C3B596F4F1F06e1a34', # office
-    # api_key = 'sk-eWSYPo0CvhRYgcJs55B0C3F00aC74f6e95F47c1f4772292c', # my
+    # api_key = 'sk-eYvV5PulUcRh5gX40d10873c274b41C3B596F4F1F06e1a34', # office
+    api_key = 'sk-eWSYPo0CvhRYgcJs55B0C3F00aC74f6e95F47c1f4772292c', # my
     base_url = "https://api2.aigcbest.top/v1"
 )
 
@@ -236,7 +236,7 @@ prompt = generate_prompt(original_data["premise"], original_data["choice1"], ori
 
 start_time = time.time()
 response = client.chat.completions.create( # change
-    model="gpt-4o",
+    model="claude-3-7-sonnet-latest",
     messages=[
         {"role": "user", "content": prompt}
     ],
@@ -249,12 +249,12 @@ print(end_time - start_time, 's')
 '''
 
 data = []
-with open('/home/jlong1/Downloads/Synthetic_Data_for_ZO/Data/original/Copa/copa_train.jsonl', 'r', encoding='utf-8') as file: # input file
+with open('/home/ubuntu/LLM-inference/jikai-project/Synthetic_Data_for_ZO/Data/original/Copa/copa_train.jsonl', 'r', encoding='utf-8') as file: # input file
     for line in file:
             # Parses the JSON data for each row and appends it to the data list
         data.append(json.loads(line.strip()))
 
-output_file = os.path.expanduser("/home/jlong1/Downloads/Synthetic_Data_for_ZO/Data/synthetic/mezo/Copa/copa_train.jsonl") # output file
+output_file = os.path.expanduser("/home/ubuntu/LLM-inference/jikai-project/Synthetic_Data_for_ZO/Data/synthetic/mezo/Copa/copa_train.jsonl") # output file
 
 os.makedirs(os.path.dirname(output_file), exist_ok=True)
 out_file = open(output_file, "w")
@@ -268,7 +268,7 @@ for i in tqdm(range(len(data))):
 
     prompt = generate_prompt(data[i]["premise"], data[i]["choice1"], data[i]["choice2"], data[i]["question"], data[i]["label"])
     response = client.chat.completions.create( # change
-        model="gpt-4o",
+        model="claude-3-7-sonnet-latest",
         messages=[
             {"role": "user", "content": prompt}
         ],

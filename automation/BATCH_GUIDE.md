@@ -109,136 +109,136 @@ The parameter fingerprint is an MD5 hash (first 12 characters) calculated based 
     'gen_presence_penalty': 0.0,
     'val_model': 'gpt-4o',
     'val_temperature': 0.0,
-    'gen_prompt_hash': 'a1b2c3d4',  # rephrase_prompt的hash
-    'val_prompt_hash': 'e5f6g7h8'   # validation_prompt的hash
+    'gen_prompt_hash': 'a1b2c3d4',  # rephrase_prompthash
+    'val_prompt_hash': 'e5f6g7h8'   # validation_prompthash
 }
 ```
 
-**指纹用途**:
-- **去重判断**: 相同指纹 = 相同参数 = 复用数据
-- **唯一标识**: 精确识别参数配置
-- **追溯来源**: 通过指纹找到首次生成的batch
+**Fingerprint use way**:
+- **DeduplicationJudgment**: sameFingerprint = sameParameter = Repeat use data
+- **UniqueIdentifier**: preciseIdentifyParameter configuration
+- **Trace source**: passFingerprintfind to First timeGeneratebatch
 
-### 2. 语义化目录名 (Semantic Directory Name)
+### 2. SemanticsationDirectoryname (Semantic Directory Name)
 
-为了人类可读性，使用语义化的目录名而不是直接使用hash。
+ as personclass can Readability，useSemanticsationDirectorynameWhilenotYesDirectlyusehash。
 
-**命名格式**:
+**Namingformat**:
 ```
 temp{temperature}_topp{top_p}_{model}
 ```
 
-**示例**:
+**Example**:
 - `temp07_topp10_gpt4o` → temperature=0.7, top_p=1.0, model=gpt-4o
 - `temp09_topp08_gpt4o` → temperature=0.9, top_p=0.8, model=gpt-4o
 - `temp05_topp10_gpt35` → temperature=0.5, top_p=1.0, model=gpt-3.5-turbo
 
-**智能省略**:
-- 默认值 top_p=1.0 → 显示为 topp10
-- 非默认值 top_p=0.9 → 显示为 topp09
+**smart can saveSlightly**:
+- Defaultvalue top_p=1.0 → Show as  topp10
+- NotDefaultvalue top_p=0.9 → Show as  topp09
 
-**精确匹配**: 目录内的 `.fingerprint` 文件存储精确hash，用于参数匹配
+**preciseMatch**: Directory inside  `.fingerprint` Filestorageprecisehash， use  at ParameterMatch
 
 ### 3. Batch ID
 
-Batch ID用于组织多个相关实验到同一批次。
+Batch ID use  at grouporganizemultiplemutualOffExperiment to Samebatch。
 
-**格式**:
+**format**:
 ```
 batch_{date}_{purpose}
 ```
 
-**示例**:
-- `batch_20241229_temperature` → 2024年12月29日的温度实验
-- `batch_20241230_topp` → 2024年12月30日的top_p实验
-- `batch_20250103_model_comparison` → 2025年1月3日的模型对比实验
+**Example**:
+- `batch_20241229_temperature` → 2024Year12Month29dayTemperatureExperiment
+- `batch_20241230_topp` → 2024Year12Month30daytop_pExperiment
+- `batch_20250103_model_comparison` → 2025Year1Month3daymodelcomparisonExperiment
 
-**自动生成**: 如果配置文件中未指定 `batch_id`，系统会根据当前日期和 `purpose` 自动生成
+**AutomaticGenerate**: IfConfigurationFile in Unspecified `batch_id`，system will According toCurrentdateand `purpose` AutomaticGenerate
 
 ---
 
-## 使用方法
+## usemethod
 
-### 配置文件设置
+### ConfigurationFilesetup
 
-在配置文件中添加 `experiment.batch_id` 字段：
+ in ConfigurationFile in add `experiment.batch_id` Field：
 
 ```yaml
 experiment:
-  # Batch ID（可选）
-  # 格式: batch_{date}_{purpose}
-  # 不指定时自动生成: batch_{YYYYMMDD}_{purpose}
+  # Batch ID（ can select）
+  # format: batch_{date}_{purpose}
+  # notSpecifySometimesAutomaticGenerate: batch_{YYYYMMDD}_{purpose}
   batch_id: "batch_20241229_temperature"
 
   purpose: "temperature_study"
-  description: "研究temperature参数对合成数据质量的影响"
+  description: "ResearchtemperatureParameter for synthetic dataqualityImpact"
 
-# 其他配置...
+# OtherConfiguration...
 generation:
   model: "gpt-4o"
-  temperature: 0.7  # 实验变量
+  temperature: 0.7  # Experimentvariable
   top_p: 1.0
   # ...
 ```
 
-### 生成脚本
+### Generatescript
 
-使用 `generator.py` 生成脚本时，Batch方案会自动启用：
+use `generator.py` GeneratescriptSometimes，BatchSolution will AutomaticEnable：
 
 ```bash
-# 生成实验脚本
+# GenerateExperimentscript
 python automation/stage1_generation/generator.py \
     automation/configs/examples/stage1_full_example_copa.yaml
 ```
 
-**系统会自动**:
-1. 计算参数指纹
-2. 在 `_shared/{Dataset}/` 中查找相同指纹
-3. 如果找到 → 复用物理数据 + 创建batch符号链接
-4. 如果未找到 → 创建新物理目录 + 创建batch符号链接
+**system will Automatic**:
+1. CalculateParameter fingerprint
+2.  in  `_shared/{Dataset}/`  in FindsameFingerprint
+3. If found to  → Repeat use Physicaldata + CreatebatchSymbolic link
+4. If not found to  → CreateNewPhysicalDirectory + CreatebatchSymbolic link
 
-### 输出解读
+### outputInterpret
 
 ```
 ================================================================================
-🔧 Batch实验管理
+🔧 BatchExperimentManage
 ================================================================================
 Batch ID: batch_20241229_temperature
-数据集: Copa
-参数指纹: a1b2c3d4e5f6
-语义化名称: temp07_topp09_gpt4o
+Dataset: Copa
+Parameter fingerprint: a1b2c3d4e5f6
+SemanticsSemantic name: temp07_topp09_gpt4o
 ================================================================================
 
-🔍 在 _shared/Copa/ 中搜索指纹 a1b2c3d4e5f6...
-✅ 发现相同参数的已有实验！
-   位置: _shared/Copa/temp07_topp09_gpt4o
-   创建时间: 2024-12-29 10:30:00
-   原batch: batch_20241228_pilot
+🔍  in  _shared/Copa/  in SearchFingerprint a1b2c3d4e5f6...
+✅ DiscoversameParameteralreadyhasExperiment！
+   location: _shared/Copa/temp07_topp09_gpt4o
+   Createtime: 2024-12-29 10:30:00
+   Originalbatch: batch_20241228_pilot
 
-📂 复用已有数据
-   物理存储: _shared/Copa/temp07_topp09_gpt4o (已存在，复用)
-   Batch视图: batch_20241229_temperature/Copa/temp07_topp09_gpt4o
+📂 Repeat use alreadyhasdata
+   Physical storage: _shared/Copa/temp07_topp09_gpt4o (Exists in ，Repeat use )
+   BatchView: batch_20241229_temperature/Copa/temp07_topp09_gpt4o
 
-✅ 已有数据复用成功
-   💾 节省资源: 无需重新生成数据
+✅ alreadyhasData reuseSuccess
+   💾 Sectionsaveresource: NoneneedHeavyNewGeneratedata
 ```
 
-**关键信息**:
-- ✅ 发现相同参数 → 数据会被复用
-- ✓ 未找到匹配 → 创建新实验
-- 💾 节省资源 → 不会重复生成数据
+**Keyinformation**:
+- ✅ DiscoversameParameter → data will  by Repeat use 
+- ✓ Not found to Match → CreateNewExperiment
+- 💾 Sectionsaveresource → not will RepeatGeneratedata
 
 ---
 
-## 实际操作示例
+## ActualOperationExample
 
-### 场景A: 首次batch - 温度实验
+### scenarioA: First timebatch - TemperatureExperiment
 
-**目标**: 测试 temperature=0.5, 0.7, 0.9 对Copa数据质量的影响
+**goal**: test temperature=0.5, 0.7, 0.9  for CopadataqualityImpact
 
-#### 步骤1: 准备配置文件
+#### Step1: AccurateprepareConfigurationFile
 
-创建三个配置文件（或使用脚本批量生成）：
+CreatethreeConfigurationFile（orusescriptbatchGenerate）：
 
 **config_temp05.yaml**:
 ```yaml
@@ -248,43 +248,43 @@ experiment:
 
 generation:
   model: "gpt-4o"
-  temperature: 0.5  # 变量
+  temperature: 0.5  # variable
   top_p: 1.0
 ```
 
-**config_temp07.yaml**, **config_temp09.yaml** 类似，只改temperature值。
+**config_temp07.yaml**, **config_temp09.yaml** classsimilar，Onlychangetemperaturevalue。
 
-#### 步骤2: 生成脚本
+#### Step2: Generatescript
 
 ```bash
-# 生成三个实验的脚本
+# GeneratethreeExperimentscript
 python automation/stage1_generation/generator.py automation/configs/temp05.yaml
 python automation/stage1_generation/generator.py automation/configs/temp07.yaml
 python automation/stage1_generation/generator.py automation/configs/temp09.yaml
 ```
 
-#### 步骤3: 查看生成的目录结构
+#### Step3: ViewGenerateDirectory Structure
 
 ```bash
 python automation/stage1_generation/batch_tools/list_batch_experiments.py \
     batch_20241229_temperature --verbose
 ```
 
-**输出**:
+**output**:
 ```
-📊 Copa (3 个实验)
+📊 Copa (3 Experiment)
   🔧 temp05_topp10_gpt4o
-     ⚡ 数据复用: 否 (新生成)
+     ⚡ Data reuse: No (NewGenerate)
   🔧 temp07_topp10_gpt4o
-     ⚡ 数据复用: 否 (新生成)
+     ⚡ Data reuse: No (NewGenerate)
   🔧 temp09_topp10_gpt4o
-     ⚡ 数据复用: 否 (新生成)
+     ⚡ Data reuse: No (NewGenerate)
 ```
 
-#### 步骤4: 运行数据生成
+#### Step4: RundataGenerate
 
 ```bash
-# 方式1: 手动依次运行
+# Way1: ManualIn orderRun
 cd Data_v2/synthetic/_shared/Copa/temp05_topp10_gpt4o/scripts/
 python rephrase_all.py && python validate.py
 
@@ -294,33 +294,33 @@ python rephrase_all.py && python validate.py
 cd ../../../temp09_topp10_gpt4o/scripts/
 python rephrase_all.py && python validate.py
 
-# 方式2: 使用脚本批量运行（推荐）
-# TODO: 创建 batch_run.py 工具
+# Way2: usescriptbatchRun（Recommended）
+# TODO: Create batch_run.py Tool
 ```
 
 ---
 
-### 场景B: 第二个batch - top_p实验
+### scenarioB: Secondbatch - top_pExperiment
 
-**目标**: 在 temperature=0.7 下，测试 top_p=0.8, 0.9, 1.0 的影响
+**goal**:  in  temperature=0.7  down ，test top_p=0.8, 0.9, 1.0 Impact
 
-#### 步骤1: 准备配置文件
+#### Step1: AccurateprepareConfigurationFile
 
 **config_topp08.yaml**:
 ```yaml
 experiment:
-  batch_id: "batch_20241230_topp"  # 新的batch
+  batch_id: "batch_20241230_topp"  # Newbatch
   purpose: "topp_study"
 
 generation:
   model: "gpt-4o"
-  temperature: 0.7  # 固定
-  top_p: 0.8        # 变量
+  temperature: 0.7  # Fixed
+  top_p: 0.8        # variable
 ```
 
-**config_topp09.yaml**, **config_topp10.yaml** 类似。
+**config_topp09.yaml**, **config_topp10.yaml** classsimilar。
 
-#### 步骤2: 生成脚本
+#### Step2: Generatescript
 
 ```bash
 python automation/stage1_generation/generator.py automation/configs/topp08.yaml
@@ -328,105 +328,105 @@ python automation/stage1_generation/generator.py automation/configs/topp09.yaml
 python automation/stage1_generation/generator.py automation/configs/topp10.yaml
 ```
 
-**关键输出**:
+**Keyoutput**:
 
-对于 **config_topp10.yaml** (temperature=0.7, top_p=1.0):
+ for  at  **config_topp10.yaml** (temperature=0.7, top_p=1.0):
 ```
-🔍 在 _shared/Copa/ 中搜索指纹 a1b2c3d4e5f6...
-✅ 发现相同参数的已有实验！
-   位置: _shared/Copa/temp07_topp10_gpt4o
-   原batch: batch_20241229_temperature
+🔍  in  _shared/Copa/  in SearchFingerprint a1b2c3d4e5f6...
+✅ DiscoversameParameteralreadyhasExperiment！
+   location: _shared/Copa/temp07_topp10_gpt4o
+   Originalbatch: batch_20241229_temperature
 
-📂 复用已有数据
-   💾 节省资源: 无需重新生成数据
+📂 Repeat use alreadyhasdata
+   💾 Sectionsaveresource: NoneneedHeavyNewGeneratedata
 ```
 
-#### 步骤3: 查看目录结构
+#### Step3: ViewDirectory Structure
 
 ```bash
 python automation/stage1_generation/batch_tools/list_batch_experiments.py \
     batch_20241230_topp --verbose
 ```
 
-**输出**:
+**output**:
 ```
-📊 Copa (3 个实验)
+📊 Copa (3 Experiment)
   🔧 temp07_topp08_gpt4o
-     ⚡ 数据复用: 否 (新生成)
+     ⚡ Data reuse: No (NewGenerate)
 
   🔧 temp07_topp09_gpt4o
-     ⚡ 数据复用: 否 (新生成)
+     ⚡ Data reuse: No (NewGenerate)
 
   🔧 temp07_topp10_gpt4o
-     ⚡ 数据复用: 是 (原batch: batch_20241229_temperature)
+     ⚡ Data reuse: Yes (Originalbatch: batch_20241229_temperature)
 ```
 
-**数据复用成功！** temp07_topp10_gpt4o 的数据直接复用自第一个batch。
+**Data reuseSuccess！** temp07_topp10_gpt4o dataDirectlyRepeat use selfFirstbatch。
 
-#### 步骤4: 运行数据生成
+#### Step4: RundataGenerate
 
 ```bash
-# 只需要生成新参数的数据
+# OnlyneedGenerateNewParameterdata
 cd Data_v2/synthetic/_shared/Copa/temp07_topp08_gpt4o/scripts/
 python rephrase_all.py && python validate.py
 
 cd ../../../temp07_topp09_gpt4o/scripts/
 python rephrase_all.py && python validate.py
 
-# temp07_topp10_gpt4o 已经有数据，跳过！
+# temp07_topp10_gpt4o Alreadyhasdata，skip！
 ```
 
 ---
 
-### 场景C: 查看和比较实验
+### scenarioC: ViewandCompareExperiment
 
-#### 查看所有batch
+#### Viewallbatch
 
 ```bash
 python automation/stage1_generation/batch_tools/list_batches.py --verbose
 ```
 
-**输出**:
+**output**:
 ```
-找到 2 个batch
+find to  2 batch
 
 📦 batch_20241229_temperature
-   实验数: 3
-   Copa: 3 个实验
+   ExperimentSeveral: 3
+   Copa: 3 Experiment
 
 📦 batch_20241230_topp
-   实验数: 3
-   Copa: 3 个实验
+   ExperimentSeveral: 3
+   Copa: 3 Experiment
 ```
 
-#### 查看物理存储使用情况
+#### ViewPhysical storageuseCase
 
 ```bash
 python automation/stage1_generation/batch_tools/list_shared_experiments.py \
     --dataset Copa --verbose
 ```
 
-**输出**:
+**output**:
 ```
-📊 Copa (5 个实验)  # 只有5个物理数据，不是6个！
+📊 Copa (5 Experiment)  # Onlyhas5Physicaldata，notYes6！
 
   📦 temp05_topp10_gpt4o
-     原始Batch: batch_20241229_temperature
+     originalBatch: batch_20241229_temperature
 
   📦 temp07_topp08_gpt4o
-     原始Batch: batch_20241230_topp
+     originalBatch: batch_20241230_topp
 
   📦 temp07_topp09_gpt4o
-     原始Batch: batch_20241230_topp
+     originalBatch: batch_20241230_topp
 
-  📦 temp07_topp10_gpt4o  # 被两个batch共享！
-     原始Batch: batch_20241229_temperature
+  📦 temp07_topp10_gpt4o  #  by twobatchTotalshare！
+     originalBatch: batch_20241229_temperature
 
   📦 temp09_topp10_gpt4o
-     原始Batch: batch_20241229_temperature
+     originalBatch: batch_20241229_temperature
 ```
 
-#### 比较两个实验参数
+#### ComparetwoExperimentParameter
 
 ```bash
 python automation/stage1_generation/batch_tools/compare_experiments.py \
@@ -434,98 +434,98 @@ python automation/stage1_generation/batch_tools/compare_experiments.py \
     --shared Copa/temp09_topp10_gpt4o
 ```
 
-**输出**:
+**output**:
 ```
-✅ 相同参数:
+✅ sameParameter:
   generation.model: gpt-4o
   generation.top_p: 1.0
   validation.model: gpt-4o
 
-⚠️  不同参数:
+⚠️  DifferentParameter:
   generation.temperature:
-    实验1: 0.7
-    实验2: 0.9
+    Experiment1: 0.7
+    Experiment2: 0.9
 ```
 
 ---
 
-## 数据复用机制
+## Data reuseMechanism
 
-### 复用条件
+### Repeat use Condition
 
-**必须满足**: 参数指纹完全相同
+**mustsatisfyEnough**: Parameter fingerprintFullysame
 
-参数指纹包括：
-- 生成模型、temperature、top_p、max_tokens、频率惩罚、存在惩罚
-- 验证模型、temperature
-- rephrase_prompt 的hash
-- validation_prompt 的hash
+Parameter fingerprintinclude：
+- Generatemodel、temperature、top_p、max_tokens、frequencyPenalty、exist in Penalty
+- validatemodel、temperature
+- rephrase_prompt hash
+- validation_prompt hash
 
-**只要有一个参数不同，指纹就不同，需要重新生成数据。**
+**Only need hasthisParameterDifferent，FingerprintAs forDifferent，needHeavyNewGeneratedata。**
 
-### 复用流程
+### Repeat use workflow
 
-1. **生成脚本时**:
-   - 计算配置文件的参数指纹
-   - 在 `_shared/{Dataset}/` 中遍历所有实验目录
-   - 读取每个目录的 `.fingerprint` 文件
-   - 如果找到相同指纹 → 复用
+1. **GeneratescriptSometimes**:
+   - CalculateConfigurationFileParameter fingerprint
+   -  in  `_shared/{Dataset}/`  in TraverseallExperimentDirectory
+   - readeachDirectory `.fingerprint` File
+   - If found to sameFingerprint → Repeat use 
 
-2. **复用操作**:
-   - **不创建新的物理目录**
-   - **不生成新的数据**
-   - 只在 `batch_*/` 中创建符号链接指向现有物理目录
+2. **Repeat use Operation**:
+   - **notCreateNewPhysicalDirectory**
+   - **notGenerateNewdata**
+   - Only in  `batch_*/`  in CreateSymbolic linkrefer towards currenthasPhysicalDirectory
 
-3. **元数据记录**:
-   - 物理目录的元数据保持不变（记录首次创建的batch）
-   - batch符号链接无额外元数据
+3. **metadataRecord**:
+   - PhysicalDirectorymetadataMaintainInvariance（RecordFirst timeCreatebatch）
+   - batchSymbolic linkNoneadditional outside metadata
 
-### 验证复用
+### validateRepeat use 
 
 ```bash
-# 检查符号链接
+# CheckSymbolic link
 ls -la Data_v2/synthetic/batch_20241230_topp/Copa/
 
-# 输出类似:
+# outputclasssimilar:
 # temp07_topp10_gpt4o -> ../../_shared/Copa/temp07_topp10_gpt4o
 
-# 检查物理目录
+# CheckPhysicalDirectory
 ls -la Data_v2/synthetic/_shared/Copa/temp07_topp10_gpt4o/
-# 应该看到实际的数据文件
+# shouldsee to ActualdataFile
 
-# 使用工具验证
+# useToolvalidate
 python automation/stage1_generation/batch_tools/list_batch_experiments.py \
     batch_20241230_topp --verbose
-# 应该看到 "⚡ 数据复用: 是"
+# shouldsee to  "⚡ Data reuse: Yes"
 ```
 
 ---
 
-## Batch管理工具
+## BatchManageTool
 
-详见 [batch_tools/README.md](stage1_generation/batch_tools/README.md)
+See [batch_tools/README.md](stage1_generation/batch_tools/README.md)
 
-### 快速参考
+### QuickReference
 
 ```bash
-# 列出所有batch
+# Columnoutallbatch
 python batch_tools/list_batches.py --verbose
 
-# 查看batch详情
+# ViewbatchDetails
 python batch_tools/list_batch_experiments.py batch_20241229_temperature --verbose
 
-# 查看物理数据
+# ViewPhysicaldata
 python batch_tools/list_shared_experiments.py --dataset Copa --verbose
 
-# 比较实验参数
+# CompareExperimentParameter
 python batch_tools/compare_experiments.py \
     --shared Copa/temp07_topp10_gpt4o \
     --shared Copa/temp09_topp10_gpt4o
 
-# ⭐ 新增：查找数据路径（用于训练配置）
+# ⭐ Newincrease：FinddataPath（ use  at trainingConfiguration）
 python batch_tools/list_data_paths.py --dataset Copa --format yaml
 
-# ⭐ 新增：路径转换
+# ⭐ Newincrease：Pathconvert
 python batch_tools/resolve_data_path.py "Data_v2/synthetic/batch_xxx/Copa/..."
 ```
 
@@ -533,79 +533,79 @@ python batch_tools/resolve_data_path.py "Data_v2/synthetic/batch_xxx/Copa/..."
 
 ## FAQ
 
-### Q1: 如果我手动修改了_shared/中的数据，batch_*/中的符号链接会自动更新吗？
+### Q1: If IManualmodify_shared/ in data，batch_*/ in Symbolic link will AutomaticUpdate？
 
-**回答**: 是的！符号链接指向物理路径，修改物理数据后，所有引用该数据的batch都会看到更新。
+**Answer**: Yes！Symbolic linkrefer towards PhysicalPath，modifyPhysicaldata back ，allreference use thisdatabatchall will see to Update。
 
-**注意**: 这可能导致不同batch的训练结果不一致，建议不要手动修改已生成的数据。
+**Note**:  this  can  can Lead toDifferentbatchtrainingresultnotConsistent，Recommendationnot need ManualmodifyalreadyGeneratedata。
 
-### Q2: 如果我删除了某个batch_*/目录，_shared/中的物理数据会被删除吗？
+### Q2: If IdeleteSomebatch_*/Directory，_shared/ in Physicaldata will  by delete？
 
-**回答**: 不会。batch_*/只包含符号链接，删除batch不影响物理数据。
+**Answer**: not will 。batch_*/OnlycontainSymbolic link，deletebatchnotImpactPhysicaldata。
 
-**清理建议**: 如果要清理不再使用的实验数据，应该:
-1. 先删除所有引用该数据的batch符号链接
-2. 再删除_shared/中的物理目录
+**CleanupRecommendation**: If need CleanupnotAgainuseExperimentdata，should:
+1. firstdeleteallreference use thisdatabatchSymbolic link
+2. Againdelete_shared/ in PhysicalDirectory
 
-### Q3: 我可以手动创建batch吗？
+### Q3: IcanManualCreatebatch？
 
-**回答**: 可以，但不推荐。应该通过配置文件 + generator.py 自动管理。
+**Answer**: can，ButnotRecommended。shouldpassConfigurationFile + generator.py AutomaticManage。
 
-如果确实需要手动操作：
+If indeedneedManualOperation：
 ```bash
 mkdir -p Data_v2/synthetic/batch_20241231_manual/Copa
 ln -s ../../_shared/Copa/temp07_topp10_gpt4o \
     Data_v2/synthetic/batch_20241231_manual/Copa/temp07_topp10_gpt4o
 ```
 
-### Q4: 参数指纹是怎么计算的？我可以看到详细内容吗？
+### Q4: Parameter fingerprintYesHowCalculate？Icansee to Detailedcontent？
 
-**回答**: 可以查看 `.fingerprint` 文件和 `experiment_metadata.json`:
+**Answer**: canView `.fingerprint` Fileand `experiment_metadata.json`:
 
 ```bash
-# 查看指纹
+# ViewFingerprint
 cat Data_v2/synthetic/_shared/Copa/temp07_topp10_gpt4o/.fingerprint
 
-# 查看完整元数据（包含所有参数）
+# ViewCompletemetadata（containallParameter）
 cat Data_v2/synthetic/_shared/Copa/temp07_topp10_gpt4o/experiment_metadata.json | jq .
 ```
 
-### Q5: 我想重新生成某个参数配置的数据，怎么办？
+### Q5: I wantHeavyNewGenerateSomeParameter configurationdata，What to do？
 
-**回答**:
-1. 删除_shared/中对应的物理目录
-2. 删除所有batch_*/中指向该目录的符号链接
-3. 重新运行 generator.py（会检测到数据不存在并重新生成）
+**Answer**:
+1. delete_shared/ in  for corresponding physicalDirectory
+2. deleteallbatch_*/ in refer towards thisDirectorySymbolic link
+3. HeavyNewRun generator.py（ will Detect to dataDoes not exist in andHeavyNewGenerate）
 
-**示例**:
+**Example**:
 ```bash
-# 1. 删除物理数据
+# 1. deletePhysicaldata
 rm -rf Data_v2/synthetic/_shared/Copa/temp07_topp10_gpt4o
 
-# 2. 删除所有符号链接
+# 2. deleteallSymbolic link
 find Data_v2/synthetic/batch_* -name "temp07_topp10_gpt4o" -type l -delete
 
-# 3. 重新生成
+# 3. HeavyNewGenerate
 python automation/stage1_generation/generator.py automation/configs/temp07.yaml
 cd Data_v2/synthetic/_shared/Copa/temp07_topp10_gpt4o/scripts/
 python rephrase_all.py && python validate.py
 ```
 
-### Q6: batch_id是必须的吗？
+### Q6: batch_idYesmust？
 
-**回答**: 不是必须的。如果配置文件中未指定 `batch_id`，系统会根据当前日期和 `purpose` 自动生成：
+**Answer**: notYesmust。IfConfigurationFile in Unspecified `batch_id`，system will According toCurrentdateand `purpose` AutomaticGenerate：
 
 ```
 batch_{YYYYMMDD}_{purpose}
 ```
 
-例如: `batch_20241229_temperature_study`
+for example: `batch_20241229_temperature_study`
 
-### Q7: 我可以把多个数据集（Copa, CB, BOOLQ）放在同一个batch中吗？
+### Q7: IcanmultipleDataset（Copa, CB, BOOLQ）put in Samebatch in ？
 
-**回答**: 可以！batch是跨数据集的。只要配置文件中指定相同的 `batch_id`，不同数据集的实验都会出现在同一个batch中。
+**Answer**: can！batchYescrossDataset。Only need ConfigurationFile in Specifysame `batch_id`，DifferentDatasetExperimentall will Appear in Samebatch in 。
 
-**示例**:
+**Example**:
 
 **copa_config.yaml**:
 ```yaml
@@ -618,12 +618,12 @@ dataset:
 **cb_config.yaml**:
 ```yaml
 experiment:
-  batch_id: "batch_20241229_multi_dataset"  # 相同batch_id
+  batch_id: "batch_20241229_multi_dataset"  # samebatch_id
 dataset:
   dataset_name: "CB"
 ```
 
-结果：
+result：
 ```
 batch_20241229_multi_dataset/
 ├── Copa/
@@ -632,40 +632,40 @@ batch_20241229_multi_dataset/
     └── temp07_topp10_gpt4o/
 ```
 
-### Q8: 还需要使用publish_dataset.py吗？
+### Q8: Stillneedusepublish_dataset.py？
 
-**回答**: **不需要！** trainer.py可以直接使用 `Data_v2/` 路径。
+**Answer**: **notneed！** trainer.pycanDirectlyuse `Data_v2/` Path。
 
-**推荐方式**（直接使用Data_v2路径）:
+**Recommended approach**（DirectlyuseData_v2Path）:
 ```yaml
-# 训练配置
+# trainingConfiguration
 data:
-  # 推荐：使用batch路径（更直观）
+  # Recommended：usebatchPath（MoreIntuitive）
   path: "Data_v2/synthetic/batch_20241229_temperature/Copa/temp07_topp10_gpt4o/Copa"
 
-  # 或使用shared路径
+  # orusesharedPath
   # path: "Data_v2/synthetic/_shared/Copa/temp07_topp10_gpt4o/Copa"
 ```
 
-**可选方式**（仅用于兼容旧脚本）:
+** can Selection method**（Only use  at CompatibleOldscript）:
 ```bash
-# 仅在需要兼容旧训练脚本时使用
+# Only in needCompatibleOldtrainingscriptSometimesuse
 python automation/stage1_generation/tools/publish_dataset.py \
     --source Data_v2/synthetic/_shared/Copa/temp07_topp10_gpt4o/Copa \
     --dataset Copa \
     --target Data/rejection_sampling/0_data
 ```
 
-### Q9: 如何快速找到数据路径用于训练配置？
+### Q9: how toQuick find to dataPath use  at trainingConfiguration？
 
-**回答**: 使用新增的 `list_data_paths.py` 工具：
+**Answer**: useNewincrease `list_data_paths.py` Tool：
 
 ```bash
-# 输出YAML格式，可直接复制到配置文件
+# outputYAMLformat， can Directlycopy to ConfigurationFile
 python automation/stage1_generation/batch_tools/list_data_paths.py --dataset Copa --format yaml
 ```
 
-**输出示例**:
+**outputExample**:
 ```yaml
 data:
   path: "Data_v2/synthetic/batch_20241229_temperature/Copa/temp07_topp10_gpt4o/Copa"
@@ -673,15 +673,15 @@ data:
 
 ---
 
-## 最佳实践
+## Best Practices
 
-### 1. Batch命名规范
+### 1. BatchNamingspecification
 
-- 使用日期前缀: `batch_YYYYMMDD_*`
-- 使用描述性purpose: `temperature`, `topp`, `model_comparison`
-- 避免使用中文或特殊字符
+- usedate front prefix: `batch_YYYYMMDD_*`
+- useDescriptionilitypurpose: `temperature`, `topp`, `model_comparison`
+- AvoiduseChineseorSpeciallyspecialCharacterSymbol
 
-### 2. 配置文件管理
+### 2. ConfigurationFileManage
 
 ```
 automation/configs/
@@ -696,30 +696,30 @@ automation/configs/
 │       └── copa_topp10.yaml
 ```
 
-### 3. 定期清理
+### 3. RegularCleanup
 
-- 定期查看 `_shared/` 使用情况
-- 删除不再需要的实验数据
-- 保留有价值的实验结果
+- RegularView `_shared/` useCase
+- deletenotAgainneedExperimentdata
+- KeephasvaluevalueExperimentresult
 
-### 4. 文档记录
+### 4. DocumentRecord
 
-在每个batch目录中创建 `README.md` 记录：
-- 实验目的
-- 参数设置
-- 结果总结
-- 训练效果对比
+ in eachbatchDirectory in Create `README.md` Record：
+- ExperimentPurpose
+- Parametersetup
+- resultsummary
+- trainingEffectcomparison
 
 ---
 
-## 与训练脚本的兼容性
+## andtrainingscriptcompatibility
 
-### ✅ 推荐：直接使用Data_v2路径
+### ✅ Recommended：DirectlyuseData_v2Path
 
-**trainer.py可以直接使用 `Data_v2/` 路径**，无需publish步骤：
+**trainer.pycanDirectlyuse `Data_v2/` Path**，NoneneedpublishStep：
 
 ```yaml
-# 训练配置 - automation/configs/stage2/my_training.yaml
+# trainingConfiguration - automation/configs/stage2/my_training.yaml
 experiment:
   purpose: "temperature_study"
 
@@ -728,21 +728,21 @@ task: "Copa"
 method: "zo"
 
 data:
-  # 推荐：使用batch路径（按实验目的组织，更直观）
+  # Recommended：usebatchPath（ according to ExperimentPurposegrouporganize，MoreIntuitive）
   path: "Data_v2/synthetic/batch_20241229_temperature/Copa/temp07_topp10_gpt4o/Copa"
 
-  # 或使用shared路径（物理存储）
+  # orusesharedPath（Physical storage）
   # path: "Data_v2/synthetic/_shared/Copa/temp07_topp10_gpt4o/Copa"
 ```
 
-**如何快速找到数据路径**：
+**how toQuick find to dataPath**：
 ```bash
 python automation/stage1_generation/batch_tools/list_data_paths.py --dataset Copa --format yaml
 ```
 
-### 可选：发布到Data/（仅用于兼容旧脚本）
+###  can select：Release to Data/（Only use  at CompatibleOldscript）
 
-如果需要兼容旧的训练脚本（直接使用 `Data/` 目录），可以使用publish工具：
+IfneedCompatibleOldtrainingscript（Directlyuse `Data/` Directory），canusepublishTool：
 
 ```bash
 python automation/stage1_generation/tools/publish_dataset.py \
@@ -751,22 +751,22 @@ python automation/stage1_generation/tools/publish_dataset.py \
     --target Data/rejection_sampling/0_data
 ```
 
-**注意**: 仅用于兼容旧项目结构，新项目推荐直接使用 `Data_v2/` 路径。
+**Note**: Only use  at CompatibleOldprojectstructure，NewprojectRecommendedDirectlyuse `Data_v2/` Path。
 
 ---
 
-## 总结
+## summary
 
-Batch方案3++通过物理存储与逻辑视图分离，实现了：
+BatchSolution3++passPhysical storageandLogicViewSeparation，Implementation：
 
-✅ **参数去重**: 相同参数配置只生成一次数据
-✅ **存储优化**: 节省磁盘空间和API调用成本
-✅ **灵活组织**: 按时间/目的灵活组织实验
-✅ **易于追溯**: 清晰记录每个实验的来源和参数
-✅ **向后兼容**: 不影响现有训练脚本和工具
+✅ **ParameterDeduplication**: sameParameter configurationOnlyGenerateOncedata
+✅ **storageoptimize**: SectionsavediskspaceandAPIadjust use Cost
+✅ **Flexiblegrouporganize**:  according to time/PurposeFlexiblegrouporganizeExperiment
+✅ **easy at Trace**: ClearRecordeachExperimentSourceandParameter
+✅ **backward compatible**: notImpactcurrenthastrainingscriptandTool
 
 ---
 
-**创建日期**: 2024-12-29
-**版本**: 1.0
-**维护**: Synthetic Data Generation Team
+**Createdate**: 2024-12-29
+**Version**: 1.0
+**Maintenance**: Synthetic Data Generation Team

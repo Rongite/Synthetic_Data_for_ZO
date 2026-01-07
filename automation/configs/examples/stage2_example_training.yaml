@@ -1,61 +1,61 @@
-# 训练Pipeline配置文件示例
+# TrainingPipelineConfigurationFileExample
 
-# ========== 实验管理 ==========
+# ========== Experiment Management ==========
 experiment:
-  # 🔴 重要：这是"训练"的实验目的，与"数据生成"的实验目的独立！
-  # 训练实验目的示例：
-  #   - model_comparison: 对比不同模型效果
-  #   - hyperparameter_tuning: 调整超参数
-  #   - baseline_comparison: 与baseline对比
-  #   - ablation_study: 消融实验
-  #   - prompt_effectiveness: 测试prompt效果
-  purpose: "model_comparison"  # 训练实验目的（Results分类依据）
-  description: "对比不同模型在Copa合成数据上的表现"
+  # 🔴 Important: This is the experiment purpose for "Training", independent from "Data Generation" experiment purpose!
+  # Training experiment purpose examples:
+  #   - model_comparison: Compare different models' performance
+  #   - hyperparameter_tuning: Adjust hyperparameters
+  #   - baseline_comparison: Comparison with baseline
+  #   - ablation_study: Ablation study
+  #   - prompt_effectiveness: Test prompt effectiveness
+  purpose: "model_comparison"  # Training experiment purpose (basis for results classification)
+  description: "Compare different models' performance on Copa synthetic data"
 
-# 模型配置
-model: "meta-llama/Llama-3.2-1B"  # 或 "mistralai/Mistral-Nemo-Base-2407"
+# Model Configuration
+model: "meta-llama/Llama-3.2-1B"  # or "mistralai/Mistral-Nemo-Base-2407"
 
-# 任务
+# Task
 task: "Copa"  # Copa, CB, RTE, BOOLQ, ArcC_Cloze, ArcC_MC
 
-# 训练方法
+# Training Method
 method: "zo"  # zo (MeZO), fo_full (Full Fine-tune), fo_lora (LoRA)
 
-# 数据配置
+# Data Configuration
 data:
-  # 🆕 推荐格式：直接指定数据路径（会自动推断experiment_purpose）
+  # 🆕 Recommended format: Directly specify data path (will automatically infer experiment_purpose)
   path: "Data_v2/synthetic/prompt_engineering/copa_mezo_v1/Copa"
 
-  # 旧格式（已弃用但仍支持）：
-  # type: "original"  # 数据类型
-  #   - "original": 原始数据
-  #   - "synthetic_{method}_{model}_{version}": 合成数据
-  #   - "mixed_{method}_{model}_{version}": 混合数据
+  # Old format (deprecated but still supported):
+  # type: "original"  # Data type
+  #   - "original": Original data
+  #   - "synthetic_{method}_{model}_{version}": Synthetic data
+  #   - "mixed_{method}_{model}_{version}": Mixed data
 
-# 超参数配置 (支持单值或列表进行网格搜索)
+# Hyperparameter Configuration (Supports single value or list for grid search)
 hyperparameters:
-  learning_rate:  # 学习率 (可以是单值或列表)
+  learning_rate:  # Learning rate (can be single value or list)
     - 1e-6
     - 5e-7
     - 2e-7
     - 1e-7
 
-  batch_size: 16  # Batch size
+  batch_size: 16  # Batch Size
 
-  steps: 20000  # 训练步数
+  steps: 20000  # Training steps
 
-  seed: 0  # 随机种子 (可以是单值或列表)
+  seed: 0  # Random seed (can be single value or list)
 
-  # MeZO 特定参数
-  zo_eps: 1e-3  # MeZO 的 epsilon 参数
+  # MeZO Specific parameters
+  zo_eps: 1e-3  # MeZO epsilon parameter
 
-  # LoRA 特定参数 (仅在 method=fo_lora 时使用)
+  # LoRA Specific parameters (Only used when method=fo_lora)
   lora_rank: 8
   lora_alpha: 16
 
-# CUDA设备配置
-cuda_devices: "0"  # 可以是 "0", "0,1", "0,1,2,3" 等
+# CUDA Device Configuration
+cuda_devices: "0"  # Can be "0", "0,1", "0,1,2,3", etc.
 
-# 运行选项
-wait_for_completion: false  # 是否等待训练完成 (false则后台运行)
-continue_on_error: true  # 出错时是否继续执行剩余实验
+# Run Options
+wait_for_completion: false  # Whether to wait for training completion (false means run in background)
+continue_on_error: true  # Whether to continue executing remaining experiments on error

@@ -4,7 +4,7 @@
   "batch_id": "batch_20241229_temperature",
   "experiment_purpose": "prompt_engineering",
   "experiment_id": "copa_mezo_v1",
-  "experiment_description": "Copa任务的prompt优化实验",
+  "experiment_description": "CopaTask的promptOptimizeExperiment",
   "task_name": "Copa",
   "dataset_name": "Copa",
   "training_method": "mezo",

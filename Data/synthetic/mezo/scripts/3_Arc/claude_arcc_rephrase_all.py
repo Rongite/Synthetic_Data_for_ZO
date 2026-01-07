@@ -268,17 +268,19 @@ with open("/home/ubuntu/LLM-inference/jikai-project/Synthetic_Data_for_ZO/Data/o
             # Parses the JSON data for each row and appends it to the data list
         data.append(json.loads(line.strip()))
 
-output_file = os.path.expanduser("/home/ubuntu/LLM-inference/jikai-project/Synthetic_Data_for_ZO/Data/synthetic/mezo/ArcC/ARC-Challenge_train_rest.jsonl") # output file
+output_file = os.path.expanduser("/home/ubuntu/LLM-inference/jikai-project/Synthetic_Data_for_ZO/Data/synthetic/mezo/ArcC/ARC-Challenge_train.jsonl") # output file
 
 os.makedirs(os.path.dirname(output_file), exist_ok=True) # no need to create the output path mannually
 out_file = open(output_file, "w")
 progress = 0 # delete
 for i in tqdm(range(len(data))):
     progress += 1 # delete
-    if progress <= 20: # delete
-        continue # delete
+    # if progress <= 20: # delete
+        # continue # delete
     # if progress > 462: # delete
     #     break # delete
+    if progress > 619: # delete
+        break # delete
 
     prompt = generate_prompt(data[i]["question"], data[i]["choices"], data[i]["answerKey"])
     response = client.chat.completions.create( # change
